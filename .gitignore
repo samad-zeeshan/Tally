@@ -1,0 +1,12 @@
+# Maven build output
+target/
+
+# IDE and editor noise
+.idea/
+*.iml
+.vscode/
+
+# OS and OneDrive noise
+.DS_Store
+Thumbs.db
+desktop.ini

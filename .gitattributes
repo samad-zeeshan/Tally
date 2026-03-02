@@ -1,0 +1,12 @@
+# Normalize to LF in the repo and in the working tree, so a Windows checkout does not
+# quietly turn Java and config files into CRLF against what .editorconfig asks for.
+* text=auto eol=lf
+
+# CI runs mvnw on Linux. CRLF in a shell script breaks on the shebang line,
+# and Windows batch files need CRLF, so both are pinned explicitly.
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+
+*.sh text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
