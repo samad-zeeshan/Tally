@@ -7,3 +7,5 @@ commit that changed the code.
 | Number | Decision | Area |
 |--------|----------|------|
 | 0001 | Build with Maven through the wrapper | build |
+| 0002 | Money is a long in integer minor units | core |
+| 0005 | UUID ids for accounts and transfers, bigserial for postings | core |
