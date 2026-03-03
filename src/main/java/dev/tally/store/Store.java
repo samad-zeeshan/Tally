@@ -2,6 +2,8 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
+import dev.tally.core.Transfer;
+import dev.tally.core.TransferOutcome;
 
 import java.util.Optional;
 
@@ -16,4 +18,6 @@ public interface Store {
     Account createAccount(String name, long openingBalanceMinor);
 
     Optional<Account> findAccount(AccountId id);
+
+    TransferOutcome apply(Transfer transfer);
 }

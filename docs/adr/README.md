@@ -8,4 +8,6 @@ commit that changed the code.
 |--------|----------|------|
 | 0001 | Build with Maven through the wrapper | build |
 | 0002 | Money is a long in integer minor units | core |
+| 0003 | Outcomes are sealed values, not exceptions | core |
+| 0004 | A world account funds openings and may go negative | core |
 | 0005 | UUID ids for accounts and transfers, bigserial for postings | core |
