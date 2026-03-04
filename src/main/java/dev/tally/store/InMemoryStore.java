@@ -15,16 +15,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * In-memory store: idempotent by a reservation map, not yet safe on the balance path.
+ * In-memory store: idempotent by a reservation map, and safe under a single coarse lock.
  *
- * The account map is concurrent, so unlocked readers see a whole, current Account and the
- * map cannot be corrupted. But the balance read-check-write still spans two map operations
- * with no mutual exclusion, so a lost update is still possible. Locks land in the next commits.
+ * One lock serializes the whole read-check-write, so the lost update is closed. The cost is
+ * that transfers over disjoint account pairs queue behind each other; per-account locks
+ * replace this coarse lock next.
  */
 public final class InMemoryStore implements Store {
     private final Map<AccountId, Account> accounts = new ConcurrentHashMap<>();
+    private final ReentrantLock applyLock = new ReentrantLock();
 
     private record Reservation(TransferRequest request, CompletableFuture<TransferOutcome> slot) {}
     private final ConcurrentHashMap<String, Reservation> reservations = new ConcurrentHashMap<>();
@@ -140,8 +142,14 @@ public final class InMemoryStore implements Store {
         if (WorldAccount.isWorld(request.to())) {
             return new TransferOutcome.ReservedAccount(request.to());
         }
-        // Commit 8: no lock yet. Commit 10 wraps this in a coarse lock, commit 11 in per-account locks.
-        return applyBalances(request);
+        // One coarse lock around the read-check-write closes the lost update. Correct but it
+        // serializes disjoint transfers; per-account locks replace it next.
+        applyLock.lock();
+        try {
+            return applyBalances(request);
+        } finally {
+            applyLock.unlock();
+        }
     }
 
     private TransferOutcome applyBalances(TransferRequest request) {
