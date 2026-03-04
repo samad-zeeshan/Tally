@@ -10,7 +10,6 @@ import dev.tally.core.TransferRequest;
 import dev.tally.core.WorldAccount;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,12 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * In-memory store: idempotent by a reservation map, not yet safe on the balance path.
  *
- * The idempotency reservation is thread-safe by construction (putIfAbsent), but the account
- * map is a plain HashMap and the read-check-write is unguarded, so this store is not yet
- * concurrency-safe. Locks are added deliberately in the next commits.
+ * The account map is concurrent, so unlocked readers see a whole, current Account and the
+ * map cannot be corrupted. But the balance read-check-write still spans two map operations
+ * with no mutual exclusion, so a lost update is still possible. Locks land in the next commits.
  */
 public final class InMemoryStore implements Store {
-    private final Map<AccountId, Account> accounts = new HashMap<>();
+    private final Map<AccountId, Account> accounts = new ConcurrentHashMap<>();
 
     private record Reservation(TransferRequest request, CompletableFuture<TransferOutcome> slot) {}
     private final ConcurrentHashMap<String, Reservation> reservations = new ConcurrentHashMap<>();

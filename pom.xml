@@ -17,9 +17,10 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.release>25</maven.compiler.release>
     <junit.version>6.1.1</junit.version>
-    <!-- Tests tagged "integration" need a live Postgres, so the default build
-         skips them. The integration profile below clears this to run everything. -->
-    <surefire.excludedGroups>integration</surefire.excludedGroups>
+    <!-- integration tests need a live Postgres, and race-demo tests assert corruption or
+         deadlock, so the default build skips both. Profiles below re-enable each on demand. -->
+    <surefire.groups></surefire.groups>
+    <surefire.excludedGroups>integration,race-demo</surefire.excludedGroups>
   </properties>
 
   <dependencyManagement>
@@ -57,6 +58,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.6</version>
         <configuration>
+          <groups>${surefire.groups}</groups>
           <excludedGroups>${surefire.excludedGroups}</excludedGroups>
         </configuration>
       </plugin>
@@ -64,10 +66,18 @@
   </build>
 
   <profiles>
-    <!-- ./mvnw test -Pintegration runs the integration-tagged tests too, which is what CI activates. -->
+    <!-- -Pintegration runs the database tests too, but must still exclude the demos. -->
     <profile>
       <id>integration</id>
       <properties>
+        <surefire.excludedGroups>race-demo</surefire.excludedGroups>
+      </properties>
+    </profile>
+    <!-- ./mvnw test -Prace-demo runs only the corruption and deadlock demos. -->
+    <profile>
+      <id>race-demo</id>
+      <properties>
+        <surefire.groups>race-demo</surefire.groups>
         <surefire.excludedGroups></surefire.excludedGroups>
       </properties>
     </profile>
