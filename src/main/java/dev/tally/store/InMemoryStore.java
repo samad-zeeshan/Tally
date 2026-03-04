@@ -3,33 +3,46 @@ package dev.tally.store;
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
 import dev.tally.core.Ledger;
-import dev.tally.core.Posting;
 import dev.tally.core.Transfer;
+import dev.tally.core.TransferId;
 import dev.tally.core.TransferOutcome;
+import dev.tally.core.TransferRequest;
 import dev.tally.core.WorldAccount;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory store, single threaded on purpose.
+ * In-memory store: idempotent by a reservation map, not yet safe on the balance path.
  *
- * A plain HashMap and no locks, so the naive version can later be shown corrupting money
- * under concurrency. Concurrency safety is added deliberately, not smuggled in here.
+ * The idempotency reservation is thread-safe by construction (putIfAbsent), but the account
+ * map is a plain HashMap and the read-check-write is unguarded, so this store is not yet
+ * concurrency-safe. Locks are added deliberately in the next commits.
  */
 public final class InMemoryStore implements Store {
     private final Map<AccountId, Account> accounts = new HashMap<>();
+
+    private record Reservation(TransferRequest request, CompletableFuture<TransferOutcome> slot) {}
+    private final ConcurrentHashMap<String, Reservation> reservations = new ConcurrentHashMap<>();
+
+    private sealed interface Claim {
+        record Winner(CompletableFuture<TransferOutcome> slot) implements Claim {}
+        record Replay(CompletableFuture<TransferOutcome> slot) implements Claim {}
+        record Conflict() implements Claim {}
+    }
 
     public InMemoryStore() {
         // World exists from construction: the reserved counterparty that funds every opening.
         accounts.put(WorldAccount.ID, WorldAccount.initial());
     }
 
-    // The opening is funded by world, not minted, through the same Ledger.post ordinary transfers
-    // use. The account insert and the world debit are one unit: the account enters the map only
-    // inside the Posted result, so a half-funded account is never observable.
+    // The opening funds from world through the same Ledger.post ordinary transfers use. Its id is
+    // fresh, so its system key open:<id> could never replay; persisting that key is a Stage 4 concern.
     @Override
     public Account createAccount(String name, long openingBalanceMinor) {
         if (openingBalanceMinor < 0) {
@@ -58,52 +71,102 @@ public final class InMemoryStore implements Store {
     }
 
     @Override
-    public TransferOutcome apply(Transfer transfer) {
-        // Reserved guard first, before any lookup: only the internal opening path may name world.
-        for (Posting p : transfer.postings()) {
-            if (WorldAccount.isWorld(p.accountId())) {
-                return new TransferOutcome.ReservedAccount(WorldAccount.ID);
-            }
+    public TransferOutcome apply(TransferRequest request) {
+        // Same-account nets to a no-op and would break the strict lock order; a non-positive amount is
+        // never valid. Both are HTTP-edge 400s later, so here they throw before any key claim, which
+        // means a rejected structural request never consumes the key.
+        if (request.from().equals(request.to())) {
+            throw new IllegalArgumentException("same account");
         }
-        Map<AccountId, Account> snapshot = new HashMap<>();
-        for (Posting p : transfer.postings()) {
-            Account account = accounts.get(p.accountId());
-            if (account == null) {
-                return new TransferOutcome.UnknownAccount(p.accountId());
-            }
-            snapshot.put(p.accountId(), account);
+        if (request.amountMinor() <= 0) {
+            throw new IllegalArgumentException("amount must be positive");
         }
+        return switch (claim(request)) {
+            case Claim.Winner(var slot) -> {
+                TransferOutcome outcome;
+                try {
+                    outcome = evaluate(request);
+                } catch (RuntimeException | Error crash) {
+                    // A crash is not a terminal outcome; release so a retry can rerun.
+                    reservations.remove(request.idempotencyKey());
+                    slot.completeExceptionally(crash);
+                    throw crash;
+                }
+                slot.complete(outcome);   // any in-flight duplicate still gets the answer
+                // Selective release: only Applied and InsufficientFunds are recorded and replay.
+                if (!consumes(outcome)) {
+                    reservations.remove(request.idempotencyKey());
+                }
+                yield outcome;
+            }
+            case Claim.Replay(var slot) -> {
+                TransferOutcome first = slot.join();
+                // Replayed wraps only a recorded outcome. A duplicate that joined a non-consuming
+                // outcome inside the release window gets the raw outcome, never Replayed(UnknownAccount).
+                yield consumes(first) ? new TransferOutcome.Replayed(first) : first;
+            }
+            case Claim.Conflict() -> new TransferOutcome.KeyConflict(request.idempotencyKey());
+        };
+    }
+
+    private Claim claim(TransferRequest request) {
+        Reservation fresh = new Reservation(request, new CompletableFuture<>());
+        Reservation existing = reservations.putIfAbsent(request.idempotencyKey(), fresh);
+        if (existing == null) {
+            return new Claim.Winner(fresh.slot());
+        }
+        boolean sameTuple = existing.request().from().equals(request.from())
+                && existing.request().to().equals(request.to())
+                && existing.request().amountMinor() == request.amountMinor();
+        return sameTuple ? new Claim.Replay(existing.slot()) : new Claim.Conflict();
+    }
+
+    private static boolean consumes(TransferOutcome outcome) {
+        return outcome instanceof TransferOutcome.Applied
+                || outcome instanceof TransferOutcome.InsufficientFunds;
+    }
+
+    // Existence and identity are decided before any balance work: they touch no account state.
+    private TransferOutcome evaluate(TransferRequest request) {
+        if (accounts.get(request.from()) == null) {
+            return new TransferOutcome.UnknownAccount(request.from());
+        }
+        if (accounts.get(request.to()) == null) {
+            return new TransferOutcome.UnknownAccount(request.to());
+        }
+        // A client may never name world; the one legitimate world transfer is the internal opening.
+        if (WorldAccount.isWorld(request.from())) {
+            return new TransferOutcome.ReservedAccount(request.from());
+        }
+        if (WorldAccount.isWorld(request.to())) {
+            return new TransferOutcome.ReservedAccount(request.to());
+        }
+        // Commit 8: no lock yet. Commit 10 wraps this in a coarse lock, commit 11 in per-account locks.
+        return applyBalances(request);
+    }
+
+    private TransferOutcome applyBalances(TransferRequest request) {
+        Account from = accounts.get(request.from());
+        Account to = accounts.get(request.to());
+        Transfer transfer = Transfer.between(request.from(), request.to(), request.amountMinor());
+        Map<AccountId, Account> snapshot = Map.of(from.id(), from, to.id(), to);
         return switch (Ledger.post(transfer, snapshot)) {
             case Ledger.Result.Posted(var updated) -> {
                 for (Account a : updated) {
                     accounts.put(a.id(), a);
                 }
-                yield applied(transfer, updated);
+                yield new TransferOutcome.Applied(transfer.id(),
+                        balanceOf(updated, request.from()), balanceOf(updated, request.to()), Instant.now());
             }
             case Ledger.Result.InsufficientFunds(var account, var balance, var requested) ->
                     new TransferOutcome.InsufficientFunds(account, balance, requested);
-            // A store-built transfer is always balanced, so an Invalid here is a bug, not an outcome.
+            // A mirrored two-posting transfer can never be unbalanced, so an Invalid here is a bug.
             case Ledger.Result.Invalid(var reason) ->
-                    throw new IllegalStateException("store-built transfer did not balance: " + reason);
+                    throw new IllegalStateException("mirrored transfer did not balance: " + reason);
         };
     }
 
-    // For a two-party transfer, from is the debit (negative) posting's account, to the credit.
-    private static TransferOutcome applied(Transfer transfer, java.util.List<Account> updated) {
-        AccountId fromId = null;
-        AccountId toId = null;
-        for (Posting p : transfer.postings()) {
-            if (p.amountMinor() < 0) {
-                fromId = p.accountId();
-            } else if (p.amountMinor() > 0) {
-                toId = p.accountId();
-            }
-        }
-        return new TransferOutcome.Applied(transfer.id(),
-                balanceOf(updated, fromId), balanceOf(updated, toId), Instant.now());
-    }
-
-    private static long balanceOf(java.util.List<Account> updated, AccountId id) {
+    private static long balanceOf(List<Account> updated, AccountId id) {
         for (Account a : updated) {
             if (a.id().equals(id)) {
                 return a.balanceMinor();

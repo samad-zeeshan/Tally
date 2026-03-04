@@ -2,8 +2,8 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
-import dev.tally.core.Transfer;
 import dev.tally.core.TransferOutcome;
+import dev.tally.core.TransferRequest;
 import dev.tally.core.WorldAccount;
 import org.junit.jupiter.api.Test;
 
@@ -77,10 +77,10 @@ class InMemoryStoreTest {
         Account a = store.createAccount("a", 1000);
         Account b = store.createAccount("b", 0);
 
-        Transfer t = Transfer.between(a.id(), b.id(), 400);
-        TransferOutcome.Applied applied = assertInstanceOf(TransferOutcome.Applied.class, store.apply(t));
+        TransferOutcome.Applied applied = assertInstanceOf(TransferOutcome.Applied.class,
+                store.apply(new TransferRequest("move-key-01", a.id(), b.id(), 400)));
 
-        assertEquals(t.id(), applied.id());
+        assertNotNull(applied.id());
         assertEquals(600, applied.fromBalanceAfter());
         assertEquals(400, applied.toBalanceAfter());
         assertNotNull(applied.at());
@@ -94,7 +94,7 @@ class InMemoryStoreTest {
         Account a = store.createAccount("a", 100);
         Account b = store.createAccount("b", 0);
 
-        TransferOutcome outcome = store.apply(Transfer.between(a.id(), b.id(), 101));
+        TransferOutcome outcome = store.apply(new TransferRequest("over-key-01", a.id(), b.id(), 101));
 
         assertEquals(new TransferOutcome.InsufficientFunds(a.id(), 100, 101), outcome);
         assertEquals(100, balance(store, a.id()));
@@ -107,7 +107,7 @@ class InMemoryStoreTest {
         Account a = store.createAccount("a", 100);
         AccountId unknown = AccountId.newId();
 
-        TransferOutcome outcome = store.apply(Transfer.between(a.id(), unknown, 10));
+        TransferOutcome outcome = store.apply(new TransferRequest("unk-key-01", a.id(), unknown, 10));
 
         assertEquals(new TransferOutcome.UnknownAccount(unknown), outcome);
         assertEquals(100, balance(store, a.id()));
@@ -119,9 +119,9 @@ class InMemoryStoreTest {
         Account a = store.createAccount("a", 100);
 
         assertEquals(new TransferOutcome.ReservedAccount(WorldAccount.ID),
-                store.apply(Transfer.between(a.id(), WorldAccount.ID, 10)));
+                store.apply(new TransferRequest("world-key-01", a.id(), WorldAccount.ID, 10)));
         assertEquals(new TransferOutcome.ReservedAccount(WorldAccount.ID),
-                store.apply(Transfer.between(WorldAccount.ID, a.id(), 10)));
+                store.apply(new TransferRequest("world-key-02", WorldAccount.ID, a.id(), 10)));
 
         assertEquals(100, balance(store, a.id()));
         assertEquals(-100, balance(store, WorldAccount.ID));
@@ -132,7 +132,7 @@ class InMemoryStoreTest {
         InMemoryStore store = new InMemoryStore();
         Account a = store.createAccount("a", 1000);
         Account b = store.createAccount("b", 500);
-        store.apply(Transfer.between(a.id(), b.id(), 200));
+        store.apply(new TransferRequest("neg-key-01", a.id(), b.id(), 200));
 
         long world = balance(store, WorldAccount.ID);
         assertTrue(world < 0);
@@ -145,7 +145,7 @@ class InMemoryStoreTest {
         Account a = store.createAccount("a", 100);
         Account b = store.createAccount("b", 0);
 
-        store.apply(Transfer.between(a.id(), b.id(), 200));   // overdraft, rejected
+        store.apply(new TransferRequest("save-key-01", a.id(), b.id(), 200));   // overdraft, rejected
 
         assertEquals(100, balance(store, a.id()));
         assertEquals(0, balance(store, b.id()));

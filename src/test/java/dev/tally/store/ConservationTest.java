@@ -1,8 +1,8 @@
 package dev.tally.store;
 
 import dev.tally.core.AccountId;
-import dev.tally.core.Transfer;
 import dev.tally.core.TransferOutcome;
+import dev.tally.core.TransferRequest;
 import dev.tally.core.WorldAccount;
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +32,18 @@ class ConservationTest {
             int from = random.nextInt(10);
             int to = random.nextInt(10);
             long amount = random.nextLong(1, 2_001);
-            switch (store.apply(Transfer.between(ids.get(from), ids.get(to), amount))) {
+            // A same-account transfer is a client error the store rejects up front, so skip the draw.
+            if (from == to) {
+                continue;
+            }
+            TransferRequest request = new TransferRequest("batch-" + i, ids.get(from), ids.get(to), amount);
+            switch (store.apply(request)) {
                 case TransferOutcome.Applied _ -> applied++;
                 case TransferOutcome.InsufficientFunds _ -> rejected++;
                 case TransferOutcome.UnknownAccount _ -> fail("no unknown account in this batch");
                 case TransferOutcome.ReservedAccount _ -> fail("the batch never names world");
+                case TransferOutcome.KeyConflict _ -> fail("every key is unique");
+                case TransferOutcome.Replayed _ -> fail("every key is unique");
             }
         }
 
