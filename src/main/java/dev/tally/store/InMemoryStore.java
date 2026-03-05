@@ -15,18 +15,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * In-memory store: idempotent by a reservation map, and safe under a single coarse lock.
+ * In-memory store: idempotent by a reservation map, concurrency-safe by per-account locks.
  *
- * One lock serializes the whole read-check-write, so the lost update is closed. The cost is
- * that transfers over disjoint account pairs queue behind each other; per-account locks
- * replace this coarse lock next.
+ * Each transfer takes the two account locks lower-id-first, so disjoint transfers run in
+ * parallel and a deadlock cycle cannot form. The pure Ledger does the arithmetic under those
+ * locks. A Postgres store reimplements the same contract with SELECT ... FOR UPDATE.
  */
 public final class InMemoryStore implements Store {
     private final Map<AccountId, Account> accounts = new ConcurrentHashMap<>();
-    private final ReentrantLock applyLock = new ReentrantLock();
+    private final AccountLocks locks = new AccountLocks();
 
     private record Reservation(TransferRequest request, CompletableFuture<TransferOutcome> slot) {}
     private final ConcurrentHashMap<String, Reservation> reservations = new ConcurrentHashMap<>();
@@ -54,16 +53,20 @@ public final class InMemoryStore implements Store {
             accounts.put(fresh.id(), fresh);
             return fresh;
         }
-        Account world = accounts.get(WorldAccount.ID);
-        Map<AccountId, Account> snapshot = Map.of(world.id(), world, fresh.id(), fresh);
-        Transfer funding = Transfer.between(WorldAccount.ID, fresh.id(), openingBalanceMinor);
-        if (!(Ledger.post(funding, snapshot) instanceof Ledger.Result.Posted(var updated))) {
-            throw new IllegalStateException("world funding should always post");
-        }
-        for (Account a : updated) {
-            accounts.put(a.id(), a);
-        }
-        return accounts.get(fresh.id());
+        // Fund under the world and new-account locks together, in the same id order transfers use,
+        // so concurrent creations cannot lose each other's debit to world and cannot deadlock.
+        return locks.withBothLocked(WorldAccount.ID, fresh.id(), () -> {
+            Account world = accounts.get(WorldAccount.ID);
+            Map<AccountId, Account> snapshot = Map.of(world.id(), world, fresh.id(), fresh);
+            Transfer funding = Transfer.between(WorldAccount.ID, fresh.id(), openingBalanceMinor);
+            if (!(Ledger.post(funding, snapshot) instanceof Ledger.Result.Posted(var updated))) {
+                throw new IllegalStateException("world funding should always post");
+            }
+            for (Account a : updated) {
+                accounts.put(a.id(), a);
+            }
+            return accounts.get(fresh.id());
+        });
     }
 
     @Override
@@ -142,14 +145,9 @@ public final class InMemoryStore implements Store {
         if (WorldAccount.isWorld(request.to())) {
             return new TransferOutcome.ReservedAccount(request.to());
         }
-        // One coarse lock around the read-check-write closes the lost update. Correct but it
-        // serializes disjoint transfers; per-account locks replace it next.
-        applyLock.lock();
-        try {
-            return applyBalances(request);
-        } finally {
-            applyLock.unlock();
-        }
+        // Both account locks, lower-id-first, around the read-check-write. Disjoint transfers run
+        // in parallel; the fixed order rules out a deadlock cycle.
+        return locks.withBothLocked(request.from(), request.to(), () -> applyBalances(request));
     }
 
     private TransferOutcome applyBalances(TransferRequest request) {

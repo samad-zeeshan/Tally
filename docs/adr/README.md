@@ -12,3 +12,4 @@ commit that changed the code.
 | 0004 | A world account funds openings and may go negative | core |
 | 0005 | UUID ids for accounts and transfers, bigserial for postings | core |
 | 0006 | An idempotent key replays the first outcome | store |
+| 0007 | Per-account locks in id order | store |
