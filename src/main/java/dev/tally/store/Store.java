@@ -2,6 +2,7 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
+import dev.tally.core.StatementPage;
 import dev.tally.core.TransferOutcome;
 import dev.tally.core.TransferRequest;
 
@@ -20,4 +21,7 @@ public interface Store {
     Optional<Account> findAccount(AccountId id);
 
     TransferOutcome apply(TransferRequest request);
+
+    // Postings for the account with postingId < beforePostingId, newest first, at most limit.
+    StatementPage statement(AccountId id, long beforePostingId, int limit);
 }

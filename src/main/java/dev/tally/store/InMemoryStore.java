@@ -3,6 +3,8 @@ package dev.tally.store;
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
 import dev.tally.core.Ledger;
+import dev.tally.core.StatementLine;
+import dev.tally.core.StatementPage;
 import dev.tally.core.Transfer;
 import dev.tally.core.TransferId;
 import dev.tally.core.TransferOutcome;
@@ -10,11 +12,14 @@ import dev.tally.core.TransferRequest;
 import dev.tally.core.WorldAccount;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * In-memory store: idempotent by a reservation map, concurrency-safe by per-account locks.
@@ -26,6 +31,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class InMemoryStore implements Store {
     private final Map<AccountId, Account> accounts = new ConcurrentHashMap<>();
     private final AccountLocks locks = new AccountLocks();
+
+    // The posting journal that backs statements. Per-account, append-ordered (ascending postingId
+    // because appends happen under the account lock), read as a snapshot without a lock.
+    private final Map<AccountId, List<StatementLine>> journal = new ConcurrentHashMap<>();
+    private final AtomicLong postingSeq = new AtomicLong(1);
 
     private record Reservation(TransferRequest request, CompletableFuture<TransferOutcome> slot) {}
     private final ConcurrentHashMap<String, Reservation> reservations = new ConcurrentHashMap<>();
@@ -41,8 +51,9 @@ public final class InMemoryStore implements Store {
         accounts.put(WorldAccount.ID, WorldAccount.initial());
     }
 
-    // The opening funds from world through the same Ledger.post ordinary transfers use. Its id is
-    // fresh, so its system key open:<id> could never replay; persisting that key is a Stage 4 concern.
+    // The opening funds from world, not minted, through the same Ledger.post ordinary transfers use.
+    // The account insert and the world debit are one unit under the world and new-account locks, so a
+    // half-funded account is never observable and concurrent creations cannot lose world's debit.
     @Override
     public Account createAccount(String name, long openingBalanceMinor) {
         if (openingBalanceMinor < 0) {
@@ -53,8 +64,6 @@ public final class InMemoryStore implements Store {
             accounts.put(fresh.id(), fresh);
             return fresh;
         }
-        // Fund under the world and new-account locks together, in the same id order transfers use,
-        // so concurrent creations cannot lose each other's debit to world and cannot deadlock.
         return locks.withBothLocked(WorldAccount.ID, fresh.id(), () -> {
             Account world = accounts.get(WorldAccount.ID);
             Map<AccountId, Account> snapshot = Map.of(world.id(), world, fresh.id(), fresh);
@@ -65,6 +74,9 @@ public final class InMemoryStore implements Store {
             for (Account a : updated) {
                 accounts.put(a.id(), a);
             }
+            long newWorld = balanceOf(updated, WorldAccount.ID);
+            long newAccount = balanceOf(updated, fresh.id());
+            recordPostings(funding.id(), WorldAccount.ID, fresh.id(), openingBalanceMinor, newWorld, newAccount, Instant.now());
             return accounts.get(fresh.id());
         });
     }
@@ -72,6 +84,20 @@ public final class InMemoryStore implements Store {
     @Override
     public Optional<Account> findAccount(AccountId id) {
         return Optional.ofNullable(accounts.get(id));
+    }
+
+    @Override
+    public StatementPage statement(AccountId id, long beforePostingId, int limit) {
+        List<StatementLine> lines = journal.getOrDefault(id, List.of());
+        List<StatementLine> page = new ArrayList<>();
+        // The list ascends by postingId, so walk it backwards for newest-first.
+        for (int i = lines.size() - 1; i >= 0 && page.size() < limit; i--) {
+            StatementLine line = lines.get(i);
+            if (line.postingId() < beforePostingId) {
+                page.add(line);
+            }
+        }
+        return new StatementPage(id, page);
     }
 
     @Override
@@ -130,7 +156,7 @@ public final class InMemoryStore implements Store {
                 || outcome instanceof TransferOutcome.InsufficientFunds;
     }
 
-    // Existence and identity are decided before any balance work: they touch no account state.
+    // Existence and identity are decided before any lock: they touch no account state.
     private TransferOutcome evaluate(TransferRequest request) {
         if (accounts.get(request.from()) == null) {
             return new TransferOutcome.UnknownAccount(request.from());
@@ -160,8 +186,11 @@ public final class InMemoryStore implements Store {
                 for (Account a : updated) {
                     accounts.put(a.id(), a);
                 }
-                yield new TransferOutcome.Applied(transfer.id(),
-                        balanceOf(updated, request.from()), balanceOf(updated, request.to()), Instant.now());
+                long newFrom = balanceOf(updated, request.from());
+                long newTo = balanceOf(updated, request.to());
+                Instant at = Instant.now();
+                recordPostings(transfer.id(), request.from(), request.to(), request.amountMinor(), newFrom, newTo, at);
+                yield new TransferOutcome.Applied(transfer.id(), newFrom, newTo, at);
             }
             case Ledger.Result.InsufficientFunds(var account, var balance, var requested) ->
                     new TransferOutcome.InsufficientFunds(account, balance, requested);
@@ -169,6 +198,19 @@ public final class InMemoryStore implements Store {
             case Ledger.Result.Invalid(var reason) ->
                     throw new IllegalStateException("mirrored transfer did not balance: " + reason);
         };
+    }
+
+    // Two postings per transfer, appended under the account locks so per-account postingIds ascend.
+    private void recordPostings(TransferId transferId, AccountId from, AccountId to, long amount,
+                                long newFrom, long newTo, Instant at) {
+        long fromPostingId = postingSeq.getAndIncrement();
+        long toPostingId = postingSeq.getAndIncrement();
+        journalFor(from).add(new StatementLine(fromPostingId, transferId, to, -amount, newFrom, at));
+        journalFor(to).add(new StatementLine(toPostingId, transferId, from, amount, newTo, at));
+    }
+
+    private List<StatementLine> journalFor(AccountId id) {
+        return journal.computeIfAbsent(id, k -> new CopyOnWriteArrayList<>());
     }
 
     private static long balanceOf(List<Account> updated, AccountId id) {

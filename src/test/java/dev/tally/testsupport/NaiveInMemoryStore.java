@@ -3,6 +3,7 @@ package dev.tally.testsupport;
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
 import dev.tally.core.Ledger;
+import dev.tally.core.StatementPage;
 import dev.tally.core.Transfer;
 import dev.tally.core.TransferId;
 import dev.tally.core.TransferOutcome;
@@ -11,6 +12,7 @@ import dev.tally.core.WorldAccount;
 import dev.tally.store.Store;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,6 +57,12 @@ public final class NaiveInMemoryStore implements Store {
     @Override
     public Optional<Account> findAccount(AccountId id) {
         return Optional.ofNullable(accounts.get(id));
+    }
+
+    // The race demo drives transfers and reads balances, never statements.
+    @Override
+    public StatementPage statement(AccountId id, long beforePostingId, int limit) {
+        return new StatementPage(id, List.of());
     }
 
     @Override
