@@ -1,0 +1,47 @@
+package dev.tally.http;
+
+import dev.tally.json.JsonValue;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * A response to write back: a status, a JSON body, and any extra headers.
+ */
+public record Response(int status, JsonValue body, Map<String, String> extraHeaders) {
+    public Response {
+        extraHeaders = Map.copyOf(extraHeaders);
+    }
+
+    public static Response json(int status, JsonValue body) {
+        return new Response(status, body, Map.of());
+    }
+
+    public static Response error(ErrorCode code, String message) {
+        return new Response(code.status, errorBody(code, null, message), Map.of());
+    }
+
+    public static Response error(ErrorCode code, String field, String message) {
+        return new Response(code.status, errorBody(code, field, message), Map.of());
+    }
+
+    public Response withHeader(String name, String value) {
+        Map<String, String> headers = new LinkedHashMap<>(extraHeaders);
+        headers.put(name, value);
+        return new Response(status, body, headers);
+    }
+
+    // The one place the error envelope shape lives, so the kernel's exception path and the
+    // handlers' outcome path render identical bodies.
+    private static JsonValue errorBody(ErrorCode code, String field, String message) {
+        Map<String, JsonValue> error = new LinkedHashMap<>();
+        error.put("code", new JsonValue.JsonString(code.name()));
+        error.put("message", new JsonValue.JsonString(message));
+        if (field != null) {
+            error.put("field", new JsonValue.JsonString(field));
+        }
+        Map<String, JsonValue> envelope = new LinkedHashMap<>();
+        envelope.put("error", new JsonValue.JsonObject(error));
+        return new JsonValue.JsonObject(envelope);
+    }
+}

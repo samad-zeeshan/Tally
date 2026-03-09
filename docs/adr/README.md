@@ -13,3 +13,5 @@ commit that changed the code.
 | 0005 | UUID ids for accounts and transfers, bigserial for postings | core |
 | 0006 | An idempotent key replays the first outcome | store |
 | 0007 | Per-account locks in id order | store |
+| 0008 | Hand-written JSON, integers only, for a small fixed surface | json |
+| 0009 | HTTP on the JDK built-in server with a virtual-thread executor | http |
