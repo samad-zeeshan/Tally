@@ -36,12 +36,18 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- The only third-party code in the build for now is JUnit, for the tests.
-         A JDBC driver joins it once the store talks to Postgres. -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
+    </dependency>
+    <!-- The JDBC driver, the second and last third-party dependency before hardening. There is no
+         database client in the JDK, and the store talks to Postgres over plain JDBC. -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.7.12</version>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 
