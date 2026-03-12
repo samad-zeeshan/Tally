@@ -1,0 +1,110 @@
+package dev.tally.db;
+
+import dev.tally.store.StoreException;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * A fixed-size JDBC connection pool that validates on borrow and heals on give-back.
+ *
+ * Fixed size bounds the load on Postgres no matter how many virtual threads exist. Because JEP 491
+ * (JDK 24, present in Java 25) removed synchronized pinning, a virtual thread that blocks here does
+ * not pin its carrier. See ADR-0013.
+ */
+public final class Pool implements AutoCloseable {
+    private final DbConfig config;
+    private final BlockingQueue<Connection> idle;
+
+    private Pool(DbConfig config, BlockingQueue<Connection> idle) {
+        this.config = config;
+        this.idle = idle;
+    }
+
+    public static Pool open(DbConfig config) throws SQLException {
+        BlockingQueue<Connection> idle = new ArrayBlockingQueue<>(config.poolSize());
+        for (int i = 0; i < config.poolSize(); i++) {
+            idle.add(fresh(config));   // eager fill
+        }
+        return new Pool(config, idle);
+    }
+
+    // No Class.forName: the driver self-registers through ServiceLoader.
+    private static Connection fresh(DbConfig config) throws SQLException {
+        return DriverManager.getConnection(config.url(), config.user(), config.password());
+    }
+
+    // Validate before handing out: a database bounce drops every socket, so a dead connection is
+    // discarded and replaced with a fresh one rather than served to a borrower.
+    public Connection borrow() {
+        try {
+            Connection conn = idle.poll(5, TimeUnit.SECONDS);
+            if (conn == null) {
+                throw new StoreException("timed out waiting for a database connection");
+            }
+            if (isDead(conn)) {
+                closeQuietly(conn);
+                return fresh(config);
+            }
+            return conn;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new StoreException("interrupted while borrowing a connection", e);
+        } catch (SQLException e) {
+            throw new StoreException("could not open a replacement connection", e);
+        }
+    }
+
+    // Heal and reset: replace a broken connection so the pool never shrinks, and roll back a leaked
+    // open transaction, the safety net that makes a leaked transaction impossible even if a store
+    // bug skips its own finally.
+    public void giveBack(Connection conn) {
+        try {
+            if (isDead(conn)) {
+                closeQuietly(conn);
+                idle.offer(fresh(config));
+                return;
+            }
+            if (!conn.getAutoCommit()) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+            }
+            idle.offer(conn);
+        } catch (SQLException broken) {
+            closeQuietly(conn);
+            try {
+                idle.offer(fresh(config));
+            } catch (SQLException databaseDown) {
+                // The database is down; the pool shrinks by one and borrow will replace it when it returns.
+            }
+        }
+    }
+
+    private static boolean isDead(Connection conn) {
+        try {
+            return conn.isClosed() || !conn.isValid(1);
+        } catch (SQLException e) {
+            return true;
+        }
+    }
+
+    private static void closeQuietly(Connection conn) {
+        try {
+            conn.close();
+        } catch (SQLException ignored) {
+            // nothing to do while closing
+        }
+    }
+
+    @Override
+    public void close() {
+        Connection conn;
+        while ((conn = idle.poll()) != null) {
+            closeQuietly(conn);
+        }
+    }
+}

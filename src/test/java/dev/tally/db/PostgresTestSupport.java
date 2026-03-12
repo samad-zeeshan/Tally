@@ -11,15 +11,15 @@ import java.sql.Statement;
 /**
  * Shared bootstrap for the Postgres integration tests: read the env, connect, migrate, reset.
  */
-final class PostgresTestSupport {
+public final class PostgresTestSupport {
     private PostgresTestSupport() {}
 
-    static final Path MIGRATIONS = Path.of("db", "migrations");
-    static final String WORLD_ID = "00000000-0000-0000-0000-000000000000";
+    public static final Path MIGRATIONS = Path.of("db", "migrations");
+    public static final String WORLD_ID = "00000000-0000-0000-0000-000000000000";
 
     // The @Tag and this check are two layers: with the profile on but no database, skip with
     // instructions rather than crash on a connection error.
-    static String url() {
+    public static String url() {
         String url = System.getenv("TALLY_TEST_DB_URL");
         Assumptions.assumeTrue(url != null,
                 "TALLY_TEST_DB_URL is not set. Start Postgres with `docker compose up -d db` and set "
@@ -27,15 +27,15 @@ final class PostgresTestSupport {
         return url;
     }
 
-    static String user() {
+    public static String user() {
         return System.getenv().getOrDefault("TALLY_TEST_DB_USER", "tally");
     }
 
-    static String password() {
+    public static String password() {
         return System.getenv().getOrDefault("TALLY_TEST_DB_PASSWORD", "tally");
     }
 
-    static Connection connect() {
+    public static Connection connect() {
         try {
             return DriverManager.getConnection(url(), user(), password());
         } catch (SQLException e) {
@@ -43,7 +43,7 @@ final class PostgresTestSupport {
         }
     }
 
-    static void migrate() {
+    public static void migrate() {
         try (Connection c = connect()) {
             new MigrationRunner(c, MIGRATIONS).run();
         } catch (Exception e) {
@@ -53,7 +53,7 @@ final class PostgresTestSupport {
 
     // TRUNCATE CASCADE removes the world row too, so re-insert it, keeping every test's book at a
     // zero sum with world present. schema_version is never truncated, so migrations stay applied.
-    static void resetSchema() {
+    public static void resetSchema() {
         try (Connection c = connect(); Statement s = c.createStatement()) {
             s.execute("TRUNCATE TABLE postings, transfers, accounts RESTART IDENTITY CASCADE");
             s.execute("INSERT INTO accounts (id, name, allow_negative, balance_minor) "
