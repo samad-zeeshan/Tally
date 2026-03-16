@@ -2,6 +2,7 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
+import dev.tally.core.ReconciliationReport;
 import dev.tally.core.StatementPage;
 import dev.tally.core.TransferOutcome;
 import dev.tally.core.TransferRequest;
@@ -24,4 +25,7 @@ public interface Store {
 
     // Postings for the account with postingId < beforePostingId, newest first, at most limit.
     StatementPage statement(AccountId id, long beforePostingId, int limit);
+
+    // Recompute each balance from its postings, compare to the stored balance, and check the book sums to zero.
+    ReconciliationReport reconcile();
 }

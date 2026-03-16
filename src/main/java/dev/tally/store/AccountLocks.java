@@ -2,6 +2,8 @@ package dev.tally.store;
 
 import dev.tally.core.AccountId;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -32,6 +34,24 @@ final class AccountLocks {
             }
         } finally {
             first.unlock();
+        }
+    }
+
+    // Lock every account, ids given already in UUID order, so the audit takes its locks in the same
+    // global order transfers use and cannot deadlock one. Release in reverse.
+    <T> T withAllLocked(List<AccountId> idsInOrder, Supplier<T> action) {
+        List<ReentrantLock> acquired = new ArrayList<>(idsInOrder.size());
+        try {
+            for (AccountId id : idsInOrder) {
+                ReentrantLock lock = lockFor(id);
+                lock.lock();
+                acquired.add(lock);
+            }
+            return action.get();
+        } finally {
+            for (int i = acquired.size() - 1; i >= 0; i--) {
+                acquired.get(i).unlock();
+            }
         }
     }
 

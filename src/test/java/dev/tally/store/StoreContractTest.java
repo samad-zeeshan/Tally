@@ -2,6 +2,7 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
+import dev.tally.core.ReconciliationReport;
 import dev.tally.core.StatementLine;
 import dev.tally.core.StatementPage;
 import dev.tally.core.TransferOutcome;
@@ -256,6 +257,34 @@ abstract class StoreContractTest {
         StatementPage page = store.statement(a.id(), Long.MAX_VALUE, 2);
         assertEquals(2, page.entries().size());
         assertFalse(page.hasMore());   // the limit+1 probe found no extra row
+    }
+
+    @Test
+    void cleanLedgerReportsConsistent() {
+        Store store = newStore();
+        Account a = store.createAccount("a", 1000);
+        Account b = store.createAccount("b", 500);
+        store.apply(new TransferRequest(key(), a.id(), b.id(), 300));
+
+        ReconciliationReport report = store.reconcile();
+        assertTrue(report.consistent());
+        assertEquals(0, report.globalSumMinor());
+        assertTrue(report.drifts().isEmpty());
+        assertEquals(3, report.accountsChecked());   // world, a, b
+    }
+
+    @Test
+    void worldBalanceOffsetsAllOpenings() {
+        Store store = newStore();
+        store.createAccount("a", 1000);
+        store.createAccount("b", 2500);
+        store.createAccount("c", 0);
+
+        ReconciliationReport report = store.reconcile();
+        // World is deeply negative, every account matches its postings, and the whole book still nets zero.
+        assertEquals(-3500, balance(store, WorldAccount.ID));
+        assertTrue(report.consistent());
+        assertEquals(0, report.globalSumMinor());
     }
 
     @Test

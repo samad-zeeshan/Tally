@@ -2,6 +2,8 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
+import dev.tally.core.Drift;
+import dev.tally.core.ReconciliationReport;
 import dev.tally.core.StatementLine;
 import dev.tally.core.StatementPage;
 import dev.tally.core.TransferId;
@@ -160,6 +162,44 @@ public final class JdbcStore implements Store {
             lines = new ArrayList<>(lines.subList(0, limit));
         }
         return new StatementPage(id, lines, hasMore);
+    }
+
+    // One read-only REPEATABLE READ transaction, so every row is read at the same snapshot and a transfer
+    // committing mid-scan cannot make a balanced book look torn. The LEFT JOIN keeps accounts with no
+    // postings, whose derived balance is then zero. Give-back resets the isolation and read-only flags.
+    @Override
+    public ReconciliationReport reconcile() {
+        Connection conn = pool.borrow();
+        try {
+            conn.setAutoCommit(false);
+            conn.setReadOnly(true);
+            conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+            List<Drift> drifts = new ArrayList<>();
+            long globalSum = 0;
+            int accountsChecked = 0;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT a.id, a.balance_minor, COALESCE(SUM(p.amount_minor), 0) AS derived_minor "
+                            + "FROM accounts a LEFT JOIN postings p ON p.account_id = a.id "
+                            + "GROUP BY a.id, a.balance_minor ORDER BY a.id");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AccountId id = new AccountId(rs.getObject("id", UUID.class));
+                    long stored = rs.getLong("balance_minor");
+                    long derived = rs.getLong("derived_minor");
+                    if (stored != derived) {
+                        drifts.add(new Drift(id, stored, derived));
+                    }
+                    globalSum += stored;
+                    accountsChecked++;
+                }
+            }
+            conn.commit();
+            return new ReconciliationReport(globalSum, accountsChecked, drifts);
+        } catch (SQLException e) {
+            throw new StoreException("reconcile failed", e);
+        } finally {
+            pool.giveBack(conn);
+        }
     }
 
     @Override

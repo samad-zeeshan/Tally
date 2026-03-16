@@ -2,6 +2,7 @@ package dev.tally;
 
 import com.sun.net.httpserver.HttpServer;
 import dev.tally.api.AccountsHandler;
+import dev.tally.api.ReconciliationHandler;
 import dev.tally.api.TransfersHandler;
 import dev.tally.http.HttpKernel;
 import dev.tally.http.Router;
@@ -23,11 +24,13 @@ public final class ApiServer {
     public ApiServer(int port, Store store) {
         AccountsHandler accounts = new AccountsHandler(store);
         TransfersHandler transfers = new TransfersHandler(store);
+        ReconciliationHandler reconciliation = new ReconciliationHandler(store);
         Router router = new Router();
         router.add("POST", "/accounts", accounts::create);
         router.add("GET", "/accounts/{id}", accounts::get);
         router.add("GET", "/accounts/{id}/statement", accounts::statement);
         router.add("POST", "/transfers", transfers::create);
+        router.add("GET", "/reconciliation", reconciliation::report);
         try {
             // Wildcard bind: the container needs to reach it from another host in Stage 8.
             server = HttpServer.create(new InetSocketAddress(port), 0);

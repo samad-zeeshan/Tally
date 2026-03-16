@@ -3,6 +3,7 @@ package dev.tally.testsupport;
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
 import dev.tally.core.Ledger;
+import dev.tally.core.ReconciliationReport;
 import dev.tally.core.StatementPage;
 import dev.tally.core.Transfer;
 import dev.tally.core.TransferId;
@@ -63,6 +64,12 @@ public final class NaiveInMemoryStore implements Store {
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
         return new StatementPage(id, List.of(), false);
+    }
+
+    // A store built to lose updates cannot be audited; the demo never asks it to.
+    @Override
+    public ReconciliationReport reconcile() {
+        throw new UnsupportedOperationException("the race demo store does not reconcile");
     }
 
     @Override

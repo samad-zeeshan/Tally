@@ -63,4 +63,8 @@ final class Fields {
     static JsonValue num(long value) {
         return new JsonValue.JsonNumber(value);
     }
+
+    static JsonValue bool(boolean value) {
+        return new JsonValue.JsonBool(value);
+    }
 }

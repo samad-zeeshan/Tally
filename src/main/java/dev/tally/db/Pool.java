@@ -73,6 +73,14 @@ public final class Pool implements AutoCloseable {
                 conn.rollback();
                 conn.setAutoCommit(true);
             }
+            // Reset what reconcile changes, so a read-only REPEATABLE READ connection never leaks to a
+            // transfer that must run read-committed and writable.
+            if (conn.isReadOnly()) {
+                conn.setReadOnly(false);
+            }
+            if (conn.getTransactionIsolation() != Connection.TRANSACTION_READ_COMMITTED) {
+                conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            }
             idle.offer(conn);
         } catch (SQLException broken) {
             closeQuietly(conn);

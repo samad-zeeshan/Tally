@@ -3,6 +3,7 @@ package dev.tally.testsupport;
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
 import dev.tally.core.Ledger;
+import dev.tally.core.ReconciliationReport;
 import dev.tally.core.StatementPage;
 import dev.tally.core.Transfer;
 import dev.tally.core.TransferId;
@@ -64,6 +65,12 @@ public final class UnorderedLockStore implements Store {
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
         return new StatementPage(id, List.of(), false);
+    }
+
+    // The deadlock demo never reconciles; only the production stores answer this.
+    @Override
+    public ReconciliationReport reconcile() {
+        throw new UnsupportedOperationException("the deadlock demo store does not reconcile");
     }
 
     @Override

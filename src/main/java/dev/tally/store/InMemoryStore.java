@@ -2,7 +2,9 @@ package dev.tally.store;
 
 import dev.tally.core.Account;
 import dev.tally.core.AccountId;
+import dev.tally.core.Drift;
 import dev.tally.core.Ledger;
+import dev.tally.core.ReconciliationReport;
 import dev.tally.core.StatementLine;
 import dev.tally.core.StatementPage;
 import dev.tally.core.Transfer;
@@ -13,6 +15,7 @@ import dev.tally.core.WorldAccount;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -104,6 +107,32 @@ public final class InMemoryStore implements Store {
             }
         }
         return new StatementPage(id, page, hasMore);
+    }
+
+    // Lock every account in UUID order so the audit sees a snapshot no transfer is mid-write on, and so
+    // it takes its locks in the same global order transfers do and cannot deadlock one. Stored and derived
+    // are written together under the account lock, so this store never drifts; the check still runs, both
+    // to prove that and to sum the whole book, which must be zero.
+    @Override
+    public ReconciliationReport reconcile() {
+        List<AccountId> ids = accounts.keySet().stream()
+                .sorted(Comparator.comparing(AccountId::value))
+                .toList();
+        return locks.withAllLocked(ids, () -> {
+            List<Drift> drifts = new ArrayList<>();
+            long globalSum = 0;
+            for (AccountId id : ids) {
+                long stored = accounts.get(id).balanceMinor();
+                long derived = journal.getOrDefault(id, List.of()).stream()
+                        .mapToLong(StatementLine::amountMinor)
+                        .sum();
+                if (stored != derived) {
+                    drifts.add(new Drift(id, stored, derived));
+                }
+                globalSum += stored;
+            }
+            return new ReconciliationReport(globalSum, ids.size(), drifts);
+        });
     }
 
     @Override
