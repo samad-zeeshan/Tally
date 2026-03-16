@@ -48,15 +48,34 @@ public final class HttpKernel implements HttpHandler {
         String body = readBody(exchange);
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
+        Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
         return switch (router.match(method, path)) {
             case Router.RouteResult.Matched(var handler, var params) ->
-                    handler.handle(new Request(method, path, params, exchange.getRequestHeaders(), body));
+                    handler.handle(new Request(method, path, params, query, exchange.getRequestHeaders(), body));
             case Router.RouteResult.MethodMismatch(var allowed) ->
                     Response.error(ErrorCode.METHOD_NOT_ALLOWED, method + " is not allowed on " + path)
                             .withHeader("Allow", String.join(", ", allowed));
             case Router.RouteResult.NoRoute() ->
                     Response.error(ErrorCode.NOT_FOUND, "no route for " + method + " " + path);
         };
+    }
+
+    private static Map<String, String> parseQuery(String rawQuery) {
+        if (rawQuery == null || rawQuery.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, String> params = new java.util.LinkedHashMap<>();
+        for (String pair : rawQuery.split("&")) {
+            int eq = pair.indexOf('=');
+            String key = eq < 0 ? pair : pair.substring(0, eq);
+            String value = eq < 0 ? "" : pair.substring(eq + 1);
+            params.put(decode(key), decode(value));
+        }
+        return params;
+    }
+
+    private static String decode(String s) {
+        return java.net.URLDecoder.decode(s, StandardCharsets.UTF_8);
     }
 
     // Cap before trusting the body: read at most MAX+1 bytes, and if that many arrive it is too big.

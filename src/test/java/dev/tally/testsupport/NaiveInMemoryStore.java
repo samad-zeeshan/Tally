@@ -62,7 +62,7 @@ public final class NaiveInMemoryStore implements Store {
     // The race demo drives transfers and reads balances, never statements.
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
-        return new StatementPage(id, List.of());
+        return new StatementPage(id, List.of(), false);
     }
 
     @Override

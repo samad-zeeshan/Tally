@@ -9,10 +9,14 @@ import dev.tally.core.TransferRequest;
 import dev.tally.core.WorldAccount;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -198,5 +202,82 @@ abstract class StoreContractTest {
         Account a = store.createAccount("a", 5000);
         StatementPage page = store.statement(a.id(), Long.MAX_VALUE, 10);
         assertEquals(WorldAccount.ID, page.entries().getFirst().counterpartyAccountId());
+    }
+
+    @Test
+    void emptyAccountStatementIsAnEmptyPage() {
+        Store store = newStore();
+        Account bob = store.createAccount("bob", 0);
+        StatementPage page = store.statement(bob.id(), Long.MAX_VALUE, 50);
+        assertTrue(page.entries().isEmpty());
+        assertFalse(page.hasMore());
+    }
+
+    @Test
+    void runningBalanceMatchesReplay() {
+        Store store = newStore();
+        Account a = store.createAccount("a", 10_000);
+        Account b = store.createAccount("b", 10_000);
+        Random random = new Random(7);
+        for (int i = 0; i < 10; i++) {
+            boolean aToB = random.nextBoolean();
+            long amount = random.nextLong(1, 500);
+            store.apply(new TransferRequest(key(), aToB ? a.id() : b.id(), aToB ? b.id() : a.id(), amount));
+        }
+        List<StatementLine> entries = store.statement(a.id(), Long.MAX_VALUE, 100).entries();
+        // Walk oldest to newest, recomputing the balance; every balanceAfterMinor must match.
+        long running = 0;
+        for (int i = entries.size() - 1; i >= 0; i--) {
+            running += entries.get(i).amountMinor();
+            assertEquals(running, entries.get(i).balanceAfterMinor());
+        }
+        assertEquals(balance(store, a.id()), entries.getFirst().balanceAfterMinor());   // newest equals stored
+    }
+
+    @Test
+    void limitTruncatesAndSetsHasMore() {
+        Store store = newStore();
+        Account a = store.createAccount("a", 1000);
+        Account b = store.createAccount("b", 0);
+        for (int i = 0; i < 4; i++) {
+            store.apply(new TransferRequest(key(), a.id(), b.id(), 10));
+        }
+        StatementPage page = store.statement(a.id(), Long.MAX_VALUE, 2);   // a has 5 postings, page 2
+        assertEquals(2, page.entries().size());
+        assertTrue(page.hasMore());
+    }
+
+    @Test
+    void exactlyLimitPostingsHasNoMore() {
+        Store store = newStore();
+        Account a = store.createAccount("a", 1000);
+        Account b = store.createAccount("b", 0);
+        store.apply(new TransferRequest(key(), a.id(), b.id(), 10));   // a has exactly 2 postings
+        StatementPage page = store.statement(a.id(), Long.MAX_VALUE, 2);
+        assertEquals(2, page.entries().size());
+        assertFalse(page.hasMore());   // the limit+1 probe found no extra row
+    }
+
+    @Test
+    void pagesChainWithoutOverlapOrGap() {
+        Store store = newStore();
+        Account a = store.createAccount("a", 1000);
+        Account b = store.createAccount("b", 0);
+        for (int i = 0; i < 6; i++) {
+            store.apply(new TransferRequest(key(), a.id(), b.id(), 10));   // a has 7 postings
+        }
+        Set<Long> seen = new HashSet<>();
+        long before = Long.MAX_VALUE;
+        while (true) {
+            StatementPage page = store.statement(a.id(), before, 3);
+            for (StatementLine line : page.entries()) {
+                assertTrue(seen.add(line.postingId()), "no page overlap");
+            }
+            if (!page.hasMore()) {
+                break;
+            }
+            before = page.entries().getLast().postingId();
+        }
+        assertEquals(7, seen.size());   // every posting seen exactly once, no gap
     }
 }

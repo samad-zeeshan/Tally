@@ -128,13 +128,17 @@ public final class JdbcStore implements Store {
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
         Connection conn = pool.borrow();
         List<StatementLine> lines = new ArrayList<>();
+        // Keyset by posting id beats offset here: pages are anchored to a value, not a position, so a
+        // concurrent insert cannot shift them. The id is a safe key because the account row lock is held
+        // to commit, so per-account posting ids strictly increase in commit order. Fetch limit+1 to know
+        // whether another page exists.
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT p.id, p.transfer_id, cp.account_id AS counterparty, p.amount_minor, p.balance_after_minor, p.created_at "
                         + "FROM postings p JOIN postings cp ON cp.transfer_id = p.transfer_id AND cp.account_id <> p.account_id "
                         + "WHERE p.account_id = ? AND p.id < ? ORDER BY p.id DESC LIMIT ?")) {
             ps.setObject(1, id.value());
             ps.setLong(2, beforePostingId);
-            ps.setInt(3, limit);
+            ps.setInt(3, limit + 1);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     lines.add(new StatementLine(
@@ -151,7 +155,11 @@ public final class JdbcStore implements Store {
         } finally {
             pool.giveBack(conn);
         }
-        return new StatementPage(id, lines);
+        boolean hasMore = lines.size() > limit;
+        if (hasMore) {
+            lines = new ArrayList<>(lines.subList(0, limit));
+        }
+        return new StatementPage(id, lines, hasMore);
     }
 
     @Override

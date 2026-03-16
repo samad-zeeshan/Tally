@@ -5,6 +5,7 @@ import dev.tally.core.AccountId;
 import dev.tally.core.StatementLine;
 import dev.tally.core.StatementPage;
 import dev.tally.http.ApiException;
+import dev.tally.http.Cursor;
 import dev.tally.http.ErrorCode;
 import dev.tally.http.Request;
 import dev.tally.http.Response;
@@ -26,7 +27,8 @@ import static dev.tally.api.Fields.str;
  * The account endpoints: create, read, and read a statement.
  */
 public final class AccountsHandler {
-    static final int STATEMENT_LIMIT = 100;
+    static final int DEFAULT_LIMIT = 50;
+    static final int MAX_LIMIT = 200;
 
     private final Store store;
 
@@ -53,11 +55,34 @@ public final class AccountsHandler {
     }
 
     // An opening shows up here as an ordinary transfer whose counterparty is world, not a special
-    // entry type. The 100 cap is pending pagination.
+    // entry type. The cursor is decoded to a keyset bound here; the store never sees the cursor string.
     public Response statement(Request request) {
         Account account = resolve(request.pathParams().get("id"));
-        StatementPage page = store.statement(account.id(), Long.MAX_VALUE, STATEMENT_LIMIT);
+        int limit = parseLimit(request.queryParams().get("limit"));
+        long before = parseCursor(request.queryParams().get("cursor"));
+        StatementPage page = store.statement(account.id(), before, limit);
         return Response.json(200, renderStatement(page));
+    }
+
+    private static int parseLimit(String raw) {
+        if (raw == null) {
+            return DEFAULT_LIMIT;
+        }
+        int limit;
+        try {
+            limit = Integer.parseInt(raw);
+        } catch (NumberFormatException notAnInteger) {
+            throw new ApiException(ErrorCode.INVALID_LIMIT, "limit", "limit must be an integer between 1 and " + MAX_LIMIT);
+        }
+        // Out of range is a 400, not a silent clamp: a clamp would hide a client bug.
+        if (limit < 1 || limit > MAX_LIMIT) {
+            throw new ApiException(ErrorCode.INVALID_LIMIT, "limit", "limit must be between 1 and " + MAX_LIMIT);
+        }
+        return limit;
+    }
+
+    private static long parseCursor(String cursor) {
+        return cursor == null ? Long.MAX_VALUE : Cursor.decode(cursor);
     }
 
     // A path id is opaque: a string that is not a UUID, or a UUID with no account, is simply not found.
@@ -95,6 +120,13 @@ public final class AccountsHandler {
         Map<String, JsonValue> m = new LinkedHashMap<>();
         m.put("accountId", str(page.accountId().value().toString()));
         m.put("entries", new JsonValue.JsonArray(entries));
+        // The last returned entry is the oldest on this page; the next page fetches ids below it. null
+        // exactly when there are no further entries, from the store's limit+1 probe.
+        if (page.hasMore() && !page.entries().isEmpty()) {
+            m.put("nextCursor", str(Cursor.encode(page.entries().getLast().postingId())));
+        } else {
+            m.put("nextCursor", new JsonValue.JsonNull());
+        }
         return new JsonValue.JsonObject(m);
     }
 }

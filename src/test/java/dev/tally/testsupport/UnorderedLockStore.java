@@ -63,7 +63,7 @@ public final class UnorderedLockStore implements Store {
     // The deadlock demo drives transfers only, never statements.
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
-        return new StatementPage(id, List.of());
+        return new StatementPage(id, List.of(), false);
     }
 
     @Override

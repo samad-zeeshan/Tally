@@ -90,14 +90,20 @@ public final class InMemoryStore implements Store {
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
         List<StatementLine> lines = journal.getOrDefault(id, List.of());
         List<StatementLine> page = new ArrayList<>();
-        // The list ascends by postingId, so walk it backwards for newest-first.
-        for (int i = lines.size() - 1; i >= 0 && page.size() < limit; i--) {
+        boolean hasMore = false;
+        // The list ascends by postingId, so walk it backwards for newest-first. One extra matching
+        // row past the limit means there is another page.
+        for (int i = lines.size() - 1; i >= 0; i--) {
             StatementLine line = lines.get(i);
             if (line.postingId() < beforePostingId) {
+                if (page.size() == limit) {
+                    hasMore = true;
+                    break;
+                }
                 page.add(line);
             }
         }
-        return new StatementPage(id, page);
+        return new StatementPage(id, page, hasMore);
     }
 
     @Override

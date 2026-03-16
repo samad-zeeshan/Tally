@@ -87,13 +87,13 @@ class StatementApiTest extends ApiTestHarness {
     }
 
     @Test
-    void capsAtMostRecent100Entries() {
+    void limitCapsTheEntries() {
         String a = createAccount("A", 200);
         String b = createAccount("B", 0);
         for (int i = 0; i < 101; i++) {
             transfer(a, b, 1, freshKey());
         }
-        List<JsonValue.JsonObject> entries = entries(get("/accounts/" + a + "/statement"));
+        List<JsonValue.JsonObject> entries = entries(get("/accounts/" + a + "/statement?limit=100"));
         assertEquals(100, entries.size());
         // The oldest posting, the opening from world, is cut off, so no entry names world.
         assertFalse(entries.stream().anyMatch(e -> WORLD.equals(entryStr(e, "counterpartyAccountId"))));
