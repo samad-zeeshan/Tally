@@ -1,72 +1,38 @@
 package dev.tally.api;
 
-import dev.tally.core.AccountId;
 import dev.tally.core.TransferOutcome;
 import dev.tally.core.TransferRequest;
-import dev.tally.http.ApiException;
 import dev.tally.http.ErrorCode;
 import dev.tally.http.Request;
 import dev.tally.http.Response;
+import dev.tally.http.Validation;
 import dev.tally.json.Json;
 import dev.tally.json.JsonValue;
 import dev.tally.store.Store;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Pattern;
 
 import static dev.tally.api.Fields.num;
 import static dev.tally.api.Fields.str;
 
 /**
- * The transfer endpoint. The key is validated here; the store owns the actual dedupe.
+ * The transfer endpoint. Validation owns the edge checks; the store owns the actual dedupe.
  */
 public final class TransfersHandler {
-    private static final Pattern KEY_FORMAT = Pattern.compile("[A-Za-z0-9_-]{8,64}");
-
     private final Store store;
 
     public TransfersHandler(Store store) {
         this.store = store;
     }
 
+    // The key is read before the body so a missing or malformed key is caught without a parse; then
+    // Validation checks the body and hands back parsed account ids.
     public Response create(Request request) {
-        String key = request.headers().getFirst("Idempotency-Key");
-        if (key == null) {
-            throw new ApiException(ErrorCode.IDEMPOTENCY_KEY_MISSING, "the Idempotency-Key header is required");
-        }
-        if (!KEY_FORMAT.matcher(key).matches()) {
-            throw new ApiException(ErrorCode.IDEMPOTENCY_KEY_INVALID,
-                    "Idempotency-Key must be 8 to 64 characters of letters, digits, _ or -");
-        }
-        JsonValue.JsonObject obj = Fields.object(Json.parse(request.body()));
-        Fields.rejectUnknownFields(obj, Set.of("fromAccountId", "toAccountId", "amountMinor"));
-        String fromRaw = Fields.requiredString(obj, "fromAccountId", ErrorCode.FROM_ACCOUNT_ID_REQUIRED);
-        String toRaw = Fields.requiredString(obj, "toAccountId", ErrorCode.TO_ACCOUNT_ID_REQUIRED);
-        long amount = Fields.requiredLong(obj, "amountMinor", ErrorCode.AMOUNT_REQUIRED, ErrorCode.AMOUNT_NOT_INTEGER);
-        if (amount <= 0) {
-            throw new ApiException(ErrorCode.AMOUNT_NOT_POSITIVE, "amountMinor", "amountMinor must be greater than zero");
-        }
-        if (fromRaw.equals(toRaw)) {
-            throw new ApiException(ErrorCode.SAME_ACCOUNT, "toAccountId", "fromAccountId and toAccountId must be different");
-        }
-        AccountId from = parseId(fromRaw, ErrorCode.FROM_ACCOUNT_ID_INVALID, "fromAccountId");
-        AccountId to = parseId(toRaw, ErrorCode.TO_ACCOUNT_ID_INVALID, "toAccountId");
-
-        TransferRequest transferRequest = new TransferRequest(key, from, to, amount);
+        String key = Validation.idempotencyKey(request.headers().getFirst("Idempotency-Key"));
+        Validation.TransferFields fields = Validation.transfer(Json.parse(request.body()));
+        TransferRequest transferRequest = new TransferRequest(key, fields.from(), fields.to(), fields.amountMinor());
         return render(store.apply(transferRequest), transferRequest);
-    }
-
-    // A non-UUID id is a 400 here, decided before the store: a string that is not a UUID could never
-    // name an account in any ledger state. A well-formed UUID with no account is the store's 422.
-    private static AccountId parseId(String raw, ErrorCode invalid, String field) {
-        try {
-            return new AccountId(UUID.fromString(raw));
-        } catch (IllegalArgumentException notAUuid) {
-            throw new ApiException(invalid, field, field + " must be an account id");
-        }
     }
 
     // Replay reproduces the original status on purpose (see ADR-0010): it recurses once into the same

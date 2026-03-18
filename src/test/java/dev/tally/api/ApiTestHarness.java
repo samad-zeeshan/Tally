@@ -96,6 +96,11 @@ abstract class ApiTestHarness {
         return field == null ? null : ((JsonValue.JsonString) field).value();
     }
 
+    protected String errorMessage(HttpResponse<String> r) {
+        JsonValue.JsonObject error = (JsonValue.JsonObject) body(r).members().get("error");
+        return ((JsonValue.JsonString) error.members().get("message")).value();
+    }
+
     protected String stringField(HttpResponse<String> r, String name) {
         return ((JsonValue.JsonString) body(r).members().get(name)).value();
     }

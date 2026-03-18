@@ -9,6 +9,7 @@ import dev.tally.http.Cursor;
 import dev.tally.http.ErrorCode;
 import dev.tally.http.Request;
 import dev.tally.http.Response;
+import dev.tally.http.Validation;
 import dev.tally.json.Json;
 import dev.tally.json.JsonValue;
 import dev.tally.store.Store;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static dev.tally.api.Fields.num;
@@ -37,15 +37,8 @@ public final class AccountsHandler {
     }
 
     public Response create(Request request) {
-        JsonValue.JsonObject obj = Fields.object(Json.parse(request.body()));
-        Fields.rejectUnknownFields(obj, Set.of("name", "openingBalanceMinor"));
-        String name = Fields.requiredString(obj, "name", ErrorCode.NAME_REQUIRED);
-        long opening = Fields.optionalLong(obj, "openingBalanceMinor", 0, ErrorCode.OPENING_BALANCE_NOT_INTEGER);
-        if (opening < 0) {
-            throw new ApiException(ErrorCode.OPENING_BALANCE_NEGATIVE, "openingBalanceMinor",
-                    "openingBalanceMinor must not be negative");
-        }
-        Account account = store.createAccount(name, opening);
+        Validation.AccountFields fields = Validation.account(Json.parse(request.body()));
+        Account account = store.createAccount(fields.name(), fields.openingBalanceMinor());
         return Response.json(201, renderAccount(account))
                 .withHeader("Location", "/accounts/" + account.id().value());
     }

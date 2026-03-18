@@ -51,9 +51,10 @@ class AccountsApiTest extends ApiTestHarness {
 
     @Test
     void rejectsBlankName() {
+        // A blank name is present and a string, so it clears NAME_REQUIRED and fails the length rule.
         HttpResponse<String> r = post("/accounts", "{\"name\":\"\"}");
         assertEquals(400, r.statusCode());
-        assertEquals("NAME_REQUIRED", errorCode(r));
+        assertEquals("NAME_LENGTH", errorCode(r));
     }
 
     @Test
