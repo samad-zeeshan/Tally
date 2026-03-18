@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 import dev.tally.api.AccountsHandler;
 import dev.tally.api.ReconciliationHandler;
 import dev.tally.api.TransfersHandler;
+import dev.tally.http.Auth;
 import dev.tally.http.HttpKernel;
 import dev.tally.http.Router;
 import dev.tally.store.Store;
@@ -21,16 +22,19 @@ public final class ApiServer {
     private final HttpServer server;
     private final ExecutorService executor;
 
-    public ApiServer(int port, Store store) {
+    public ApiServer(int port, Store store, String apiToken) {
         AccountsHandler accounts = new AccountsHandler(store);
         TransfersHandler transfers = new TransfersHandler(store);
         ReconciliationHandler reconciliation = new ReconciliationHandler(store);
+        Auth auth = new Auth(apiToken);
         Router router = new Router();
-        router.add("POST", "/accounts", accounts::create);
+        // Writes and reconciliation are wrapped; reads are registered bare, so the protection boundary
+        // is visible in one screenful. auth.protect checks the token before the body is ever read.
+        router.add("POST", "/accounts", auth.protect(accounts::create));
         router.add("GET", "/accounts/{id}", accounts::get);
         router.add("GET", "/accounts/{id}/statement", accounts::statement);
-        router.add("POST", "/transfers", transfers::create);
-        router.add("GET", "/reconciliation", reconciliation::report);
+        router.add("POST", "/transfers", auth.protect(transfers::create));
+        router.add("GET", "/reconciliation", auth.protect(reconciliation::report));
         try {
             // Wildcard bind: the container needs to reach it from another host in Stage 8.
             server = HttpServer.create(new InetSocketAddress(port), 0);

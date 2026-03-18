@@ -24,7 +24,7 @@ class ReconciliationHttpTest extends ApiTestHarness {
         String b = createAccount("B", 500);
         transfer(a, b, 300, freshKey());
 
-        HttpResponse<String> r = get("/reconciliation");
+        HttpResponse<String> r = getAuthed("/reconciliation");
         assertEquals(200, r.statusCode());
         assertTrue(consistent(r));
         assertEquals(0, longField(r, "globalSumMinor"));
@@ -34,7 +34,7 @@ class ReconciliationHttpTest extends ApiTestHarness {
 
     @Test
     void freshBookHasOnlyWorldAndIsConsistent() {
-        HttpResponse<String> r = get("/reconciliation");
+        HttpResponse<String> r = getAuthed("/reconciliation");
         assertEquals(200, r.statusCode());
         assertTrue(consistent(r));
         assertEquals(0, longField(r, "globalSumMinor"));

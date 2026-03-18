@@ -18,15 +18,20 @@ import java.util.UUID;
 /**
  * A fresh server over a fresh in-memory store per test. The error helpers read error.code and
  * message only, never whole bodies, so a later requestId or field addition does not churn a test.
+ *
+ * Writes go out authenticated by default so the account and transfer tests stay about their own
+ * behaviour; the auth tests build raw requests through send to exercise the missing/wrong-token paths.
  */
 abstract class ApiTestHarness {
+    protected static final String TOKEN = "test-token-0123456789";   // >= 16 chars, the fail-closed floor
+
     protected ApiServer server;
     protected URI base;
     protected final HttpClient client = HttpClient.newHttpClient();
 
     @BeforeEach
     void startServer() {
-        server = new ApiServer(0, new InMemoryStore());
+        server = new ApiServer(0, new InMemoryStore(), TOKEN);
         server.start();
         base = URI.create("http://127.0.0.1:" + server.port());
     }
@@ -40,8 +45,15 @@ abstract class ApiTestHarness {
         return send(HttpRequest.newBuilder(base.resolve(path)).GET().build());
     }
 
+    // Reads are open, but reconciliation is a protected read, so its test needs an authenticated GET.
+    protected HttpResponse<String> getAuthed(String path) {
+        return send(HttpRequest.newBuilder(base.resolve(path)).header("Authorization", "Bearer " + TOKEN).GET().build());
+    }
+
     protected HttpResponse<String> post(String path, String body, String... headerPairs) {
-        HttpRequest.Builder builder = HttpRequest.newBuilder(base.resolve(path)).POST(BodyPublishers.ofString(body));
+        HttpRequest.Builder builder = HttpRequest.newBuilder(base.resolve(path))
+                .header("Authorization", "Bearer " + TOKEN)
+                .POST(BodyPublishers.ofString(body));
         for (int i = 0; i + 1 < headerPairs.length; i += 2) {
             builder.header(headerPairs[i], headerPairs[i + 1]);
         }
@@ -61,7 +73,7 @@ abstract class ApiTestHarness {
         return "key-" + UUID.randomUUID();
     }
 
-    private HttpResponse<String> send(HttpRequest request) {
+    protected HttpResponse<String> send(HttpRequest request) {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Exception e) {

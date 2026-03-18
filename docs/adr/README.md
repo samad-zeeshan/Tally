@@ -15,3 +15,9 @@ commit that changed the code.
 | 0007 | Per-account locks in id order | store |
 | 0008 | Hand-written JSON, integers only, for a small fixed surface | json |
 | 0009 | HTTP on the JDK built-in server with a virtual-thread executor | http |
+| 0010 | An HTTP status code for each outcome | http |
+| 0011 | Pessimistic row locks at read committed | store |
+| 0012 | Plain SQL migrations with a hand-rolled runner | db |
+| 0013 | A hand-rolled fixed-size connection pool | db |
+| 0014 | Stored balances and keyset pagination | store |
+| 0015 | A static bearer token checked at the edge | http |

@@ -7,19 +7,24 @@ import dev.tally.json.JsonParseException;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
- * The single HttpHandler at "/": caps and decodes the body, routes, and turns any failure
- * into the error envelope. It is the one place an exception becomes a response.
+ * The single HttpHandler at "/": routes, dispatches, and turns any failure into the error envelope.
+ * It is the one place an exception becomes a response.
+ *
+ * The body is read lazily, inside the matched handler, not here: routing and auth run first so an
+ * unauthenticated request is rejected before its body (and the 413 cap) is ever touched.
  */
 public final class HttpKernel implements HttpHandler {
-    static final int MAX_BODY_BYTES = 16_384;
+    static final int MAX_BODY_BYTES = 4_096;
 
     private final Router router;
 
@@ -44,19 +49,37 @@ public final class HttpKernel implements HttpHandler {
         write(exchange, response);
     }
 
-    private Response process(HttpExchange exchange) throws IOException {
-        String body = readBody(exchange);
+    private Response process(HttpExchange exchange) {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
         Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
         return switch (router.match(method, path)) {
             case Router.RouteResult.Matched(var handler, var params) ->
-                    handler.handle(new Request(method, path, params, query, exchange.getRequestHeaders(), body));
+                    handler.handle(new Request(method, path, params, query,
+                            exchange.getRequestHeaders(), bodySupplier(exchange)));
             case Router.RouteResult.MethodMismatch(var allowed) ->
                     Response.error(ErrorCode.METHOD_NOT_ALLOWED, method + " is not allowed on " + path)
                             .withHeader("Allow", String.join(", ", allowed));
             case Router.RouteResult.NoRoute() ->
                     Response.error(ErrorCode.NOT_FOUND, "no route for " + method + " " + path);
+        };
+    }
+
+    // Read the body at most once, on demand: a handler may read it more than once (validate, then log),
+    // and an auth wrapper must be able to skip it entirely.
+    private static Supplier<String> bodySupplier(HttpExchange exchange) {
+        return new Supplier<>() {
+            private String cached;
+            private boolean read;
+
+            @Override
+            public String get() {
+                if (!read) {
+                    cached = readBody(exchange);
+                    read = true;
+                }
+                return cached;
+            }
         };
     }
 
@@ -79,11 +102,17 @@ public final class HttpKernel implements HttpHandler {
     }
 
     // Cap before trusting the body: read at most MAX+1 bytes, and if that many arrive it is too big.
-    private String readBody(HttpExchange exchange) throws IOException {
-        byte[] bytes = exchange.getRequestBody().readNBytes(MAX_BODY_BYTES + 1);
+    private static String readBody(HttpExchange exchange) {
+        byte[] bytes;
+        try {
+            bytes = exchange.getRequestBody().readNBytes(MAX_BODY_BYTES + 1);
+        } catch (IOException e) {
+            // A broken request stream is not a clean client error we can envelope; let it surface as 500.
+            throw new UncheckedIOException(e);
+        }
         if (bytes.length > MAX_BODY_BYTES) {
             throw new ApiException(ErrorCode.BODY_TOO_LARGE,
-                    "request body must be at most " + MAX_BODY_BYTES + " bytes");
+                    "request body must be " + MAX_BODY_BYTES + " bytes or fewer");
         }
         // Strict UTF-8: bad bytes are a client error, not a silent replacement character.
         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
