@@ -8,10 +8,13 @@ import dev.tally.http.Response;
 import dev.tally.http.Validation;
 import dev.tally.json.Json;
 import dev.tally.json.JsonValue;
+import dev.tally.obs.Logs;
+import dev.tally.obs.Redact;
 import dev.tally.store.Store;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import static dev.tally.api.Fields.num;
 import static dev.tally.api.Fields.str;
@@ -20,6 +23,8 @@ import static dev.tally.api.Fields.str;
  * The transfer endpoint. Validation owns the edge checks; the store owns the actual dedupe.
  */
 public final class TransfersHandler {
+    private static final Logger LOG = Logs.get(TransfersHandler.class);
+
     private final Store store;
 
     public TransfersHandler(Store store) {
@@ -39,7 +44,14 @@ public final class TransfersHandler {
     // renderer and adds the header, so a replayed 201 stays a 201 and a replayed 422 stays a 422.
     private Response render(TransferOutcome outcome, TransferRequest req) {
         return switch (outcome) {
-            case TransferOutcome.Applied a -> Response.json(201, renderTransfer(a, req));
+            case TransferOutcome.Applied a -> {
+                // Redacted: last-4 of the ids and key, the parsed amount, never the raw body or full ids.
+                LOG.info("transfer ok from=" + Redact.account(req.from().value().toString())
+                        + " to=" + Redact.account(req.to().value().toString())
+                        + " amount=" + req.amountMinor()
+                        + " key=" + Redact.key(req.idempotencyKey()));
+                yield Response.json(201, renderTransfer(a, req));
+            }
             case TransferOutcome.InsufficientFunds f -> Response.error(ErrorCode.INSUFFICIENT_FUNDS,
                     "account " + f.account().value() + " holds " + f.balanceMinor()
                             + ", the transfer needs " + f.requestedMinor());

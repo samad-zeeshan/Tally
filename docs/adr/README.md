@@ -21,3 +21,5 @@ commit that changed the code.
 | 0013 | A hand-rolled fixed-size connection pool | db |
 | 0014 | Stored balances and keyset pagination | store |
 | 0015 | A static bearer token checked at the edge | http |
+| 0016 | java.util.logging with a single-line formatter | obs |
+| 0017 | Keep the hand-written JSON past the hardening review | json |

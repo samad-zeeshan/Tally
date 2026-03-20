@@ -4,6 +4,7 @@ import dev.tally.db.DbConfig;
 import dev.tally.db.MigrationRunner;
 import dev.tally.db.Pool;
 import dev.tally.http.Auth;
+import dev.tally.obs.Logs;
 import dev.tally.store.InMemoryStore;
 import dev.tally.store.JdbcStore;
 import dev.tally.store.Store;
@@ -19,6 +20,7 @@ public final class Main {
     private Main() {}
 
     public static void main(String[] args) throws Exception {
+        Logs.init();
         applyServerTuning();
         String token = readTokenOrExit();
         int port = Integer.parseInt(System.getenv().getOrDefault("TALLY_PORT", "8080"));

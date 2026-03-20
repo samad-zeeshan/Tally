@@ -4,6 +4,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import dev.tally.json.Json;
 import dev.tally.json.JsonParseException;
+import dev.tally.obs.Logs;
+import dev.tally.obs.RequestContext;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,16 +17,20 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * The single HttpHandler at "/": routes, dispatches, and turns any failure into the error envelope.
- * It is the one place an exception becomes a response.
+ * The single HttpHandler at "/": binds the request id, routes, dispatches, and turns any failure into
+ * the error envelope. It is the one place an exception becomes a response.
  *
  * The body is read lazily, inside the matched handler, not here: routing and auth run first so an
  * unauthenticated request is rejected before its body (and the 413 cap) is ever touched.
  */
 public final class HttpKernel implements HttpHandler {
     static final int MAX_BODY_BYTES = 4_096;
+
+    private static final Logger LOG = Logs.get(HttpKernel.class);
 
     private final Router router;
 
@@ -34,35 +40,67 @@ public final class HttpKernel implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        Response response;
-        try {
-            response = process(exchange);
-        } catch (ApiException e) {
-            response = Response.error(e.code, e.field, e.getMessage());
-        } catch (JsonParseException e) {
-            response = Response.error(ErrorCode.MALFORMED_JSON, "malformed JSON: " + e.getMessage());
-        } catch (Throwable t) {
-            // The stack trace goes to stderr only. It must never reach a response body.
-            t.printStackTrace();
-            response = Response.error(ErrorCode.INTERNAL, "internal error");
-        }
-        write(exchange, response);
+        RequestContext ctx = RequestContext.fromHeaderOrNew(exchange.getRequestHeaders().getFirst("X-Request-Id"));
+        long startNanos = System.nanoTime();
+        String method = exchange.getRequestMethod();
+        String rawPath = exchange.getRequestURI().getPath();
+        Router.RouteResult route = router.match(method, rawPath);
+
+        // Everything that reads the request id happens inside the binding: the error envelope's requestId
+        // and the access log both pull it from RequestContext.CURRENT. The write happens after, with the
+        // id set explicitly on the header, so a response outside the scope still carries it.
+        Response[] holder = new Response[1];
+        ScopedValue.where(RequestContext.CURRENT, ctx).run(() -> {
+            Response response = dispatch(exchange, route, method, rawPath);
+            long ms = (System.nanoTime() - startNanos) / 1_000_000;
+            logAccess(method, logPath(route, rawPath), response.status(), ms);
+            holder[0] = response;
+        });
+        write(exchange, holder[0].withHeader("X-Request-Id", ctx.requestId()));
     }
 
-    private Response process(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
-        return switch (router.match(method, path)) {
-            case Router.RouteResult.Matched(var handler, var params) ->
-                    handler.handle(new Request(method, path, params, query,
-                            exchange.getRequestHeaders(), bodySupplier(exchange)));
-            case Router.RouteResult.MethodMismatch(var allowed) ->
-                    Response.error(ErrorCode.METHOD_NOT_ALLOWED, method + " is not allowed on " + path)
-                            .withHeader("Allow", String.join(", ", allowed));
-            case Router.RouteResult.NoRoute() ->
-                    Response.error(ErrorCode.NOT_FOUND, "no route for " + method + " " + path);
-        };
+    private Response dispatch(HttpExchange exchange, Router.RouteResult route, String method, String rawPath) {
+        try {
+            return switch (route) {
+                case Router.RouteResult.Matched(var handler, var params, var _) ->
+                        handler.handle(new Request(method, rawPath, params,
+                                parseQuery(exchange.getRequestURI().getRawQuery()),
+                                exchange.getRequestHeaders(), bodySupplier(exchange)));
+                case Router.RouteResult.MethodMismatch(var allowed) ->
+                        Response.error(ErrorCode.METHOD_NOT_ALLOWED, method + " is not allowed on " + rawPath)
+                                .withHeader("Allow", String.join(", ", allowed));
+                case Router.RouteResult.NoRoute() ->
+                        Response.error(ErrorCode.NOT_FOUND, "no route for " + method + " " + rawPath);
+            };
+        } catch (ApiException e) {
+            return Response.error(e.code, e.field, e.getMessage());
+        } catch (JsonParseException e) {
+            return Response.error(ErrorCode.MALFORMED_JSON, "malformed JSON: " + e.getMessage());
+        } catch (Throwable t) {
+            // The stack trace goes to the log only. It must never reach a response body.
+            LOG.log(Level.SEVERE, "unhandled error", t);
+            return Response.error(ErrorCode.INTERNAL, "internal error");
+        }
+    }
+
+    // Log the route template for a match, never the raw path, which carries account ids. An unmatched
+    // path is sanitized (printable ASCII, truncated) so it cannot inject newlines into the log.
+    private static String logPath(Router.RouteResult route, String rawPath) {
+        return route instanceof Router.RouteResult.Matched(var _, var _, var template) ? template : sanitize(rawPath);
+    }
+
+    private static String sanitize(String path) {
+        StringBuilder clean = new StringBuilder(Math.min(path.length(), 100));
+        for (int i = 0; i < path.length() && i < 100; i++) {
+            char c = path.charAt(i);
+            clean.append(c >= 0x20 && c < 0x7F ? c : '?');
+        }
+        return clean.toString();
+    }
+
+    private static void logAccess(String method, String path, int status, long ms) {
+        Level level = status >= 500 ? Level.SEVERE : status >= 400 ? Level.WARNING : Level.INFO;
+        LOG.log(level, "method=" + method + " path=" + path + " status=" + status + " ms=" + ms);
     }
 
     // Read the body at most once, on demand: a handler may read it more than once (validate, then log),

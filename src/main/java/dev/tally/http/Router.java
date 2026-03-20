@@ -11,12 +11,12 @@ import java.util.TreeSet;
  * A method-plus-template route table that captures {id} segments.
  */
 public final class Router {
-    private record Route(String method, String[] segments, ApiHandler handler) {}
+    private record Route(String method, String template, String[] segments, ApiHandler handler) {}
 
     private final List<Route> routes = new ArrayList<>();
 
     public void add(String method, String template, ApiHandler handler) {
-        routes.add(new Route(method, split(template), handler));
+        routes.add(new Route(method, template, split(template), handler));
     }
 
     public RouteResult match(String method, String path) {
@@ -30,7 +30,7 @@ public final class Router {
                 continue;
             }
             if (route.method().equals(method)) {
-                return new RouteResult.Matched(route.handler(), params);
+                return new RouteResult.Matched(route.handler(), params, route.template());
             }
             allowed.add(route.method());
         }
@@ -65,7 +65,9 @@ public final class Router {
     }
 
     public sealed interface RouteResult {
-        record Matched(ApiHandler handler, Map<String, String> pathParams) implements RouteResult {}
+        // template is the matched route's path template, e.g. /accounts/{id}, so the access log can
+        // record it instead of the raw path, which carries account ids.
+        record Matched(ApiHandler handler, Map<String, String> pathParams, String template) implements RouteResult {}
         record MethodMismatch(Set<String> allowed) implements RouteResult {}
         record NoRoute() implements RouteResult {}
     }

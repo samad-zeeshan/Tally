@@ -1,6 +1,7 @@
 package dev.tally.http;
 
 import dev.tally.json.JsonValue;
+import dev.tally.obs.RequestContext;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,7 +33,8 @@ public record Response(int status, JsonValue body, Map<String, String> extraHead
     }
 
     // The one place the error envelope shape lives, so the kernel's exception path and the
-    // handlers' outcome path render identical bodies.
+    // handlers' outcome path render identical bodies. requestId is read from the bound context and
+    // equals the X-Request-Id response header, so a caller can quote it against the logs.
     private static JsonValue errorBody(ErrorCode code, String field, String message) {
         Map<String, JsonValue> error = new LinkedHashMap<>();
         error.put("code", new JsonValue.JsonString(code.name()));
@@ -40,6 +42,7 @@ public record Response(int status, JsonValue body, Map<String, String> extraHead
         if (field != null) {
             error.put("field", new JsonValue.JsonString(field));
         }
+        error.put("requestId", new JsonValue.JsonString(RequestContext.currentIdOr("-")));
         Map<String, JsonValue> envelope = new LinkedHashMap<>();
         envelope.put("error", new JsonValue.JsonObject(error));
         return new JsonValue.JsonObject(envelope);
