@@ -60,6 +60,12 @@ public final class NaiveInMemoryStore implements Store {
         return Optional.ofNullable(accounts.get(id));
     }
 
+    // The race demo drives transfers and reads balances, never the account listing.
+    @Override
+    public List<Account> listAccounts() {
+        throw new UnsupportedOperationException("the race demo store does not list accounts");
+    }
+
     // The race demo drives transfers and reads balances, never statements.
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {

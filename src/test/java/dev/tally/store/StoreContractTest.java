@@ -74,6 +74,32 @@ abstract class StoreContractTest {
     }
 
     @Test
+    void listAccountsReturnsCreatedAccountsInOrder() {
+        Store store = newStore();
+        Account a = store.createAccount("alice", 1000);
+        Account b = store.createAccount("bob", 0);
+        List<Account> list = store.listAccounts();
+        assertEquals(2, list.size());
+        assertEquals(a.id(), list.get(0).id());
+        assertEquals("alice", list.get(0).name());
+        assertEquals(1000, list.get(0).balanceMinor());
+        assertEquals(b.id(), list.get(1).id());
+    }
+
+    @Test
+    void listAccountsExcludesWorld() {
+        Store store = newStore();
+        store.createAccount("only", 500);
+        assertTrue(store.listAccounts().stream().noneMatch(account -> WorldAccount.isWorld(account.id())));
+        assertEquals(1, store.listAccounts().size());
+    }
+
+    @Test
+    void emptyLedgerListsNoAccounts() {
+        assertTrue(newStore().listAccounts().isEmpty());   // world exists but is filtered out
+    }
+
+    @Test
     void appliedTransferMovesMoneyOnce() {
         Store store = newStore();
         Account a = store.createAccount("a", 1000);

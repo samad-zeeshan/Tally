@@ -126,6 +126,29 @@ public final class JdbcStore implements Store {
         }
     }
 
+    // No pagination on purpose: this is a demo listing, and the statement endpoint already shows keyset
+    // pagination done properly. World is excluded so a client's transfer dropdowns never offer it.
+    @Override
+    public List<Account> listAccounts() {
+        Connection conn = pool.borrow();
+        List<Account> accounts = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id, name, allow_negative, balance_minor, created_at FROM accounts "
+                        + "WHERE id <> ? ORDER BY created_at, id")) {
+            ps.setObject(1, WORLD);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    accounts.add(readAccount(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new StoreException("listAccounts failed", e);
+        } finally {
+            pool.giveBack(conn);
+        }
+        return accounts;
+    }
+
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {
         Connection conn = pool.borrow();

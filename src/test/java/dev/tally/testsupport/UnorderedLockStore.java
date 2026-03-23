@@ -61,6 +61,12 @@ public final class UnorderedLockStore implements Store {
         return Optional.ofNullable(accounts.get(id));
     }
 
+    // The deadlock demo drives transfers only, never the account listing.
+    @Override
+    public List<Account> listAccounts() {
+        throw new UnsupportedOperationException("the deadlock demo store does not list accounts");
+    }
+
     // The deadlock demo drives transfers only, never statements.
     @Override
     public StatementPage statement(AccountId id, long beforePostingId, int limit) {

@@ -7,6 +7,7 @@ import dev.tally.core.StatementPage;
 import dev.tally.core.TransferOutcome;
 import dev.tally.core.TransferRequest;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,6 +21,9 @@ public interface Store {
     Account createAccount(String name, long openingBalanceMinor);
 
     Optional<Account> findAccount(AccountId id);
+
+    // Every account except the reserved world row, in creation order. Powers the client's account list.
+    List<Account> listAccounts();
 
     TransferOutcome apply(TransferRequest request);
 

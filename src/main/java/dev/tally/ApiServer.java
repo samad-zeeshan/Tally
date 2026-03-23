@@ -31,6 +31,7 @@ public final class ApiServer {
         // Writes and reconciliation are wrapped; reads are registered bare, so the protection boundary
         // is visible in one screenful. auth.protect checks the token before the body is ever read.
         router.add("POST", "/accounts", auth.protect(accounts::create));
+        router.add("GET", "/accounts", accounts::list);
         router.add("GET", "/accounts/{id}", accounts::get);
         router.add("GET", "/accounts/{id}/statement", accounts::statement);
         router.add("POST", "/transfers", auth.protect(transfers::create));

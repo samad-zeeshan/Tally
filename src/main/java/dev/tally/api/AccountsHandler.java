@@ -47,6 +47,17 @@ public final class AccountsHandler {
         return Response.json(200, renderAccount(resolve(request.pathParams().get("id"))));
     }
 
+    // Open, like the other reads. The store already excludes world, so the client never sees it.
+    public Response list(Request request) {
+        List<JsonValue> items = new ArrayList<>();
+        for (Account account : store.listAccounts()) {
+            items.add(renderAccount(account));
+        }
+        Map<String, JsonValue> body = new LinkedHashMap<>();
+        body.put("accounts", new JsonValue.JsonArray(items));
+        return Response.json(200, new JsonValue.JsonObject(body));
+    }
+
     // An opening shows up here as an ordinary transfer whose counterparty is world, not a special
     // entry type. The cursor is decoded to a keyset bound here; the store never sees the cursor string.
     public Response statement(Request request) {

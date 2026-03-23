@@ -19,8 +19,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -34,6 +36,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class InMemoryStore implements Store {
     private final Map<AccountId, Account> accounts = new ConcurrentHashMap<>();
     private final AccountLocks locks = new AccountLocks();
+
+    // Creation order for the account listing. World is seeded in the constructor, never through
+    // createAccount, so it is not here, and the list excludes it without a filter.
+    private final Queue<AccountId> creationOrder = new ConcurrentLinkedQueue<>();
 
     // The posting journal that backs statements. Per-account, append-ordered (ascending postingId
     // because appends happen under the account lock), read as a snapshot without a lock.
@@ -63,30 +69,39 @@ public final class InMemoryStore implements Store {
             throw new IllegalArgumentException("opening balance must not be negative: " + openingBalanceMinor);
         }
         Account fresh = new Account(AccountId.newId(), name, 0L, false, Instant.now());
+        Account created;
         if (openingBalanceMinor == 0) {
             accounts.put(fresh.id(), fresh);
-            return fresh;
+            created = fresh;
+        } else {
+            created = locks.withBothLocked(WorldAccount.ID, fresh.id(), () -> {
+                Account world = accounts.get(WorldAccount.ID);
+                Map<AccountId, Account> snapshot = Map.of(world.id(), world, fresh.id(), fresh);
+                Transfer funding = Transfer.between(WorldAccount.ID, fresh.id(), openingBalanceMinor);
+                if (!(Ledger.post(funding, snapshot) instanceof Ledger.Result.Posted(var updated))) {
+                    throw new IllegalStateException("world funding should always post");
+                }
+                for (Account a : updated) {
+                    accounts.put(a.id(), a);
+                }
+                long newWorld = balanceOf(updated, WorldAccount.ID);
+                long newAccount = balanceOf(updated, fresh.id());
+                recordPostings(funding.id(), WorldAccount.ID, fresh.id(), openingBalanceMinor, newWorld, newAccount, Instant.now());
+                return accounts.get(fresh.id());
+            });
         }
-        return locks.withBothLocked(WorldAccount.ID, fresh.id(), () -> {
-            Account world = accounts.get(WorldAccount.ID);
-            Map<AccountId, Account> snapshot = Map.of(world.id(), world, fresh.id(), fresh);
-            Transfer funding = Transfer.between(WorldAccount.ID, fresh.id(), openingBalanceMinor);
-            if (!(Ledger.post(funding, snapshot) instanceof Ledger.Result.Posted(var updated))) {
-                throw new IllegalStateException("world funding should always post");
-            }
-            for (Account a : updated) {
-                accounts.put(a.id(), a);
-            }
-            long newWorld = balanceOf(updated, WorldAccount.ID);
-            long newAccount = balanceOf(updated, fresh.id());
-            recordPostings(funding.id(), WorldAccount.ID, fresh.id(), openingBalanceMinor, newWorld, newAccount, Instant.now());
-            return accounts.get(fresh.id());
-        });
+        creationOrder.add(fresh.id());
+        return created;
     }
 
     @Override
     public Optional<Account> findAccount(AccountId id) {
         return Optional.ofNullable(accounts.get(id));
+    }
+
+    @Override
+    public List<Account> listAccounts() {
+        return creationOrder.stream().map(accounts::get).toList();
     }
 
     @Override

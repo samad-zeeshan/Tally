@@ -1,9 +1,11 @@
 package dev.tally.api;
 
+import dev.tally.json.JsonValue;
 import org.junit.jupiter.api.Test;
 
 import java.net.http.HttpResponse;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,6 +94,23 @@ class AccountsApiTest extends ApiTestHarness {
         HttpResponse<String> r = post("/accounts", "[1]");
         assertEquals(400, r.statusCode());
         assertEquals("BODY_NOT_OBJECT", errorCode(r));
+    }
+
+    @Test
+    void listAccountsReturnsCreatedAccountsWithoutWorld() {
+        createAccount("alice", 1000);
+        createAccount("bob", 0);
+        HttpResponse<String> r = get("/accounts");   // open, no token needed
+        assertEquals(200, r.statusCode());
+        JsonValue.JsonArray accounts = (JsonValue.JsonArray) body(r).members().get("accounts");
+        List<JsonValue> items = accounts.items();
+        assertEquals(2, items.size());   // world is never listed
+        assertEquals("alice", name(items.get(0)));
+        assertEquals("bob", name(items.get(1)));
+    }
+
+    private static String name(JsonValue account) {
+        return ((JsonValue.JsonString) ((JsonValue.JsonObject) account).members().get("name")).value();
     }
 
     @Test
