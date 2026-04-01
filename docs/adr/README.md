@@ -23,3 +23,5 @@ commit that changed the code.
 | 0015 | A static bearer token checked at the edge | http |
 | 0016 | java.util.logging with a single-line formatter | obs |
 | 0017 | Keep the hand-written JSON past the hardening review | json |
+| 0018 | React, TypeScript, Vite, and vitest for the client | web |
+| 0019 | One idempotency key per intended transfer | web |
