@@ -52,6 +52,8 @@
   </dependencies>
 
   <build>
+    <!-- One predictable artifact name, target/tally.jar, for the Dockerfile and the run scripts. -->
+    <finalName>tally</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -67,6 +69,31 @@
           <groups>${surefire.groups}</groups>
           <excludedGroups>${surefire.excludedGroups}</excludedGroups>
         </configuration>
+      </plugin>
+      <!-- One executable jar. The only thing shaded in is the already-justified PG driver. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <!-- This app is an artifact to run, not a library others depend on, so the reduced pom is noise. -->
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <transformers>
+                <!-- The PG driver registers itself through META-INF/services. Without this
+                     transformer the shaded jar loses the java.sql.Driver entry and
+                     DriverManager finds nothing. -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>dev.tally.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
