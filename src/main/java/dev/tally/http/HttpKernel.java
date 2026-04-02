@@ -16,6 +16,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,9 +34,15 @@ public final class HttpKernel implements HttpHandler {
     private static final Logger LOG = Logs.get(HttpKernel.class);
 
     private final Router router;
+    private final StaticFileHandler staticFiles;   // null unless TALLY_STATIC_DIR is set
 
     public HttpKernel(Router router) {
+        this(router, null);
+    }
+
+    public HttpKernel(Router router, StaticFileHandler staticFiles) {
         this.router = router;
+        this.staticFiles = staticFiles;
     }
 
     @Override
@@ -69,8 +76,19 @@ public final class HttpKernel implements HttpHandler {
                 case Router.RouteResult.MethodMismatch(var allowed) ->
                         Response.error(ErrorCode.METHOD_NOT_ALLOWED, method + " is not allowed on " + rawPath)
                                 .withHeader("Allow", String.join(", ", allowed));
-                case Router.RouteResult.NoRoute() ->
-                        Response.error(ErrorCode.NOT_FOUND, "no route for " + method + " " + rawPath);
+                // A path the router does not own may still be a static file, but only when a static
+                // directory is configured. The router runs first, so /accounts and the rest always win.
+                case Router.RouteResult.NoRoute() -> {
+                    if (staticFiles != null) {
+                        Request request = new Request(method, rawPath, Map.of(), Map.of(),
+                                exchange.getRequestHeaders(), bodySupplier(exchange));
+                        Optional<Response> served = staticFiles.resolve(request);
+                        if (served.isPresent()) {
+                            yield served.get();
+                        }
+                    }
+                    yield Response.error(ErrorCode.NOT_FOUND, "no route for " + method + " " + rawPath);
+                }
             };
         } catch (ApiException e) {
             return Response.error(e.code, e.field, e.getMessage());
@@ -164,9 +182,17 @@ public final class HttpKernel implements HttpHandler {
     }
 
     private void write(HttpExchange exchange, Response response) throws IOException {
-        byte[] bytes = Json.write(response.body()).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes;
+        String contentType;
+        if (response.rawBody() != null) {
+            bytes = response.rawBody();
+            contentType = response.contentType();
+        } else {
+            bytes = Json.write(response.body()).getBytes(StandardCharsets.UTF_8);
+            contentType = "application/json; charset=utf-8";
+        }
         var headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", "application/json; charset=utf-8");
+        headers.set("Content-Type", contentType);
         for (Map.Entry<String, String> h : response.extraHeaders().entrySet()) {
             headers.set(h.getKey(), h.getValue());
         }

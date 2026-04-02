@@ -24,7 +24,10 @@ public final class Main {
         applyServerTuning();
         String token = readTokenOrExit();
         int port = Integer.parseInt(System.getenv().getOrDefault("TALLY_PORT", "8080"));
-        ApiServer server = new ApiServer(port, openStore(), token);
+        // TALLY_STATIC_DIR set (the container) serves the built client at the same origin; unset locally.
+        String staticDir = System.getenv("TALLY_STATIC_DIR");
+        Path staticPath = staticDir == null ? null : Path.of(staticDir);
+        ApiServer server = new ApiServer(port, openStore(), token, staticPath);
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         server.start();
         System.out.println("Tally listening on port " + server.port());
