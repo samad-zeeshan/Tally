@@ -1,4 +1,3 @@
-# Dev and test database. The app service joins this same file in the container work.
 services:
   db:
     image: postgres:17
@@ -6,16 +5,35 @@ services:
       POSTGRES_DB: tally
       POSTGRES_USER: tally
       POSTGRES_PASSWORD: tally
+    # Published so local integration tests can reach it at localhost:5432 with this same file.
     ports:
       - "5432:5432"
     volumes:
       - tally_pgdata:/var/lib/postgresql/data
+      # Seeds a separate tally_test database for local integration runs.
       - ./db/compose-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tally -d tally"]
       interval: 2s
       timeout: 2s
       retries: 15
+
+  app:
+    build:
+      context: .
+      # Baked into the served JS so the demo's create and transfer work. A client-embedded write token
+      # is not protection (ADR-0015), it only exercises the auth handshake.
+      args:
+        VITE_API_TOKEN: tally-local-dev-token
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TALLY_DB_URL: jdbc:postgresql://db:5432/tally?user=tally&password=tally
+      # Demo token for local use only. The app never logs it (Stage 6 rule).
+      TALLY_API_TOKEN: tally-local-dev-token
+    ports:
+      - "8080:8080"
 
 volumes:
   tally_pgdata:

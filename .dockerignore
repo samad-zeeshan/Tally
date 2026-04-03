@@ -1,0 +1,10 @@
+.git
+.github
+docs
+target
+web/node_modules
+web/dist
+*.md
+Dockerfile
+compose.yaml
+.dockerignore
