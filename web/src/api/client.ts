@@ -2,7 +2,7 @@
 // safe-integer guard; the bundled token is a demo-only credential (noted where it is read); and replayed
 // is read from the Idempotency-Replayed header, never the status, because a replay repeats the 201.
 import { classify, messageFor, type FailureKind } from "./errors";
-import type { Account, ApiErrorBody, StatementPage, Transfer, TransferRequest } from "./types";
+import type { Account, ApiErrorBody, ReconciliationReport, StatementPage, Transfer, TransferRequest } from "./types";
 
 export class ApiError extends Error {
   readonly kind: FailureKind;
@@ -133,11 +133,34 @@ export async function getStatement(accountId: string, cursor?: string): Promise<
   return toStatementPage(await response.json(), response.status);
 }
 
+export async function getReconciliation(): Promise<ReconciliationReport> {
+  const response = await send("/api/reconciliation", { headers: authHeaders() });
+  if (!response.ok) {
+    await fail(response);
+  }
+  const raw = (await response.json()) as any;
+  return {
+    consistent: raw.consistent,
+    globalSumMinor: safeAmount(raw.globalSumMinor, response.status),
+    accountsChecked: raw.accountsChecked,
+    drifts: (raw.drifts as any[]).map((drift) => ({
+      accountId: drift.accountId,
+      storedBalanceMinor: safeAmount(drift.storedBalanceMinor, response.status),
+      derivedBalanceMinor: safeAmount(drift.derivedBalanceMinor, response.status),
+      driftMinor: safeAmount(drift.driftMinor, response.status),
+    })),
+  };
+}
+
 let droppedResponseArmed = false;
 
 // Dev-only fault: arm a single dropped response so the retry path can prove server-side dedup live.
 export function armDroppedResponse(): void {
   droppedResponseArmed = true;
+}
+
+export function disarmDroppedResponse(): void {
+  droppedResponseArmed = false;
 }
 
 export async function createTransfer(

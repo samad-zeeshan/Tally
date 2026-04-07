@@ -3,39 +3,62 @@
 import { useState, type FormEvent } from "react";
 import { ApiError, createAccount } from "../api/client";
 import type { Account } from "../api/types";
-import { formatMinor, parseAmountToMinor } from "../lib/money";
+import { parseAmountToMinor } from "../lib/money";
+import { AnimatedNumber } from "./ui/AnimatedNumber";
+import { Button } from "./ui/Button";
+import { CopyButton } from "./ui/CopyButton";
+import { EmptyState } from "./ui/EmptyState";
+import { Field } from "./ui/Field";
+import { Skeleton } from "./ui/Skeleton";
+import { WalletIcon } from "./ui/icons";
+import type { ToastKind } from "./ui/Toasts";
 
 interface Props {
   accounts: Account[];
   selectedId: string | null;
+  loading: boolean;
   onSelect: (id: string) => void;
   onChanged: () => void;
+  onToast: (kind: ToastKind, message: string) => void;
 }
 
-export function AccountsPanel({ accounts, selectedId, onSelect, onChanged }: Props) {
+// A stable hue per account so the avatar color is recognizable across sessions.
+function hueFromId(id: string): number {
+  let hue = 0;
+  for (let i = 0; i < id.length; i++) {
+    hue = (hue * 31 + id.charCodeAt(i)) % 360;
+  }
+  return hue;
+}
+
+export function AccountsPanel({ accounts, selectedId, loading, onSelect, onChanged, onToast }: Props) {
   const [name, setName] = useState("");
   const [opening, setOpening] = useState("");
+  const [openingError, setOpeningError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setOpeningError(null);
     let openingMinor: number | undefined;
     if (opening.trim() !== "") {
       const parsed = parseAmountToMinor(opening);
       if (parsed === null) {
-        setError("Opening balance must be an amount like 12.34.");
+        setOpeningError("An amount like 50.00, or leave it blank.");
         return;
       }
       openingMinor = parsed;
     }
     setBusy(true);
     try {
-      await createAccount(name.trim(), openingMinor);
+      const created = await createAccount(name.trim(), openingMinor);
       setName("");
       setOpening("");
+      onToast("success", `Account "${created.name}" opened`);
       onChanged();
+      onSelect(created.id);
     } catch (caught) {
       setError((caught as ApiError).message);
     } finally {
@@ -45,41 +68,81 @@ export function AccountsPanel({ accounts, selectedId, onSelect, onChanged }: Pro
 
   return (
     <section className="card">
-      <h2>Accounts</h2>
-      <form onSubmit={handleCreate} className="create-form">
-        <input
-          aria-label="Account name"
-          placeholder="Account name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          required
-        />
-        <input
-          aria-label="Opening balance"
-          placeholder="Opening balance (optional)"
-          value={opening}
-          onChange={(event) => setOpening(event.target.value)}
-          inputMode="decimal"
-        />
-        <button type="submit" className="primary" disabled={busy || name.trim() === ""}>Create</button>
+      <div className="card-header">
+        <h2>Accounts</h2>
+        {accounts.length > 0 && <span className="count-chip">{accounts.length}</span>}
+      </div>
+
+      <form onSubmit={handleCreate}>
+        <div className="create-grid">
+          <Field label="Name">
+            {(a11y) => (
+              <input
+                {...a11y}
+                placeholder="e.g. Alice"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+              />
+            )}
+          </Field>
+          <Field label="Opening balance" error={openingError}>
+            {(a11y) => (
+              <input
+                {...a11y}
+                placeholder="optional"
+                value={opening}
+                onChange={(event) => setOpening(event.target.value)}
+                inputMode="decimal"
+              />
+            )}
+          </Field>
+          <Button type="submit" loading={busy} disabled={name.trim() === ""}>
+            Open
+          </Button>
+        </div>
       </form>
-      {error && <p className="notice notice-error">{error}</p>}
-      <ul className="account-list">
-        {accounts.map((account) => (
-          <li key={account.id}>
-            <button
-              type="button"
-              className={"account-row" + (account.id === selectedId ? " selected" : "")}
-              onClick={() => onSelect(account.id)}
-            >
-              <span className="account-name">{account.name}</span>
-              <span className="account-id">{account.id.slice(0, 8)}…</span>
-              <span className="amount">{formatMinor(account.balanceMinor)}</span>
-            </button>
-          </li>
-        ))}
-        {accounts.length === 0 && <li className="empty">No accounts yet. Create one above.</li>}
-      </ul>
+
+      {error && (
+        <p className="notice notice-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {loading && accounts.length === 0 ? (
+        <div style={{ marginTop: 16 }}>
+          <Skeleton lines={3} />
+        </div>
+      ) : accounts.length === 0 ? (
+        <EmptyState
+          icon={<WalletIcon />}
+          title="No accounts yet"
+          hint="Open the first account above; an opening balance is funded by the world account, so the book stays at zero."
+        />
+      ) : (
+        <ul className="account-list">
+          {accounts.map((account) => (
+            <li key={account.id} className="account-item">
+              <button
+                type="button"
+                className="account-row"
+                aria-current={account.id === selectedId || undefined}
+                onClick={() => onSelect(account.id)}
+              >
+                <span className="avatar" style={{ background: `hsl(${hueFromId(account.id)} 45% 42%)` }} aria-hidden="true">
+                  {account.name.slice(0, 1)}
+                </span>
+                <span className="account-name">
+                  {account.name}
+                  <span className="account-meta">{account.id.slice(0, 8)}…</span>
+                </span>
+                <AnimatedNumber className={"amount" + (account.balanceMinor < 0 ? " negative" : "")} value={account.balanceMinor} />
+              </button>
+              <CopyButton text={account.id} label={`Copy ${account.name}'s account id`} />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

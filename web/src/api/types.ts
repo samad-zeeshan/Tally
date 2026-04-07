@@ -40,6 +40,20 @@ export interface StatementPage {
   nextCursor: string | null;
 }
 
+export interface Drift {
+  accountId: string;
+  storedBalanceMinor: MinorUnits;
+  derivedBalanceMinor: MinorUnits;
+  driftMinor: MinorUnits;
+}
+
+export interface ReconciliationReport {
+  consistent: boolean;
+  globalSumMinor: MinorUnits;
+  accountsChecked: number;
+  drifts: Drift[];
+}
+
 // The wire envelope is {"error": {...}}; this is the INNER object only. client.ts reads response.error into it.
 export interface ApiErrorBody {
   code: string;

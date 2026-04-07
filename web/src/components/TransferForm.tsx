@@ -2,133 +2,239 @@
 // be retried under the same key, but any field change abandons it (a different tuple under the same key
 // would be a key conflict), and abandoning means the user cannot know if the first attempt applied.
 import { useEffect, useState, type FormEvent } from "react";
-import { armDroppedResponse } from "../api/client";
+import { armDroppedResponse, disarmDroppedResponse } from "../api/client";
 import type { Account } from "../api/types";
-import { parseAmountToMinor } from "../lib/money";
+import { formatMinor, parseAmountToMinor } from "../lib/money";
 import { useTransferIntent } from "../hooks/useTransferIntent";
+import { Button } from "./ui/Button";
+import { Field } from "./ui/Field";
+import { SwapIcon, ZapIcon } from "./ui/icons";
+import type { ToastKind } from "./ui/Toasts";
 
 interface Props {
   accounts: Account[];
   onChanged: () => void;
+  onToast: (kind: ToastKind, message: string) => void;
 }
 
-export function TransferForm({ accounts, onChanged }: Props) {
+const QUICK_AMOUNTS = [500, 2500, 10000];
+
+interface FieldErrors {
+  from?: string;
+  to?: string;
+  amount?: string;
+}
+
+export function TransferForm({ accounts, onChanged, onToast }: Props) {
   const { state, submit, retry, edited } = useTransferIntent();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [abandoned, setAbandoned] = useState(false);
+  const [chaos, setChaos] = useState(false);
 
   const inFlight = state.phase === "inFlight";
+  const fromAccount = accounts.find((account) => account.id === from) ?? null;
+  const parsed = parseAmountToMinor(amount);
+  // Live preview of the source balance after this transfer, all integer math on minor units.
+  const remaining = fromAccount !== null && parsed !== null && parsed > 0 ? fromAccount.balanceMinor - parsed : null;
 
-  // On success: clear the form and tell App to refresh balances. Fires once per transition to success.
+  // On success: clear the form, say so, and let App refresh balances. Guarded so it fires only on the
+  // transition into success.
   useEffect(() => {
-    if (state.phase === "success") {
-      setFrom("");
-      setTo("");
-      setAmount("");
-      setAbandoned(false);
-      onChanged();
+    if (state.phase !== "success") {
+      return;
     }
-  }, [state.phase, onChanged]);
+    setFrom("");
+    setTo("");
+    setAmount("");
+    setAbandoned(false);
+    setChaos(false); // the dropped-response fault self-clears after one attempt
+    onToast("success", state.replayed ? "Retry deduplicated: the transfer applied exactly once" : "Transfer applied");
+    onChanged();
+  }, [state, onChanged, onToast]);
 
   // While a transient failure is showing, editing any field abandons the intent so its key is never
   // reused for a different body; the notice then admits the first attempt's outcome is unknown.
-  function editField(setter: (value: string) => void, value: string) {
+  function markEdited() {
     if (state.phase === "failedTransient") {
       edited();
       setAbandoned(true);
     }
+  }
+
+  function editField(setter: (value: string) => void, value: string) {
+    markEdited();
+    setFieldErrors({});
     setter(value);
+  }
+
+  function swap() {
+    markEdited();
+    setFrom(to);
+    setTo(from);
+  }
+
+  function applyChip(minor: number) {
+    editField(setAmount, formatMinor(minor));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFormError(null);
     setAbandoned(false);
-    if (from === "" || to === "") {
-      setFormError("Choose both accounts.");
-      return;
+    const errors: FieldErrors = {};
+    if (from === "") {
+      errors.from = "Choose the source account.";
     }
-    if (from === to) {
-      setFormError("Choose two different accounts.");
-      return;
+    if (to === "") {
+      errors.to = "Choose the destination account.";
+    } else if (to === from) {
+      errors.to = "Choose two different accounts.";
     }
     const amountMinor = parseAmountToMinor(amount);
     if (amountMinor === null || amountMinor <= 0) {
-      setFormError("Enter an amount like 12.34.");
+      errors.amount = "An amount like 12.34, greater than zero.";
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0 || amountMinor === null) {
       return;
     }
     submit({ fromAccountId: from, toAccountId: to, amountMinor });
   }
 
+  const accountOptions = accounts.map((account) => (
+    <option key={account.id} value={account.id}>
+      {account.name} · {formatMinor(account.balanceMinor)}
+    </option>
+  ));
+
   return (
     <section className="card transfer">
-      <h2>Transfer</h2>
-      <form onSubmit={handleSubmit} className="transfer-form">
-        <label>
-          From
-          <select value={from} onChange={(event) => editField(setFrom, event.target.value)} disabled={inFlight}>
-            <option value="">Select an account</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>{account.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          To
-          <select value={to} onChange={(event) => editField(setTo, event.target.value)} disabled={inFlight}>
-            <option value="">Select an account</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>{account.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Amount
-          <input
-            value={amount}
-            onChange={(event) => editField(setAmount, event.target.value)}
-            placeholder="12.34"
-            inputMode="decimal"
+      <div className="card-header">
+        <h2>Transfer</h2>
+        {import.meta.env.DEV && (
+          <label className="chaos" title="The request still reaches the server; only the response is dropped. Retry proves the dedup.">
+            <input
+              type="checkbox"
+              checked={chaos}
+              onChange={(event) => {
+                setChaos(event.target.checked);
+                (event.target.checked ? armDroppedResponse : disarmDroppedResponse)();
+              }}
+            />
+            <ZapIcon /> drop the next response
+          </label>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="transfer-grid">
+          <Field label="From" error={fieldErrors.from}>
+            {(a11y) => (
+              <select {...a11y} value={from} onChange={(event) => editField(setFrom, event.target.value)} disabled={inFlight}>
+                <option value="">Select an account</option>
+                {accountOptions}
+              </select>
+            )}
+          </Field>
+          <button
+            type="button"
+            className="icon-btn swap-btn"
+            onClick={swap}
             disabled={inFlight}
-          />
-        </label>
-        <button type="submit" className="primary" disabled={inFlight}>
-          {inFlight ? "Submitting…" : "Send transfer"}
-        </button>
+            aria-label="Swap the two accounts"
+            title="Swap accounts"
+          >
+            <SwapIcon />
+          </button>
+          <Field label="To" error={fieldErrors.to}>
+            {(a11y) => (
+              <select {...a11y} value={to} onChange={(event) => editField(setTo, event.target.value)} disabled={inFlight}>
+                <option value="">Select an account</option>
+                {accountOptions}
+              </select>
+            )}
+          </Field>
+        </div>
+
+        <div className="amount-row">
+          <Field label="Amount" error={fieldErrors.amount}>
+            {(a11y) => (
+              <input
+                {...a11y}
+                value={amount}
+                onChange={(event) => editField(setAmount, event.target.value)}
+                placeholder="12.34"
+                inputMode="decimal"
+                disabled={inFlight}
+              />
+            )}
+          </Field>
+          <div className="chips" role="group" aria-label="Quick amounts">
+            {QUICK_AMOUNTS.map((minor) => (
+              <button key={minor} type="button" className="chip" onClick={() => applyChip(minor)} disabled={inFlight}>
+                {formatMinor(minor)}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="chip"
+              onClick={() => fromAccount && applyChip(fromAccount.balanceMinor)}
+              disabled={inFlight || fromAccount === null || fromAccount.balanceMinor <= 0}
+            >
+              Max
+            </button>
+          </div>
+        </div>
+
+        <p className={"preview" + (remaining !== null && remaining < 0 ? " warn" : "")} aria-live="polite">
+          {remaining !== null &&
+            fromAccount !== null &&
+            (remaining < 0
+              ? `Exceeds ${fromAccount.name}'s balance by ${formatMinor(-remaining)}; the ledger will reject it.`
+              : `${fromAccount.name} will hold ${formatMinor(remaining)} after this transfer.`)}
+        </p>
+
+        <div className="actions-row">
+          <Button type="submit" loading={inFlight}>
+            {inFlight ? "Sending" : "Send transfer"}
+          </Button>
+        </div>
       </form>
 
-      {import.meta.env.DEV && (
-        <label className="dev-fault">
-          <input type="checkbox" onChange={(event) => event.target.checked && armDroppedResponse()} />
-          Simulate a dropped response on next submit
-        </label>
-      )}
+      <div aria-live="polite">
+        {state.phase === "failedTransient" && (
+          <div className="notice notice-warn">
+            <span>{state.message}</span>
+            <Button variant="secondary" onClick={retry}>
+              Retry
+            </Button>
+          </div>
+        )}
 
-      {formError && <p className="notice notice-error">{formError}</p>}
+        {state.phase === "failedTerminal" && <p className="notice notice-error">{state.message}</p>}
 
-      {state.phase === "failedTransient" && (
-        <div className="notice notice-warn">
-          <span>{state.message}</span>
-          <button type="button" className="secondary" onClick={retry}>Retry</button>
-        </div>
-      )}
+        {abandoned && (
+          <p className="notice notice-warn">The previous transfer may or may not have gone through. Check the statement.</p>
+        )}
 
-      {state.phase === "failedTerminal" && <p className="notice notice-error">{state.message}</p>}
-
-      {abandoned && (
-        <p className="notice notice-warn">The previous transfer may or may not have gone through. Check the statement.</p>
-      )}
-
-      {state.phase === "success" && (
-        <p className="notice notice-success">
-          {state.replayed
-            ? "Applied once. The retry was deduplicated by the server."
-            : "Transfer applied."}
-        </p>
-      )}
+        {state.phase === "success" && (
+          <p className="notice notice-success">
+            <span className="burst" aria-hidden="true">
+              <i /><i /><i /><i /><i /><i />
+            </span>
+            {state.replayed ? (
+              <>
+                Applied once. The retry was deduplicated by the server.
+                <span className="replay-badge">idempotency key</span>
+              </>
+            ) : (
+              "Transfer applied."
+            )}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
