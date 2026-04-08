@@ -10,3 +10,8 @@ mvnw.cmd text eol=crlf
 *.sh text eol=lf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Media is binary: never apply text/EOL normalization to it.
+*.gif binary
+*.png binary
+*.mp4 binary

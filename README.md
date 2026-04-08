@@ -2,6 +2,8 @@
 
 Tally is a small banking service built on a double-entry ledger, with a Java backend, a Postgres store, and a React client.
 
+![Tally: a sample transfer, an idempotent retry applied exactly once, and a reconciliation that re-derives every balance from the postings](docs/media/demo.gif)
+
 ## What it does
 
 Accounts hold balances. A transfer moves money between two accounts by writing two postings, one negative and one positive, that sum to zero. Because every movement is recorded that way, the whole book always nets to zero, and a reconciliation endpoint proves it on demand by re-deriving every balance from the postings. Each account has a paginated statement. Transfers are idempotent: the client sends a unique key with each intended transfer, and if the response is lost, retrying with the same key applies the transfer exactly once. The web client shows all of this, including a fault toggle that drops a response so you can watch the retry get deduplicated. There is also an in-app "Try it" strip that runs these flows for you.
