@@ -6,6 +6,7 @@ import type { Account } from "./api/types";
 import { AccountsPanel } from "./components/AccountsPanel";
 import { AccountDetail } from "./components/AccountDetail";
 import { BooksBadge } from "./components/BooksBadge";
+import { ExplainerPanel } from "./components/ExplainerPanel";
 import { TransferForm } from "./components/TransferForm";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { ThemeToggle } from "./components/ui/ThemeToggle";
@@ -56,6 +57,36 @@ export default function App() {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
+  // The page background carries a faint accent spotlight that trails the pointer (see body's gradient).
+  // Mouse-only chrome: skipped for coarse pointers and for reduced-motion users, who keep the resting
+  // glow at the top of the page.
+  useEffect(() => {
+    if (!window.matchMedia("(pointer: fine)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const root = document.documentElement;
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+    const onMove = (event: PointerEvent) => {
+      x = event.clientX;
+      y = event.clientY;
+      if (frame) {
+        return; // one style write per frame, however fast the pointer moves
+      }
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        root.style.setProperty("--glow-x", `${x}px`);
+        root.style.setProperty("--glow-y", `${y}px`);
+      });
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
     <>
       <a className="skip-link" href="#main">
@@ -81,6 +112,9 @@ export default function App() {
           </p>
         )}
         <ErrorBoundary>
+          <ExplainerPanel onToast={pushToast} onSelect={setSelectedId} onChanged={onChanged} />
+          {/* The detail panel is the hero: it holds the tall right column while the accounts list and
+              the transfer form share the left rail (grid areas in styles.css). */}
           <div className="grid">
             <AccountsPanel
               accounts={accounts}
@@ -91,11 +125,11 @@ export default function App() {
               onToast={pushToast}
             />
             <AccountDetail accountId={selectedId} accounts={accounts} refreshSeq={refreshSeq} />
+            <TransferForm accounts={accounts} onChanged={onChanged} onToast={pushToast} />
           </div>
-          <TransferForm accounts={accounts} onChanged={onChanged} onToast={pushToast} />
         </ErrorBoundary>
       </main>
-      <footer className="footer">every transfer is two postings that sum to zero — the whole book always nets to 0.00</footer>
+      <footer className="footer">every transfer is two postings that sum to zero, so the whole book always nets to 0.00</footer>
       <ToastShelf toasts={toasts} onDismiss={dismissToast} />
     </>
   );

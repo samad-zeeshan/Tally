@@ -110,7 +110,7 @@ export function TransferForm({ accounts, onChanged, onToast }: Props) {
   ));
 
   return (
-    <section className="card transfer">
+    <section className="card transfer card-transfer">
       <div className="card-header">
         <h2>Transfer</h2>
         {import.meta.env.DEV && (
@@ -188,15 +188,15 @@ export function TransferForm({ accounts, onChanged, onToast }: Props) {
           </div>
         </div>
 
-        <p className={"preview" + (remaining !== null && remaining < 0 ? " warn" : "")} aria-live="polite">
-          {remaining !== null &&
-            fromAccount !== null &&
-            (remaining < 0
-              ? `Exceeds ${fromAccount.name}'s balance by ${formatMinor(-remaining)}; the ledger will reject it.`
-              : `${fromAccount.name} will hold ${formatMinor(remaining)} after this transfer.`)}
-        </p>
-
+        {/* The live preview and the action share one row: consequence on the left, commit on the right. */}
         <div className="actions-row">
+          <p className={"preview" + (remaining !== null && remaining < 0 ? " warn" : "")} aria-live="polite">
+            {remaining !== null &&
+              fromAccount !== null &&
+              (remaining < 0
+                ? `Exceeds ${fromAccount.name}'s balance by ${formatMinor(-remaining)}; the ledger will reject it.`
+                : `${fromAccount.name} will hold ${formatMinor(remaining)} after this transfer.`)}
+          </p>
           <Button type="submit" loading={inFlight}>
             {inFlight ? "Sending" : "Send transfer"}
           </Button>
@@ -217,22 +217,6 @@ export function TransferForm({ accounts, onChanged, onToast }: Props) {
 
         {abandoned && (
           <p className="notice notice-warn">The previous transfer may or may not have gone through. Check the statement.</p>
-        )}
-
-        {state.phase === "success" && (
-          <p className="notice notice-success">
-            <span className="burst" aria-hidden="true">
-              <i /><i /><i /><i /><i /><i />
-            </span>
-            {state.replayed ? (
-              <>
-                Applied once. The retry was deduplicated by the server.
-                <span className="replay-badge">idempotency key</span>
-              </>
-            ) : (
-              "Transfer applied."
-            )}
-          </p>
         )}
       </div>
     </section>

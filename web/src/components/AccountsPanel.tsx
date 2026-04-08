@@ -1,6 +1,6 @@
 // The create form (name plus an optional opening balance) and the account list. The opening-balance
 // field funds a new account through the world-funded creation path, so the demo needs no seeding step.
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { ApiError, createAccount } from "../api/client";
 import type { Account } from "../api/types";
 import { parseAmountToMinor } from "../lib/money";
@@ -67,7 +67,7 @@ export function AccountsPanel({ accounts, selectedId, loading, onSelect, onChang
   }
 
   return (
-    <section className="card">
+    <section className="card card-accounts">
       <div className="card-header">
         <h2>Accounts</h2>
         {accounts.length > 0 && <span className="count-chip">{accounts.length}</span>}
@@ -121,8 +121,13 @@ export function AccountsPanel({ accounts, selectedId, loading, onSelect, onChang
         />
       ) : (
         <ul className="account-list">
-          {accounts.map((account) => (
-            <li key={account.id} className="account-item">
+          {accounts.map((account, index) => (
+            // Rows cascade in with a capped stagger; late rows in a long list arrive as one beat.
+            <li
+              key={account.id}
+              className="account-item"
+              style={{ "--row-delay": `${Math.min(index, 6) * 30}ms` } as CSSProperties}
+            >
               <button
                 type="button"
                 className="account-row"

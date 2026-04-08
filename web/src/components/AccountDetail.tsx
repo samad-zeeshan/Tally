@@ -1,7 +1,7 @@
 // Balance, trend, and paginated statement for the selected account. Switching accounts shows a full
 // skeleton; a refresh after a transfer keeps the current data on screen and swaps it in silently, with
 // only a thin sweep along the card's top edge admitting that work is happening.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ApiError, getAccount, getStatement } from "../api/client";
 import type { Account, StatementEntry } from "../api/types";
 import { formatMinor } from "../lib/money";
@@ -29,6 +29,9 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const lastIdRef = useRef<string | null>(null);
+  // Each row's reveal delay is assigned once, the first time that posting renders, so a Load more
+  // staggers only the appended page and never restarts rows already on screen.
+  const rowDelays = useRef(new Map<number, number>());
 
   const names = useMemo(() => new Map(accounts.map((a) => [a.id, a.name])), [accounts]);
 
@@ -47,6 +50,7 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
       setAccount(null);
       setEntries([]);
       setCursor(null);
+      rowDelays.current.clear();
     }
     setLoading(true);
     setError(null);
@@ -103,7 +107,7 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
 
   if (accountId === null) {
     return (
-      <section className="card">
+      <section className="card card-detail">
         <h2>Statement</h2>
         <EmptyState icon={<BookIcon />} title="Select an account" hint="Its balance, trend, and full statement will show here." />
       </section>
@@ -113,8 +117,23 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
   const initialLoad = loading && account === null;
   const now = Date.now();
 
+  // Delays are handed out in render order, so the first unseen row of a batch leads and the cap keeps
+  // deep pages from waiting out a long queue.
+  let unseenInThisRender = 0;
+  const delayFor = (postingId: number): string => {
+    let delay = rowDelays.current.get(postingId);
+    if (delay === undefined) {
+      delay = Math.min(unseenInThisRender++, 8) * 40;
+      rowDelays.current.set(postingId, delay);
+    }
+    return `${delay}ms`;
+  };
+
   return (
-    <section className={"card" + (loading && account !== null ? " refreshing" : "")} aria-busy={loading || undefined}>
+    <section
+      className={"card card-detail" + (loading && account !== null ? " refreshing" : "")}
+      aria-busy={loading || undefined}
+    >
       <h2>{account ? account.name : "Statement"}</h2>
       {error && (
         <p className="notice notice-error" role="alert">
@@ -130,11 +149,16 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
         account && (
           <>
             <div className="balance-row">
-              <AnimatedNumber className={"balance-big" + (account.balanceMinor < 0 ? " amount negative" : "")} value={account.balanceMinor} />
+              <div>
+                <AnimatedNumber className={"balance-big" + (account.balanceMinor < 0 ? " amount negative" : "")} value={account.balanceMinor} />
+                <span className="balance-caption">
+                  current balance · {entries.length} {entries.length === 1 ? "entry" : "entries"} below
+                </span>
+              </div>
+              {trend.length > 1 && (
+                <Sparkline values={trend} ariaLabel={`Balance after each of the last ${trend.length} postings`} />
+              )}
             </div>
-            {trend.length > 1 && (
-              <Sparkline values={trend} ariaLabel={`Balance after each of the last ${trend.length} postings`} />
-            )}
             {entries.length === 0 ? (
               <EmptyState icon={<BookIcon />} title="No entries yet" hint="Transfers in and out will land here, newest first." />
             ) : (
@@ -151,7 +175,7 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
                     </thead>
                     <tbody>
                       {entries.map((entry) => (
-                        <tr key={entry.postingId}>
+                        <tr key={entry.postingId} style={{ "--row-delay": delayFor(entry.postingId) } as CSSProperties}>
                           <td>
                             <time dateTime={entry.createdAt} title={formatDateTime(entry.createdAt)}>
                               {timeAgo(entry.createdAt, now)}
@@ -164,7 +188,7 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
                               {formatMinor(entry.amountMinor)}
                             </span>
                           </td>
-                          <td className="amount">{formatMinor(entry.balanceAfterMinor)}</td>
+                          <td className="amount balance-after">{formatMinor(entry.balanceAfterMinor)}</td>
                         </tr>
                       ))}
                     </tbody>

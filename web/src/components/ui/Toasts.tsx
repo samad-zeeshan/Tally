@@ -1,6 +1,7 @@
 // Toast shelf. Each card owns its own dismiss timer, pauses on hover with the remaining time kept, and
-// announces politely; errors interrupt with role=alert and stay up longer.
-import { useCallback, useEffect, useRef } from "react";
+// announces politely; errors interrupt with role=alert and stay up longer. Dismissal plays a short exit
+// animation and only then removes the card from state.
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheckIcon, AlertIcon, XIcon } from "./icons";
 
 export type ToastKind = "success" | "error" | "info";
@@ -34,11 +35,12 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: str
   const remaining = useRef(duration);
   const startedAt = useRef(0);
   const timer = useRef(0);
+  const [leaving, setLeaving] = useState(false);
 
   const arm = useCallback(() => {
     startedAt.current = Date.now();
-    timer.current = window.setTimeout(() => onDismiss(toast.id), remaining.current);
-  }, [onDismiss, toast.id]);
+    timer.current = window.setTimeout(() => setLeaving(true), remaining.current);
+  }, []);
 
   useEffect(() => {
     arm();
@@ -52,14 +54,21 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: str
 
   return (
     <div
-      className={`toast toast-${toast.kind}`}
+      className={`toast toast-${toast.kind}` + (leaving ? " toast-leaving" : "")}
       role={toast.kind === "error" ? "alert" : "status"}
       onMouseEnter={pause}
       onMouseLeave={arm}
+      onAnimationEnd={(event) => {
+        // The card removes itself only after the exit animation; the enter animation ends here too,
+        // so match on the leaving state, not just any animation finishing.
+        if (leaving && event.animationName === "slide-out") {
+          onDismiss(toast.id);
+        }
+      }}
     >
       <span className="toast-icon">{toast.kind === "error" ? <AlertIcon /> : <CircleCheckIcon />}</span>
       <span className="toast-msg">{toast.message}</span>
-      <button className="toast-close" onClick={() => onDismiss(toast.id)} aria-label="Dismiss notification">
+      <button className="toast-close" onClick={() => setLeaving(true)} aria-label="Dismiss notification">
         <XIcon />
       </button>
       <span className="toast-progress" style={{ animationDuration: `${duration}ms` }} aria-hidden="true" />

@@ -22,10 +22,11 @@ export function Sparkline({ values, ariaLabel }: SparklineProps) {
           <stop offset="1" stopColor="currentColor" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={paths.area} fill={`url(#${gradientId})`} stroke="none" />
-      {/* non-scaling-stroke keeps the line crisp under the stretched viewBox */}
-      <path d={paths.line} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={paths.lastX} cy={paths.lastY} r="2.5" fill="currentColor" />
+      <path className="spark-area" d={paths.area} fill={`url(#${gradientId})`} stroke="none" />
+      {/* non-scaling-stroke keeps the line crisp under the stretched viewBox; pathLength=1 lets the
+          stylesheet draw the line in with a unit dash regardless of its real length */}
+      <path className="spark-line" d={paths.line} pathLength={1} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
+      <circle className="spark-dot" cx={paths.lastX} cy={paths.lastY} r="2.5" fill="currentColor" />
     </svg>
   );
 }

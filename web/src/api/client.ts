@@ -23,6 +23,11 @@ export class ApiError extends Error {
 // short-lived session token from a login flow, never a bundled secret. The trade is owned by ADR-0015.
 const TOKEN = import.meta.env.VITE_API_TOKEN;
 
+// In dev the Vite proxy owns the "/api" prefix and strips it before forwarding to the backend. The
+// built client is served by the Java server itself, which mounts routes at bare paths on the same
+// origin, so there the prefix must not exist.
+const BASE = import.meta.env.DEV ? "/api" : "";
+
 function authHeaders(extra?: Record<string, string>): Record<string, string> {
   const headers: Record<string, string> = { ...extra };
   if (TOKEN) {
@@ -96,7 +101,7 @@ export async function createAccount(name: string, openingBalanceMinor?: number):
   if (openingBalanceMinor !== undefined) {
     body.openingBalanceMinor = openingBalanceMinor;
   }
-  const response = await send("/api/accounts", {
+  const response = await send(`${BASE}/accounts`, {
     method: "POST",
     headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
@@ -108,7 +113,7 @@ export async function createAccount(name: string, openingBalanceMinor?: number):
 }
 
 export async function getAccount(id: string): Promise<Account> {
-  const response = await send(`/api/accounts/${id}`, { headers: authHeaders() });
+  const response = await send(`${BASE}/accounts/${id}`, { headers: authHeaders() });
   if (!response.ok) {
     await fail(response);
   }
@@ -116,7 +121,7 @@ export async function getAccount(id: string): Promise<Account> {
 }
 
 export async function listAccounts(): Promise<Account[]> {
-  const response = await send("/api/accounts", { headers: authHeaders() });
+  const response = await send(`${BASE}/accounts`, { headers: authHeaders() });
   if (!response.ok) {
     await fail(response);
   }
@@ -126,7 +131,7 @@ export async function listAccounts(): Promise<Account[]> {
 
 export async function getStatement(accountId: string, cursor?: string): Promise<StatementPage> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-  const response = await send(`/api/accounts/${accountId}/statement${query}`, { headers: authHeaders() });
+  const response = await send(`${BASE}/accounts/${accountId}/statement${query}`, { headers: authHeaders() });
   if (!response.ok) {
     await fail(response);
   }
@@ -134,7 +139,7 @@ export async function getStatement(accountId: string, cursor?: string): Promise<
 }
 
 export async function getReconciliation(): Promise<ReconciliationReport> {
-  const response = await send("/api/reconciliation", { headers: authHeaders() });
+  const response = await send(`${BASE}/reconciliation`, { headers: authHeaders() });
   if (!response.ok) {
     await fail(response);
   }
@@ -167,7 +172,7 @@ export async function createTransfer(
   req: TransferRequest,
   idempotencyKey: string,
 ): Promise<{ transfer: Transfer; replayed: boolean }> {
-  const response = await send("/api/transfers", {
+  const response = await send(`${BASE}/transfers`, {
     method: "POST",
     headers: authHeaders({ "Content-Type": "application/json", "Idempotency-Key": idempotencyKey }),
     body: JSON.stringify(req),

@@ -22,9 +22,26 @@
   --radius-s: 7px;
   --radius-m: 10px;
   --radius-l: 14px;
+  /* Motion: --ease for hovers and exits, --spring (slight overshoot) for entrances only. Looping
+     indicators (spinner, shimmer, toast drain) stay linear on purpose: a loop with easing pulses. */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.3, 0.4, 1);
   --fast: 150ms;
   --slow: 300ms;
+  --slower: 550ms;
+  /* Spacing rhythm: near-everything sits on this scale so panels share a grid. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  /* Type scale: labels, body-small, panel eyebrows, and one hero size for the balance. */
+  --font-2xs: 0.72rem;
+  --font-xs: 0.8rem;
+  --font-s: 0.88rem;
+  --font-l: 1.1rem;
+  --font-hero: clamp(2.4rem, 5vw, 3.2rem);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
   color-scheme: light;
@@ -57,9 +74,20 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* An accent spotlight that trails the pointer (App keeps --glow-x/--glow-y current; they rest at the
+     top center before the first move). Low alpha and a wide falloff: ambience, not a flashlight. */
+  background:
+    radial-gradient(
+      620px circle at var(--glow-x, 50%) var(--glow-y, -10%),
+      color-mix(in srgb, var(--accent) 7%, transparent),
+      transparent 70%
+    ),
+    var(--bg);
+  /* The pointer reports viewport coordinates, so the spotlight layer must not scroll with the page. */
+  background-attachment: fixed, scroll;
   color: var(--text);
-  transition: background var(--slow) var(--ease), color var(--slow) var(--ease);
+  min-height: 100vh;
+  transition: background-color var(--slow) var(--ease), color var(--slow) var(--ease);
 }
 
 :focus-visible {
@@ -116,7 +144,7 @@ body {
 }
 
 .tagline {
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   opacity: 0.85;
   font-weight: 400;
 }
@@ -131,7 +159,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
+  font-size: var(--font-xs);
   background: rgb(255 255 255 / 0.14);
   border: 1px solid rgb(255 255 255 / 0.22);
   padding: 5px 12px;
@@ -158,26 +186,47 @@ body {
 
 .container {
   max-width: 1020px;
-  margin: 28px auto 12px;
-  padding: 0 16px;
+  margin: var(--space-6) auto var(--space-3);
+  padding: 0 var(--space-4);
 }
 
+/* The account detail is the hero: it takes the tall right column while the two forms share the left
+   rail, so the page has one focal point instead of three equal boxes. */
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 24px;
+  grid-template-columns: 1fr 1.45fr;
+  grid-template-areas:
+    "accounts detail"
+    "transfer detail";
+  gap: var(--space-5);
   align-items: start;
 }
+
+.card-accounts { grid-area: accounts; }
+.card-detail { grid-area: detail; }
+.card-transfer { grid-area: transfer; }
 
 .card {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-l);
-  padding: 22px;
-  margin-bottom: 24px;
+  padding: var(--space-5);
   box-shadow: var(--shadow-1);
-  animation: rise var(--slow) var(--ease) both;
+  animation: rise var(--slower) var(--spring) both;
+  transition: background-color var(--slow) var(--ease), border-color var(--slow) var(--ease),
+    color var(--slow) var(--ease);
+}
+
+/* Panels arrive as one choreographed beat, left rail first, hero landing last. */
+.card-accounts { animation-delay: 0ms; }
+.card-transfer { animation-delay: 70ms; }
+.card-detail { animation-delay: 140ms; }
+
+.card-detail {
+  padding: var(--space-6);
+  box-shadow: var(--shadow-2);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 3.5%, var(--surface)), var(--surface) 55%);
 }
 
 /* A thin sweep along the top while data refreshes behind what is already on screen. */
@@ -195,37 +244,128 @@ body {
 
 .card-header {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
+/* Panel titles are quiet eyebrows; the content under them carries the weight. */
 .card h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .count-chip {
-  font-size: 0.75rem;
+  font-size: var(--font-2xs);
   color: var(--muted);
   background: var(--surface-2);
   padding: 2px 9px;
   border-radius: 999px;
+  font-variant-numeric: tabular-nums;
 }
 
 .muted {
   color: var(--muted);
 }
 
+/* Sized to the container's content box so the hairline lands on the same grid edge as the cards. */
 .footer {
-  text-align: center;
+  max-width: calc(1020px - 2 * var(--space-4));
+  width: calc(100% - 2 * var(--space-4));
+  margin: var(--space-6) auto 0;
+  padding: var(--space-4) 0 var(--space-6);
+  border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: 0.8rem;
-  padding: 8px 16px 28px;
+  font-size: var(--font-xs);
+  transition: border-color var(--slow) var(--ease), color var(--slow) var(--ease);
+}
+
+/* ---------- explainer ---------- */
+
+/* The what-is-this card above the grid. A native <details> so it collapses without any state; the
+   summary row reads as a quiet panel title whether open or closed. */
+.explainer {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+}
+
+.explainer summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  list-style: none;
+}
+
+.explainer summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A small chevron that flips with the open state stands in for the default marker. */
+.explainer summary::after {
+  content: "";
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform var(--fast) var(--ease);
+  flex-shrink: 0;
+}
+
+.explainer[open] summary::after {
+  transform: rotate(-135deg);
+}
+
+.explainer-hint {
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+
+.explainer-points {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  font-size: var(--font-xs);
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.explainer-points strong {
+  display: block;
+  color: var(--text);
+  font-size: var(--font-s);
+  margin-bottom: 2px;
+}
+
+/* The live-demo strip: a hairline above, the accent label, then the three buttons. */
+.try-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--border);
+}
+
+.try-label {
+  font-size: var(--font-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent);
 }
 
 /* ---------- buttons ---------- */
@@ -334,18 +474,18 @@ form {
 }
 
 .field-label {
-  font-size: 0.82rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--muted);
 }
 
 .field-hint {
-  font-size: 0.76rem;
+  font-size: var(--font-2xs);
   color: var(--muted);
 }
 
 .field-error {
-  font-size: 0.78rem;
+  font-size: var(--font-2xs);
   color: var(--negative);
 }
 
@@ -357,7 +497,8 @@ select {
   font: inherit;
   color: var(--text);
   background: var(--surface);
-  transition: border-color var(--fast) var(--ease);
+  transition: border-color var(--fast) var(--ease), background-color var(--slow) var(--ease),
+    color var(--slow) var(--ease);
   min-width: 0;
 }
 
@@ -382,17 +523,19 @@ select[aria-invalid="true"] {
 
 .account-list {
   list-style: none;
-  margin: 16px 0 0;
+  margin: var(--space-4) 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .account-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  animation: rise var(--slow) var(--spring) both;
+  animation-delay: var(--row-delay, 0ms);
 }
 
 .account-row {
@@ -447,7 +590,7 @@ select[aria-invalid="true"] {
 .account-meta {
   display: block;
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: var(--font-2xs);
   font-family: ui-monospace, monospace;
 }
 
@@ -472,7 +615,19 @@ select[aria-invalid="true"] {
   border-radius: var(--radius-s);
   display: grid;
   place-items: center;
-  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease),
+    opacity var(--fast) var(--ease);
+}
+
+/* The id copier only surfaces when its row is engaged, so the resting list is clean. */
+.account-item .copy-btn {
+  opacity: 0;
+}
+
+.account-item:hover .copy-btn,
+.account-item:focus-within .copy-btn,
+.copy-btn.copied {
+  opacity: 1;
 }
 
 .copy-btn:hover {
@@ -487,28 +642,54 @@ select[aria-invalid="true"] {
 
 /* ---------- account detail ---------- */
 
+/* Hero block: the balance is the page's focal point, the trend sits beside it as a quiet aside. */
 .balance-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-5);
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin: var(--space-2) 0 var(--space-5);
 }
 
 .balance-big {
-  font-size: 2.2rem;
+  font-size: var(--font-hero);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.balance-caption {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-xs);
+  color: var(--muted);
 }
 
 .spark {
   color: var(--accent);
   display: block;
-  width: 100%;
+  width: min(240px, 100%);
   height: 56px;
-  margin: 4px 0 14px;
+  flex-shrink: 0;
+}
+
+/* The line draws itself in when an account opens; the fill and the endpoint dot follow it. */
+.spark-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 900ms var(--ease) 120ms forwards;
+}
+
+.spark-area {
+  opacity: 0;
+  animation: fade-in var(--slower) var(--ease) 600ms forwards;
+}
+
+.spark-dot {
+  opacity: 0;
+  animation: fade-in var(--fast) var(--ease) 950ms forwards;
 }
 
 .table-scroll {
@@ -518,26 +699,41 @@ select[aria-invalid="true"] {
 .statement {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: var(--font-s);
 }
 
 .statement th,
 .statement td {
-  padding: 9px 12px;
+  padding: 10px var(--space-3);
   border-bottom: 1px solid var(--border);
   text-align: left;
   white-space: nowrap;
+  transition: border-color var(--slow) var(--ease);
 }
 
 .statement th {
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: var(--font-2xs);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
+/* Numbers share one right edge; .amount alone loses to `.statement td`'s specificity. */
+.statement th.amount,
+.statement td.amount {
+  text-align: right;
+}
+
+.statement td.balance-after {
+  color: var(--muted);
+}
+
+/* Rows cascade in; each row's --row-delay is assigned once when it first appears (capped in JS), so
+   loading more staggers the new page without re-running rows already on screen. */
 .statement tbody tr {
-  animation: rise var(--fast) var(--ease) both;
+  animation: rise var(--slow) var(--spring) both;
+  animation-delay: var(--row-delay, 0ms);
 }
 
 .statement tbody tr:hover {
@@ -550,7 +746,7 @@ select[aria-invalid="true"] {
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: var(--font-xs);
 }
 
 .pill.pos {
@@ -578,15 +774,19 @@ select[aria-invalid="true"] {
 
 /* ---------- transfer form ---------- */
 
+/* The form lives in the narrow left rail, so From and To stack and the swap sits between them. */
 .transfer-grid {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  justify-items: stretch;
 }
 
 .swap-btn {
-  margin-bottom: 1px;
+  justify-self: center;
+  transform: rotate(90deg);
+  width: 32px;
+  height: 32px;
 }
 
 .swap-btn svg {
@@ -612,7 +812,7 @@ select[aria-invalid="true"] {
 
 .chip {
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   padding: 5px 11px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -635,29 +835,33 @@ select[aria-invalid="true"] {
 }
 
 .preview {
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   min-height: 1.2em;
+  margin: 0;
+  flex: 1;
 }
 
 .preview.warn {
   color: var(--warn);
 }
 
+/* Preview on the left, the primary action anchored right: no dead band above the button. */
 .actions-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .chaos {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
+  font-size: var(--font-xs);
   color: var(--warn);
   background: var(--warn-soft);
   border: 1px dashed var(--warn);
@@ -676,7 +880,7 @@ select[aria-invalid="true"] {
 .notice {
   padding: 11px 14px;
   border-radius: var(--radius-m);
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -694,53 +898,10 @@ select[aria-invalid="true"] {
   color: var(--warn);
 }
 
-.notice-success {
-  position: relative;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
+/* The page-level load error sits above the grid and needs its own breathing room. */
+.container > .notice {
+  margin: 0 0 var(--space-5);
 }
-
-.replay-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  padding: 3px 8px;
-  border-radius: 999px;
-}
-
-/* Confetti-lite: a handful of pieces flung from the success notice, once, on mount. */
-.burst {
-  position: absolute;
-  top: 50%;
-  left: 18px;
-  pointer-events: none;
-}
-
-.burst i {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--accent);
-  opacity: 0;
-  animation: fling 700ms var(--ease) forwards;
-}
-
-.burst i:nth-child(2n) {
-  background: var(--warn);
-  border-radius: 50%;
-}
-
-.burst i:nth-child(1) { --dx: -34px; --dy: -30px; }
-.burst i:nth-child(2) { --dx: 26px; --dy: -38px; animation-delay: 40ms; }
-.burst i:nth-child(3) { --dx: 48px; --dy: -14px; animation-delay: 70ms; }
-.burst i:nth-child(4) { --dx: -50px; --dy: -6px; animation-delay: 30ms; }
-.burst i:nth-child(5) { --dx: 12px; --dy: -48px; animation-delay: 90ms; }
-.burst i:nth-child(6) { --dx: -18px; --dy: -44px; animation-delay: 60ms; }
 
 /* ---------- empty states & skeletons ---------- */
 
@@ -756,12 +917,12 @@ select[aria-invalid="true"] {
 .empty-icon {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--border);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
   color: var(--muted);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .empty-title {
@@ -770,7 +931,7 @@ select[aria-invalid="true"] {
 
 .empty-hint {
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: var(--font-s);
   max-width: 34ch;
 }
 
@@ -818,8 +979,15 @@ select[aria-invalid="true"] {
   border-radius: var(--radius-m);
   padding: 12px 12px 12px 14px;
   box-shadow: var(--shadow-2);
-  font-size: 0.88rem;
-  animation: slide-in var(--slow) var(--ease) both;
+  transition: background-color var(--slow) var(--ease), border-color var(--slow) var(--ease),
+    color var(--slow) var(--ease);
+  font-size: var(--font-s);
+  animation: slide-in var(--slow) var(--spring) both;
+}
+
+/* Leaving is the entrance played back faster; the card is removed when this finishes. */
+.toast.toast-leaving {
+  animation: slide-out var(--fast) var(--ease) both;
 }
 
 .toast-error {
@@ -874,13 +1042,28 @@ select[aria-invalid="true"] {
 /* ---------- animations ---------- */
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-in {
   from { opacity: 0; transform: translateX(24px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Drawn with pathLength=1, so dashoffset 1 -> 0 traces the whole line regardless of geometry. */
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
 }
 
 @keyframes shimmer {
@@ -906,11 +1089,6 @@ select[aria-invalid="true"] {
   to { transform: translateX(350%); }
 }
 
-@keyframes fling {
-  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
-  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(200deg); }
-}
-
 @keyframes drain {
   from { transform: scaleX(1); }
   to { transform: scaleX(0); }
@@ -929,19 +1107,23 @@ select[aria-invalid="true"] {
 /* ---------- responsive ---------- */
 
 @media (max-width: 840px) {
+  /* One column: list, then the detail it drives, then the transfer form. */
   .grid {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "accounts"
+      "detail"
+      "transfer";
+  }
+
+  .card-detail {
+    padding: var(--space-5);
   }
 
   .create-grid,
-  .transfer-grid,
-  .amount-row {
+  .amount-row,
+  .explainer-points {
     grid-template-columns: 1fr;
-  }
-
-  .swap-btn {
-    justify-self: center;
-    transform: rotate(90deg);
   }
 
   .tagline {
@@ -949,6 +1131,6 @@ select[aria-invalid="true"] {
   }
 
   .balance-big {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 }
