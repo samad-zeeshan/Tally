@@ -43,10 +43,10 @@ broken. If a bug slipped past the store, the database constraints still catch it
 
 | Invariant | Store (in-memory) | HTTP edge | Database (Postgres) |
 |---|---|---|---|
-| Conservation | mirrored postings sum to zero; world funds every opening | — | `CHECK (amount_minor <> 0)`; reconciliation asserts `SUM(balance_minor) = 0` |
-| No silent negatives | read-check-write under a per-account lock | — | `CHECK (balance_minor >= 0 OR allow_negative)` |
+| Conservation | mirrored postings sum to zero; world funds every opening | none | `CHECK (amount_minor <> 0)`; reconciliation asserts `SUM(balance_minor) = 0` |
+| No silent negatives | read-check-write under a per-account lock | none | `CHECK (balance_minor >= 0 OR allow_negative)` |
 | Idempotency | a reservation map claims the key before applying | key format validated at the edge | `UNIQUE (idempotency_key)`, holding across restarts |
-| Atomic and durable | the pure `Ledger` computes both sides together | — | one transaction per transfer, `synchronous_commit` on |
+| Atomic and durable | the pure `Ledger` computes both sides together | none | one transaction per transfer, `synchronous_commit` on |
 | Money never a float | `long` minor units, `Math.addExact` | integer-only parse, 10^12 cap | `bigint` columns |
 
 The idempotency row is the interesting one: the in-memory reservation, the header semantics, and the
