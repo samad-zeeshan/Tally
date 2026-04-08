@@ -229,17 +229,19 @@ body {
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 3.5%, var(--surface)), var(--surface) 55%);
 }
 
-/* A thin sweep along the top while data refreshes behind what is already on screen. */
+/* A quiet sheen glides along the top while data refreshes behind what is already on screen. A soft
+   gradient that fades at both ends, so it reads as a hint of activity rather than a hard green bar. */
 .card.refreshing::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   height: 2px;
-  width: 40%;
-  border-radius: 2px;
-  background: var(--accent);
-  animation: sweep 1s var(--ease) infinite;
+  width: 55%;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.6;
+  animation: sweep 1.3s var(--ease) infinite;
 }
 
 .card-header {
