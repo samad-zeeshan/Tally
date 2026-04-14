@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tally: money that arrives exactly once</title>
+<meta name="description" content="Tally is a small banking service that moves money between accounts and makes sure a payment can never go missing and can never be paid twice. Try the real app in your browser.">
+<meta name="theme-color" content="#0f6b4f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f6b4f'/%3E%3Cpath d='M9 11h14M16 11v11' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<style>
+/* Tally's own colours and spacing, taken from the app's stylesheet (web/src/styles.css) so the page
+   and the running app read as one thing. No shared kit, no framework. */
+:root {
+  --accent: #0f6b4f;
+  --accent-strong: #0c5940;
+  --accent-soft: #e7f3ee;
+  --bg: #f5f7f5;
+  --surface: #ffffff;
+  --surface-2: #eef1ee;
+  --text: #1a1f1c;
+  --muted: #5c6660;
+  --border: #dfe4df;
+  --rule: #cdd6d0;
+  --shadow-1: 0 1px 2px rgb(16 24 20 / .06), 0 1px 6px rgb(16 24 20 / .05);
+  --shadow-2: 0 4px 16px rgb(16 24 20 / .1);
+  --radius-s: 7px;
+  --radius-m: 10px;
+  --radius-l: 14px;
+  --read: 44rem;
+  --wide: 70rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #3dbf92;
+    --accent-strong: #55d3a6;
+    --accent-soft: rgb(61 191 146 / .14);
+    --bg: #101512;
+    --surface: #181f1b;
+    --surface-2: #212a25;
+    --text: #e7ece8;
+    --muted: #97a29b;
+    --border: #2b352f;
+    --rule: #2b352f;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / .4);
+    --shadow-2: 0 6px 20px rgb(0 0 0 / .45);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent-strong); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.skip {
+  position: absolute; left: -9999px; top: 8px; z-index: 40;
+  background: var(--surface); color: var(--text);
+  padding: 10px 16px; border-radius: var(--radius-s); box-shadow: var(--shadow-2);
+}
+.skip:focus-visible { left: 8px; }
+
+.wrap { width: min(100% - 2.5rem, var(--read)); margin-inline: auto; }
+.wrap-wide { width: min(100% - 2.5rem, var(--wide)); margin-inline: auto; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky; top: 0; z-index: 30;
+}
+.masthead-in {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: .7rem 0;
+}
+.mark {
+  display: inline-grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 1rem;
+}
+.wordmark { font-weight: 700; letter-spacing: -.01em; margin-right: auto; }
+.masthead nav { display: flex; gap: 1.1rem; font-size: .88rem; }
+.masthead nav a { text-decoration: none; color: var(--muted); }
+.masthead nav a:hover { color: var(--accent); }
+
+/* ---------- the ruled column ---------- */
+
+/* Sections are numbered in the margin against a short rule, the way a ruled book is. */
+.section { padding: 3.6rem 0 .5rem; }
+.section-head { position: relative; margin-bottom: 1.1rem; }
+.section-no {
+  display: block; font-size: .78rem; font-variant-numeric: tabular-nums;
+  letter-spacing: .16em; color: var(--muted); margin-bottom: .35rem;
+}
+.section h2 {
+  font-size: clamp(1.45rem, 3.6vw, 1.95rem);
+  line-height: 1.22; letter-spacing: -.02em; margin: 0 0 .55rem;
+  max-width: 22ch;
+}
+.section-head::after {
+  content: ""; display: block; width: 44px; height: 3px; border-radius: 2px;
+  background: var(--accent);
+}
+.section p { margin: 0 0 1rem; }
+.lede { font-size: 1.08rem; }
+.muted { color: var(--muted); }
+.small { font-size: .9rem; }
+
+/* ---------- hero ---------- */
+
+.hero { padding: 4rem 0 1rem; }
+.eyebrow {
+  font-size: .78rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700; margin: 0 0 .9rem;
+}
+.hero h1 {
+  font-size: clamp(2.1rem, 7vw, 3.4rem);
+  line-height: 1.05; letter-spacing: -.035em; margin: 0 0 1.1rem;
+  max-width: 15ch;
+}
+.hero-lede { font-size: clamp(1.05rem, 2.4vw, 1.22rem); max-width: 40ch; margin: 0 0 1rem; }
+.hero-who { color: var(--muted); max-width: 44ch; }
+.cta-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.6rem; align-items: center; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .62rem 1.15rem; border-radius: var(--radius-s);
+  font: inherit; font-weight: 600; font-size: .95rem;
+  text-decoration: none; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-strong); color: #fff; }
+.btn-quiet { background: var(--surface); color: var(--text); border-color: var(--border); }
+.btn-quiet:hover { border-color: var(--muted); color: var(--text); }
+.btn-text {
+  background: none; border: none; color: var(--muted);
+  font: inherit; font-size: .85rem; text-decoration: underline;
+  cursor: pointer; padding: .4rem .2rem;
+}
+.btn-text[hidden] { display: none; }
+
+/* ---------- the typewriter narration ---------- */
+
+/* Without JavaScript this is an ordinary paragraph. JavaScript adds .is-armed, which hides the real
+   sentence but keeps it in the layout, so the block never changes height while it types. */
+.typer { position: relative; color: var(--muted); font-size: .98rem; margin: 1.2rem 0 0; }
+.typer.is-armed .typer-ghost { visibility: hidden; }
+.typer-sr {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.typer-out { position: absolute; inset: 0; }
+.typer.is-typing .typer-out::after {
+  content: ""; display: inline-block;
+  width: .5em; height: 1.05em; margin-left: 1px;
+  vertical-align: -.2em; background: var(--accent);
+  animation: blink 1s steps(1, end) infinite;
+}
+@keyframes blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+/* ---------- the zero line ---------- */
+
+.zero { margin: 2.4rem 0 0; padding: 0; }
+.zerobox {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-l); padding: 1.9rem 1.4rem 1.2rem;
+  box-shadow: var(--shadow-1);
+}
+.zerogrid {
+  /* One scale for the whole figure: --unit is the height of 500.00, and every bar is a plain
+     fraction of it, so the two halves are always comparable by eye. The rows size themselves to
+     their content, so a bar is never quietly cropped to fit. */
+  --unit: 118px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 4px auto;
+  column-gap: clamp(.6rem, 3vw, 2rem);
+}
+.zerorule {
+  grid-column: 1 / -1; grid-row: 2;
+  background: var(--accent); border-radius: 2px; position: relative;
+}
+.zerorule span {
+  position: absolute; right: 0; top: -1.6rem;
+  font-size: .8rem; font-weight: 700; color: var(--accent);
+  font-variant-numeric: tabular-nums; letter-spacing: .1em;
+}
+.zerocell { display: flex; flex-direction: column; min-width: 0; }
+.zerocell.up { grid-row: 1; justify-content: flex-end; }
+.zerocell.down { grid-row: 3; justify-content: flex-start; }
+.zerobar {
+  width: 100%; height: calc(var(--f) * var(--unit)); border-radius: 4px 4px 0 0;
+  background: var(--accent);
+  transform: scaleY(0); transform-origin: bottom;
+  transition: transform .75s cubic-bezier(.2,.8,.2,1);
+}
+.zerocell.down .zerobar {
+  border-radius: 0 0 4px 4px; transform-origin: top;
+  background: repeating-linear-gradient(
+    135deg, var(--accent), var(--accent) 5px,
+    color-mix(in srgb, var(--accent) 45%, transparent) 5px,
+    color-mix(in srgb, var(--accent) 45%, transparent) 10px);
+}
+.zero.is-drawn .zerobar { transform: scaleY(1); }
+.zerolab {
+  font-size: .8rem; font-variant-numeric: tabular-nums; line-height: 1.35;
+  padding: .35rem 0; min-width: 0;
+}
+.zerolab b { display: block; font-size: .92rem; }
+.zerolab i { font-style: normal; color: var(--muted); display: block; font-size: .78rem; }
+.zerocap { margin: 1.2rem 0 0; font-size: .88rem; color: var(--muted); line-height: 1.6; }
+.zerocap b { color: var(--text); }
+@media (prefers-reduced-motion: reduce) {
+  .zerobar { transform: scaleY(1); transition: none; }
+}
+@media (max-width: 32rem) {
+  .zerogrid { --unit: 88px; }
+  .zerolab { font-size: .72rem; }
+  .zerolab b { font-size: .8rem; }
+}
+
+/* ---------- the honesty notice ---------- */
+
+.honest {
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-l);
+  background: var(--accent-soft);
+  padding: 1.15rem 1.3rem;
+  margin: 1.6rem 0;
+}
+.honest p { margin: 0 0 .6rem; }
+.honest p:last-child { margin-bottom: 0; }
+.honest .tag {
+  display: inline-block; font-size: .72rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: .4rem;
+}
+
+/* ---------- the app frame ---------- */
+
+.doline {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-m); padding: .85rem 1rem;
+  margin: 0 0 1rem; font-size: .95rem;
+}
+
+.frame {
+  border: 1px solid var(--border); border-radius: var(--radius-l);
+  overflow: hidden; box-shadow: var(--shadow-2); background: var(--surface);
+  margin-top: 1.2rem;
+}
+.frame-bar {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .55rem .9rem; border-bottom: 1px solid var(--border);
+  background: var(--surface-2); font-size: .78rem; color: var(--muted);
+}
+.frame-dots { display: flex; gap: 5px; }
+.frame-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); display: block; }
+.frame-body { position: relative; height: clamp(560px, 78vh, 820px); }
+.frame iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--surface); }
+.frame-load {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: var(--surface); color: var(--muted); font-size: .9rem;
+}
+.frame-load[hidden] { display: none; }
+.offline {
+  border: 1px solid var(--border); border-radius: var(--radius-l);
+  background: var(--surface); padding: 1.5rem; margin-top: 1.2rem;
+}
+.offline[hidden] { display: none; }
+.offline h3 { margin: 0 0 .5rem; font-size: 1.05rem; }
+.offline p { margin: 0; color: var(--muted); font-size: .95rem; }
+
+/* ---------- lists ---------- */
+
+.points { list-style: none; margin: 1.4rem 0 0; padding: 0; display: grid; gap: 1.4rem; }
+.points > li { padding-left: 1.15rem; border-left: 3px solid var(--accent); }
+.points h3 { margin: 0 0 .35rem; font-size: 1.05rem; line-height: 1.35; }
+.points p { margin: 0; color: var(--muted); font-size: .97rem; }
+
+.limits { list-style: none; margin: 1.4rem 0 0; padding: 0; display: grid; gap: 1rem; }
+.limits > li {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-m); padding: .95rem 1.1rem;
+}
+.limits b { display: block; margin-bottom: .2rem; }
+.limits span { color: var(--muted); font-size: .95rem; }
+
+.works { list-style: none; margin: 1.4rem 0 0; padding: 0; }
+.works > li { padding: .95rem 0; border-bottom: 1px solid var(--border); }
+.works > li:first-child { border-top: 1px solid var(--border); }
+.works b { display: block; }
+.works span { color: var(--muted); font-size: .95rem; display: block; margin: .1rem 0 .4rem; }
+.works a { font-size: .82rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-word; }
+
+/* ---------- proof ---------- */
+
+.proof { display: grid; gap: 1rem; margin: 1.5rem 0 0; }
+.fact {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-m); padding: 1.1rem 1.2rem;
+}
+.fact-n {
+  font-size: clamp(1.7rem, 5vw, 2.2rem); font-weight: 700; line-height: 1.05;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: var(--accent);
+  display: block; margin-bottom: .3rem;
+}
+.fact-n small { font-size: .95rem; font-weight: 600; letter-spacing: 0; }
+.fact b { display: block; margin-bottom: .35rem; }
+.fact p { margin: 0; color: var(--muted); font-size: .92rem; }
+.fact code, .foot code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85em;
+  background: var(--surface-2); padding: .1em .4em; border-radius: 4px;
+}
+@media (min-width: 42rem) { .proof { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- footer ---------- */
+
+.foot {
+  margin-top: 4rem; border-top: 1px solid var(--border);
+  background: var(--surface); padding: 2.2rem 0 3rem;
+  font-size: .9rem; color: var(--muted);
+}
+.foot p { margin: 0 0 .6rem; }
+</style>
+</head>
+
+<body>
+<a class="skip" href="#demo">Skip to the working demo</a>
+
+<header class="masthead">
+  <div class="wrap-wide masthead-in">
+    <span class="mark" aria-hidden="true">&Sigma;</span>
+    <span class="wordmark">Tally</span>
+    <nav aria-label="Sections">
+      <a href="#demo">Try it</a>
+      <a href="#proof">Proof</a>
+      <a href="https://github.com/samad-zeeshan/Tally">Code</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 1. Hero -->
+  <section class="hero wrap">
+    <p class="eyebrow">A small banking service</p>
+    <h1>Money that arrives exactly once.</h1>
+    <p class="hero-lede">Tally moves money from one person's account to another and keeps a written
+      record of every movement, so a payment can never quietly go missing and can never be paid twice.</p>
+    <p class="hero-who">Built by Abdul Samad Zeeshan as a study in getting the boring, critical parts
+      right: Java behind the scenes, a React screen in front, and a great many tests.</p>
+    <p class="typer" data-typer>You can send a payment yourself further down this page. Nothing to install, nothing to sign up for.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#demo">Send a payment</a>
+      <a class="btn btn-quiet" href="https://github.com/samad-zeeshan/Tally">Read the code</a>
+      <button class="btn-text" type="button" id="skip-typing" hidden>Show all text now</button>
+    </div>
+  </section>
+
+  <!-- 2. The problem, in human terms -->
+  <section class="section wrap">
+    <div class="section-head">
+      <span class="section-no">01</span>
+      <h2>A payment has to land once, even when the line drops.</h2>
+    </div>
+    <p class="lede">You tap send. Your phone loses signal before the answer comes back. Did the money
+      go, or not? So you tap send again.</p>
+    <p>Now two requests exist for one payment, and only one of them may count. Get that wrong in one
+      direction and somebody is charged twice. Get it wrong in the other and the rent never arrives.
+      Tally is built around that single moment.</p>
+  </section>
+
+  <!-- 3. The demo -->
+  <section class="section wrap-wide" id="demo">
+    <div class="section-head">
+      <span class="section-no">02</span>
+      <h2>Try it yourself, right here.</h2>
+    </div>
+
+    <div class="honest">
+      <span class="tag">Read this first</span>
+      <p><b>The screen below is the real Tally app</b>, the same React code that runs against the real
+        service. <b>The bank behind it is a small copy of Tally's rules written in JavaScript</b>, so
+        the whole thing runs inside your browser with nothing to install. The real service is written
+        in Java and keeps its data in Postgres.</p>
+      <p class="small">The copy follows the same rules file by file, but it is not the real thing, so
+        every number in the <a href="#proof">proof section</a> below was measured on the real Java
+        system and never on this browser copy. Two accounts, Amara and Ben, are already open when the
+        panel loads. Closing this tab empties them.</p>
+    </div>
+
+    <p class="doline"><b>What to do:</b> in the panel below, click
+      <b>&ldquo;Make a sample transfer&rdquo;</b>. Then watch the small green tag in the dark green bar
+      at the top: it says whether the books balance, and it rechecks after every single change.</p>
+
+    <div class="frame" id="frame">
+      <div class="frame-bar">
+        <span class="frame-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Tally, running in your browser</span>
+      </div>
+      <div class="frame-body">
+        <div class="frame-load" id="frame-load">Starting the app&hellip;</div>
+        <iframe id="app" src="./app/index.html" title="The Tally app, running against a copy of its rules in your browser"></iframe>
+      </div>
+    </div>
+
+    <div class="offline" id="offline" hidden>
+      <h3>This page was opened straight off a disk.</h3>
+      <p>Browsers refuse to start the app that way, so the panel is not shown. Everything else on this
+        page reads normally. To use the app, visit
+        <a href="https://samad-zeeshan.github.io/Tally/">samad-zeeshan.github.io/Tally</a>.</p>
+    </div>
+
+    <p class="typer" data-typer>Three buttons run themselves. One sends a payment, one loses the answer and retries it, and one recounts the whole book in front of you.</p>
+  </section>
+
+  <!-- 4. What makes it different -->
+  <section class="section wrap">
+    <div class="section-head">
+      <span class="section-no">03</span>
+      <h2>What you just watched.</h2>
+    </div>
+    <ul class="points">
+      <li>
+        <h3>Every payment was written down twice.</h3>
+        <p>One line for the money leaving, one line for the money arriving, exactly the same size. Add
+          every line in the whole book together and you get nothing, which is why that green tag keeps
+          saying 0.00. The panel calls this &ldquo;double entry&rdquo;. That is all it means.</p>
+      </li>
+      <li>
+        <h3>The second send did not become a second payment.</h3>
+        <p>Every payment carries a label the sender makes up for it. The service remembers the label
+          and the exact answer it gave the first time, so a repeat under that same label gets the same
+          receipt handed straight back instead of moving money again. Run
+          &ldquo;Lose a response, retry safely&rdquo; and watch Ben's balance move once, not twice.</p>
+      </li>
+      <li>
+        <h3>Nothing is taken on trust. It gets recounted.</h3>
+        <p>Balances are stored, and they can also be worked out again by adding up an account's lines
+          from the beginning. Tally keeps both and compares them on demand. If they ever disagreed by a
+          single cent, the check would name the account rather than hide it.</p>
+      </li>
+    </ul>
+
+    <figure class="zero" id="zero">
+      <div class="zerobox">
+        <div class="zerogrid">
+          <!-- Every bar is a fraction of the same unit, where 1 is 500.00: 375.00 is .75, 125.00 is
+               .25, and 500.00 is 1. The three amounts are the real balances the Java service
+               reported, docs/data/tally-run.json, step id "transfer". -->
+          <div class="zerocell up">
+            <span class="zerolab"><b>Amara</b><i>375.00</i></span>
+            <div class="zerobar" style="--f: .75"></div>
+          </div>
+          <div class="zerocell up">
+            <span class="zerolab"><b>Ben</b><i>125.00</i></span>
+            <div class="zerobar" style="--f: .25"></div>
+          </div>
+          <div class="zerocell up"></div>
+
+          <div class="zerorule"><span>0</span></div>
+
+          <div class="zerocell down">
+            <div class="zerobar" style="--f: 1"></div>
+            <span class="zerolab"><b>world</b><i>&minus;500.00</i></span>
+          </div>
+          <div class="zerocell down"></div>
+          <div class="zerocell down"></div>
+        </div>
+      </div>
+      <figcaption class="zerocap">The whole book, drawn to one scale. Above the line is money people
+        hold. Below it is the account named <b>world</b>, which stands for the outside world: every
+        opening balance is moved out of that account rather than typed in, so it always holds the exact
+        negative of every cent ever issued. <b>500.00 above, 500.00 below, difference nothing.</b>
+        These are real balances, from the recorded run in
+        <a href="./data/tally-run.json">data/tally-run.json</a>.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 5. Proof -->
+  <section class="section wrap" id="proof">
+    <div class="section-head">
+      <span class="section-no">04</span>
+      <h2>The numbers, and how each one was measured.</h2>
+    </div>
+    <p>Every figure here comes from the real Java service. None of it comes from the browser copy above.</p>
+
+    <div class="proof">
+
+      <div class="fact">
+        <!-- 210 and 28: measured by running ./mvnw test in this repository on 2026-07-27 (Java 25).
+             Surefire printed 28 per-class lines and the summary "Tests run: 210, Failures: 0,
+             Errors: 0, Skipped: 0", then BUILD SUCCESS in 3.318 s. Sources: src/test/java. -->
+        <span class="fact-n">210<small> tests</small></span>
+        <b>0 failures, 0 errors, 0 skipped.</b>
+        <p><b>How:</b> the command <code>./mvnw test</code>, run in this repository on 27 July 2026 on
+          Java 25. That is the whole of what that one command reports, across 28 test files, and it is
+          the only test count on this page. Tests that need a live database, and the deliberately broken
+          version kept around to prove the bug, are run by different commands and are not counted here.</p>
+      </div>
+
+      <div class="fact">
+        <!-- 20,000 payments / 8 to 32 workers / 8 accounts:
+             src/test/java/dev/tally/testsupport/StressHarness.java line 39
+             (Math.clamp(2L * Runtime.getRuntime().availableProcessors(), 8, 32)) and line 42
+             (Config.standard: 8 accounts, 10_000 opening, 20_000 operations, 30 second timeout). -->
+        <span class="fact-n">20,000<small> payments</small></span>
+        <b>Pushed through by up to 32 workers at once.</b>
+        <p><b>How:</b> a test harness shares 20,000 payments across 8 accounts and hands them to a pool
+          of workers released together. The pool is two workers per processor core, never fewer than 8
+          and never more than 32, so at most 32 payments are ever in flight. Afterwards it checks the
+          total is unchanged, that no balance ever went below zero, and that replaying the log of
+          successful payments reproduces the final balances to the cent. Set in
+          <code>StressHarness.java</code>, lines 39 and 42.</p>
+      </div>
+
+      <div class="fact">
+        <!-- 3 accounts checked, sum 0, no disagreements: docs/data/tally-run.json, step id
+             "reconciliation": {"consistent":true,"globalSumMinor":0,"accountsChecked":3,"drifts":[]} -->
+        <span class="fact-n">0.00<small> left over</small></span>
+        <b>A recording of the real Java service answering.</b>
+        <p><b>How:</b> the service was built at code version <code>1b44ebf</code>, started, and driven
+          with <code>curl</code>. Every reply was copied word for word into
+          <a href="./data/tally-run.json">data/tally-run.json</a>. In it: 3 accounts checked, the whole
+          book adding to 0, no disagreements, a repeated request answered with the very same receipt
+          plus a header marking it a repeat, and an overdraft refused with both numbers named. That
+          file is real evidence, and it is the only recording on this page.</p>
+      </div>
+
+      <div class="fact">
+        <!-- 1 runtime library: pom.xml lines 46-51, the postgresql driver at runtime scope; JUnit is
+             test scope only. 51 files and 3,155 lines: counted over src/main/java on 2026-07-27. -->
+        <span class="fact-n">1<small> outside library</small></span>
+        <b>Almost all of it is hand written.</b>
+        <p><b>How:</b> the running service pulls in exactly one third party library, the Postgres
+          driver, listed in <code>pom.xml</code>. The web server, the JSON reader and writer, the
+          request routing and the database pool are all written by hand: 51 Java files, about 3,155
+          lines under <code>src/main/java</code>.</p>
+      </div>
+
+      <div class="fact">
+        <!-- 31 browser tests: npm test (vitest run) in web/ on 2026-07-27 reported
+             "Test Files 5 passed (5)" and "Tests 31 passed (31)". Type check: npx tsc -b exits 0. -->
+        <span class="fact-n">31<small> screen tests</small></span>
+        <b>The screen has its own checks.</b>
+        <p><b>How:</b> <code>npm test</code> in the <code>web</code> folder on 27 July 2026: 5 files,
+          31 tests, all passing, alongside a clean type check. They cover the money arithmetic, so that
+          a value like 0.29 can never arrive on screen as 0.28999.</p>
+      </div>
+
+      <div class="fact">
+        <!-- Whole cents and the cap: src/main/java/dev/tally/http/Validation.java line 22,
+             MAX_AMOUNT_MINOR = 1_000_000_000_000L. Money as a long count of cents: ADR-0002. -->
+        <span class="fact-n">0<small> decimals used</small></span>
+        <b>Money is counted in whole cents.</b>
+        <p><b>How:</b> every amount is a whole number of cents from the database to the screen, so
+          there is nothing to round and nothing to lose. No amount above a thousand billion cents is
+          accepted, a limit set in <code>Validation.java</code> line 22, which keeps every total well
+          inside what a browser can hold exactly.</p>
+      </div>
+
+    </div>
+
+    <p class="small muted" style="margin-top:1.4rem">The longer write up, guarantee by guarantee,
+      including the concurrency bug that was written on purpose so the fix could be proved against the
+      exact defect it closes, is in <a href="./correctness.md">correctness.md</a>.</p>
+  </section>
+
+  <!-- 6. Honest limits -->
+  <section class="section wrap">
+    <div class="section-head">
+      <span class="section-no">05</span>
+      <h2>What Tally does not do.</h2>
+    </div>
+    <ul class="limits">
+      <li><b>It never touches a real bank.</b><span>Nothing here reaches a card network, a bank, or any
+        payment rail. The account named <em>world</em> stands in for the outside world, and money only
+        ever moves between accounts Tally holds itself.</span></li>
+      <li><b>One currency, and it is never named.</b><span>Every amount is the same implied currency. A
+        real system carries a currency on each account and refuses to mix two of them in one payment.
+        That was left out on purpose, to keep the money model a single clear idea.</span></li>
+      <li><b>One server and one database, nothing spread out.</b><span>The arguments about locking and
+        about repeated requests are written so they would still hold with several servers running at
+        once, but that is neither built nor tested, so claiming it would be guessing.</span></li>
+      <li><b>The password is fixed and in plain sight.</b><span>The real service guards its write
+        requests with a single password chosen when it starts. A real product would hand each person a
+        short lived one from a login screen. The trade is written down rather than hidden, in decision
+        record 15.</span></li>
+    </ul>
+  </section>
+
+  <!-- 7. How it works -->
+  <section class="section wrap">
+    <div class="section-head">
+      <span class="section-no">06</span>
+      <h2>Where each piece actually lives.</h2>
+    </div>
+    <ul class="works">
+      <li>
+        <b>The rule that makes it all add up</b>
+        <span>Takes a payment and the accounts it touches, refuses it if the two sides do not cancel or
+          if it would push somebody below zero, and hands back the new balances. It stores nothing.</span>
+        <a href="https://github.com/samad-zeeshan/Tally/blob/main/src/main/java/dev/tally/core/Ledger.java">src/main/java/dev/tally/core/Ledger.java</a>
+      </li>
+      <li>
+        <b>Where the money and the written lines are kept</b>
+        <span>Holds the accounts, remembers which payment labels have been used and what answer each
+          one got, and writes both lines of a payment together so half a payment is never visible.</span>
+        <a href="https://github.com/samad-zeeshan/Tally/blob/main/src/main/java/dev/tally/store/InMemoryStore.java">src/main/java/dev/tally/store/InMemoryStore.java</a>
+      </li>
+      <li>
+        <b>The account named world</b>
+        <span>The one account allowed to go below zero. Every opening balance is moved out of it, which
+          is the reason the whole book adds to nothing from the very first account onward.</span>
+        <a href="https://github.com/samad-zeeshan/Tally/blob/main/src/main/java/dev/tally/core/WorldAccount.java">src/main/java/dev/tally/core/WorldAccount.java</a>
+      </li>
+      <li>
+        <b>Two payments touching one account at the same time</b>
+        <span>Each payment takes a hold on both of its accounts, always in the same fixed order, so two
+          payments crossing in opposite directions can never end up waiting on each other forever.</span>
+        <a href="https://github.com/samad-zeeshan/Tally/blob/main/src/main/java/dev/tally/store/AccountLocks.java">src/main/java/dev/tally/store/AccountLocks.java</a>
+      </li>
+      <li>
+        <b>The recount</b>
+        <span>Adds every account's lines back up from the beginning, compares the result against the
+          stored balance, and reports any disagreement as an ordinary answer rather than as a failure.</span>
+        <a href="https://github.com/samad-zeeshan/Tally/blob/main/src/main/java/dev/tally/api/ReconciliationHandler.java">src/main/java/dev/tally/api/ReconciliationHandler.java</a>
+      </li>
+      <li>
+        <b>The one place the screen talks to the service</b>
+        <span>Six requests, and nothing else in the whole app reaches the network. That narrow gap is
+          what made the browser copy on this page possible at all.</span>
+        <a href="https://github.com/samad-zeeshan/Tally/blob/main/web/src/api/client.ts">web/src/api/client.ts</a>
+      </li>
+    </ul>
+    <p class="typer" data-typer style="margin-top:1.8rem">Every claim on this page points at a file you can open.</p>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p><b style="color:var(--text)">Tally</b> &middot;
+      <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a></p>
+    <p>A money service that writes every payment down twice, built on the Java standard library and
+      Postgres, with a React and TypeScript screen.
+      The page you are reading is one hand written HTML file with the built app beside it in
+      <code>docs/app</code>. The bank answering that app is
+      <a href="./app/tally-server.js">docs/app/tally-server.js</a>, a copy of Tally's rules in
+      JavaScript, not the Java service.</p>
+    <p>Page rebuilt 27 July 2026. Longer notes: <a href="./NOTES.md">NOTES.md</a> &middot;
+      <a href="./correctness.md">correctness.md</a> &middot;
+      <a href="./adr/">the decision records</a>.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------------- the typewriter narration ----------------
+     It is a garnish, never a gate. The full sentence sits in the HTML, so a reader with no
+     JavaScript, or with reduced motion turned on, simply reads it. While it types, the finished
+     sentence stays in the page at full size but invisible, which reserves the exact height and stops
+     anything jumping. Screen readers get the sentence once, from a copy that is never rewritten. */
+
+  var typers = [];
+
+  function arm(el) {
+    var text = (el.textContent || "").replace(/\s+/g, " ").trim();
+    if (text === "") { return; }
+    el.textContent = "";
+
+    var ghost = document.createElement("span");
+    ghost.className = "typer-ghost";
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.textContent = text;
+
+    var sr = document.createElement("span");
+    sr.className = "typer-sr";
+    sr.textContent = text;
+
+    var out = document.createElement("span");
+    out.className = "typer-out";
+    out.setAttribute("aria-hidden", "true");
+
+    el.appendChild(ghost);
+    el.appendChild(sr);
+    el.appendChild(out);
+    el.classList.add("is-armed");
+
+    var state = { el: el, out: out, text: text, at: 0, timer: 0, started: false, done: false };
+    typers.push(state);
+    el.addEventListener("click", function () { finish(state); });
+  }
+
+  function allDone() {
+    return typers.every(function (t) { return t.done; });
+  }
+
+  function finish(state) {
+    if (state.done) { return; }
+    state.done = true;
+    clearTimeout(state.timer);
+    state.out.textContent = state.text;
+    state.el.classList.remove("is-typing");
+    var button = document.getElementById("skip-typing");
+    if (button && allDone()) { button.hidden = true; }
+  }
+
+  function start(state) {
+    if (state.done || state.started) { return; }
+    state.started = true;
+    state.el.classList.add("is-typing");
+    var step = function () {
+      if (state.done) { return; }
+      state.at += 1;
+      state.out.textContent = state.text.slice(0, state.at);
+      if (state.at >= state.text.length) { finish(state); return; }
+      var last = state.text.charAt(state.at - 1);
+      // A brief rest after a stop, so it reads like sentences rather than a ticker.
+      state.timer = setTimeout(step, last === "." || last === "," ? 170 : 17);
+    };
+    state.timer = setTimeout(step, 120);
+  }
+
+  var nodes = document.querySelectorAll("[data-typer]");
+  if (nodes.length > 0) {
+    Array.prototype.forEach.call(nodes, arm);
+
+    if (reduced || typeof IntersectionObserver !== "function") {
+      typers.forEach(finish);
+    } else {
+      var button = document.getElementById("skip-typing");
+      if (button) {
+        button.hidden = false;
+        button.addEventListener("click", function () { typers.forEach(finish); });
+      }
+      var watcher = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) { return; }
+          watcher.unobserve(entry.target);
+          typers.forEach(function (t) { if (t.el === entry.target) { start(t); } });
+        });
+      }, { threshold: 0.35 });
+      typers.forEach(function (t) { watcher.observe(t.el); });
+      // A safety net for a browser whose watcher never calls back: after a moment, anything already
+      // on screen types anyway. Lines further down are left to the watcher, so a reader who lingers
+      // up here does not arrive to find them already finished.
+      setTimeout(function () {
+        typers.forEach(function (t) {
+          if (t.started || t.done) { return; }
+          var box = t.el.getBoundingClientRect();
+          if (box.top < window.innerHeight && box.bottom > 0) { start(t); }
+        });
+      }, 2500);
+    }
+  }
+
+  /* ---------------- the zero line ---------------- */
+
+  var zero = document.getElementById("zero");
+  if (zero) {
+    if (reduced || typeof IntersectionObserver !== "function") {
+      zero.classList.add("is-drawn");
+    } else {
+      var drawer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { zero.classList.add("is-drawn"); drawer.disconnect(); }
+        });
+      }, { threshold: 0.35 });
+      drawer.observe(zero);
+    }
+  }
+
+  /* ---------------- the app panel ----------------
+     Browsers refuse to start the app when this page is opened straight off a disk, so say that
+     plainly rather than leave an empty box looking broken. */
+
+  var frame = document.getElementById("frame");
+  var offline = document.getElementById("offline");
+  var loading = document.getElementById("frame-load");
+
+  if (window.location.protocol === "file:") {
+    if (frame) { frame.hidden = true; frame.style.display = "none"; }
+    if (offline) { offline.hidden = false; }
+  } else {
+    window.addEventListener("message", function (event) {
+      if (event.data && event.data.tally === "ready" && loading) { loading.hidden = true; }
+    });
+    // If that message never lands, the placeholder still gets out of the way.
+    setTimeout(function () { if (loading) { loading.hidden = true; } }, 4000);
+  }
+})();
+</script>
+</body>
+</html>
