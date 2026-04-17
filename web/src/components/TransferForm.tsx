@@ -51,7 +51,7 @@ export function TransferForm({ accounts, onChanged, onToast }: Props) {
     setAmount("");
     setAbandoned(false);
     setChaos(false); // the dropped-response fault self-clears after one attempt
-    onToast("success", state.replayed ? "Retry deduplicated: the transfer applied exactly once" : "Transfer applied");
+    onToast("success", state.replayed ? "Sent again, and it still counted only once" : "Transfer applied");
     onChanged();
   }, [state, onChanged, onToast]);
 
@@ -114,7 +114,7 @@ export function TransferForm({ accounts, onChanged, onToast }: Props) {
       <div className="card-header">
         <h2>Transfer</h2>
         {import.meta.env.DEV && (
-          <label className="chaos" title="The request still reaches the server; only the response is dropped. Retry proves the dedup.">
+          <label className="chaos" title="The request still reaches the server; only the reply is dropped. Sending again proves it counts once.">
             <input
               type="checkbox"
               checked={chaos}
@@ -194,7 +194,7 @@ export function TransferForm({ accounts, onChanged, onToast }: Props) {
             {remaining !== null &&
               fromAccount !== null &&
               (remaining < 0
-                ? `Exceeds ${fromAccount.name}'s balance by ${formatMinor(-remaining)}; the ledger will reject it.`
+                ? `Exceeds ${fromAccount.name}'s balance by ${formatMinor(-remaining)}; Tally will refuse it.`
                 : `${fromAccount.name} will hold ${formatMinor(remaining)} after this transfer.`)}
           </p>
           <Button type="submit" loading={inFlight}>

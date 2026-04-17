@@ -58,7 +58,7 @@ instances.
 
 A single harness fires a flood of concurrent transfers and then checks every invariant at once: N worker
 threads each fire a share of M transfers between K accounts with random amounts, all released from one
-start latch so they collide. In memory the standard run is K = 8 accounts, N = one thread per two cores
+start latch so they collide. In memory the standard run is K = 8 accounts, N = two threads per core
 (clamped to 8–32), M = 20,000 transfers; an overdraft-pressure variant drops the opening balances so many
 transfers are legitimately rejected for funds and the no-negative rule takes real fire. The same harness
 runs against Postgres at K = 8, N = 8, M = 2,000 (fewer, because each is a full database transaction).

@@ -45,28 +45,28 @@ export function ExplainerPanel({ onToast, onSelect, onChanged }: Props) {
     <details className="card explainer" open>
       <summary>
         <h2>How Tally works</h2>
-        <span className="explainer-hint">a double-entry ledger you can poke</span>
+        <span className="explainer-hint">a working set of books you can poke</span>
       </summary>
       <ul className="explainer-points">
         <li>
-          <strong>Double entry.</strong> Every transfer is two balanced postings, one out and one in, so
-          money moves but is never created. The whole book always sums to zero; the badge in the header
-          rechecks that after every change.
+          <strong>Written down twice.</strong> Every payment is written down twice, once leaving and once
+          arriving, so money moves but is never created. The whole book always adds up to zero; the badge
+          in the header rechecks that after every change.
         </li>
         <li>
-          <strong>Idempotent transfers.</strong> Each transfer carries a unique key. If the response gets
-          lost, retrying under the same key applies the transfer exactly once, never twice.
+          <strong>Send it twice, pay once.</strong> Each payment carries a label of its own. If the reply
+          gets lost, sending it again under that same label still counts once, never twice.
         </li>
         <li>
-          <strong>The ledger is the truth.</strong> Balances, statements, and the reconciliation report
-          are all derived from the same postings, so they cannot disagree.
+          <strong>The books are the truth.</strong> Balances, statements, and the recount all come from
+          the same written lines, so they cannot disagree.
         </li>
       </ul>
       <div className="try-strip" role="group" aria-label="Live demos">
         <span className="try-label">Try it</span>
         {demoButton("transfer", "Make a sample transfer")}
-        {demoButton("idempotency", "Lose a response, retry safely")}
-        {demoButton("reconcile", "Check the books")}
+        {demoButton("idempotency", "Lose the reply, send again")}
+        {demoButton("reconcile", "Recount everything")}
       </div>
     </details>
   );

@@ -117,7 +117,7 @@ export function AccountsPanel({ accounts, selectedId, loading, onSelect, onChang
         <EmptyState
           icon={<WalletIcon />}
           title="No accounts yet"
-          hint="Open the first account above; an opening balance is funded by the world account, so the book stays at zero."
+          hint="Open the first account above; an opening balance is moved in from outside, never typed in, so the book stays at zero."
         />
       ) : (
         <ul className="account-list">

@@ -61,7 +61,7 @@ export async function runIdempotencyDemo({ toast, select, changed }: DemoHooks):
     const { from, to } = await ensureDemoPair(changed);
     const key = crypto.randomUUID();
     const body = { fromAccountId: from.id, toAccountId: to.id, amountMinor: AMOUNT_MINOR };
-    toast("info", `Demo: sending ${formatMinor(AMOUNT_MINOR)} under one idempotency key, then losing the response`);
+    toast("info", `Demo: sending ${formatMinor(AMOUNT_MINOR)} under one label, then losing the reply`);
     if (import.meta.env.DEV) {
       armDroppedResponse();
     }
@@ -76,8 +76,8 @@ export async function runIdempotencyDemo({ toast, select, changed }: DemoHooks):
     toast(
       "info",
       firstArrived
-        ? "Demo: retrying the same request under the same key anyway"
-        : "Demo: the response never arrived, so we retry under the same key",
+        ? "Demo: sending the very same payment again under that same label anyway"
+        : "Demo: the reply never arrived, so we send the same payment again under that label",
     );
     const { replayed } = await createTransfer(body, key);
     changed();
@@ -86,8 +86,8 @@ export async function runIdempotencyDemo({ toast, select, changed }: DemoHooks):
     toast(
       replayed ? "success" : "error",
       replayed
-        ? "The server replayed the first outcome: applied exactly once, no double transfer"
-        : "Unexpected: the server did not report a replay",
+        ? "The server handed back the first answer again: paid exactly once, not twice"
+        : "Unexpected: the server did not recognise the repeat",
     );
   } catch (caught) {
     toast("error", `Demo stopped: ${(caught as Error).message}`);
@@ -100,8 +100,8 @@ export async function runReconciliationCheck({ toast }: DemoHooks): Promise<void
     toast(
       report.consistent ? "success" : "error",
       report.consistent
-        ? `Reconciliation: ${report.accountsChecked} accounts re-derived from postings, zero drift, book sums to ${formatMinor(report.globalSumMinor)}`
-        : `Reconciliation found drift on ${report.drifts.length} account(s)`,
+        ? `Recount: ${report.accountsChecked} accounts added up again from their own lines, none disagreed, book totals ${formatMinor(report.globalSumMinor)}`
+        : `The recount found ${report.drifts.length} account(s) that do not add up`,
     );
   } catch (caught) {
     toast("error", `Demo stopped: ${(caught as Error).message}`);

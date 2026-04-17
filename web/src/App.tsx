@@ -98,7 +98,7 @@ export default function App() {
             Σ
           </span>
           Tally
-          <span className="tagline">double-entry money movement</span>
+          <span className="tagline">every payment written down twice</span>
         </div>
         <div className="header-actions">
           <BooksBadge refreshSeq={refreshSeq} />
@@ -129,7 +129,7 @@ export default function App() {
           </div>
         </ErrorBoundary>
       </main>
-      <footer className="footer">every transfer is two postings that sum to zero, so the whole book always nets to 0.00</footer>
+      <footer className="footer">every payment is written down twice, once leaving and once arriving, so the book always totals 0.00</footer>
       <ToastShelf toasts={toasts} onDismiss={dismissToast} />
     </>
   );

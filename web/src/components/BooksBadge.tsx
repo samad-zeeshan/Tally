@@ -36,10 +36,10 @@ export function BooksBadge({ refreshSeq }: { refreshSeq: number }) {
   return (
     <span
       className={"badge-books" + (balanced ? "" : " drift")}
-      title={`${report.accountsChecked} accounts checked, every balance recomputed from its postings`}
+      title={`${report.accountsChecked} accounts checked, every balance added up again from its own lines`}
     >
       <span className={"dot" + (balanced ? " pulse" : "")} aria-hidden="true" />
-      {balanced ? `Σ ${formatMinor(report.globalSumMinor)} · books balanced` : `drift on ${report.drifts.length} account(s)`}
+      {balanced ? `Σ ${formatMinor(report.globalSumMinor)} · books balanced` : `${report.drifts.length} account(s) do not add up`}
     </span>
   );
 }

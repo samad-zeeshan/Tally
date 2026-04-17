@@ -178,63 +178,124 @@ a:hover { color: var(--accent-strong); }
 
 /* ---------- the zero line ---------- */
 
+/* The figure is a mirror. Everything people hold is stacked into one tower above the rule; the world
+   account is one bar of the same width below it. Equal totals become equal heights, so the claim is
+   settled by looking rather than by arithmetic. */
+
 .zero { margin: 2.4rem 0 0; padding: 0; }
 .zerobox {
+  --pad-x: clamp(1.05rem, 4.5vw, 1.6rem);
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-l); padding: 1.9rem 1.4rem 1.2rem;
+  border-radius: var(--radius-l);
+  padding: clamp(1.5rem, 5vw, 2.1rem) var(--pad-x) clamp(1rem, 3vw, 1.35rem);
   box-shadow: var(--shadow-1);
+  overflow: hidden;   /* lets the zero rule run to the card's edges without escaping its corners */
 }
 .zerogrid {
   /* One scale for the whole figure: --unit is the height of 500.00, and every bar is a plain
      fraction of it, so the two halves are always comparable by eye. The rows size themselves to
      their content, so a bar is never quietly cropped to fit. */
-  --unit: 118px;
+  --unit: clamp(126px, 26vw, 188px);
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto 4px auto;
-  column-gap: clamp(.6rem, 3vw, 2rem);
+  /* A percentage here, not a vw: the bars should keep their share of the card, not of the window. */
+  grid-template-columns: clamp(84px, 26%, 180px) minmax(0, 1fr);
+  grid-template-rows: auto 5px auto;
+  column-gap: clamp(.85rem, 4vw, 1.6rem);
 }
+
+/* ---- the spine ---- */
+
 .zerorule {
   grid-column: 1 / -1; grid-row: 2;
-  background: var(--accent); border-radius: 2px; position: relative;
+  margin-inline: calc(-1 * var(--pad-x));   /* edge to edge: the rule is the spine of the whole card */
+  background: var(--accent);
+  position: relative;
+  box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 .zerorule span {
-  position: absolute; right: 0; top: -1.6rem;
-  font-size: .8rem; font-weight: 700; color: var(--accent);
-  font-variant-numeric: tabular-nums; letter-spacing: .1em;
+  position: absolute; right: var(--pad-x); top: 50%; transform: translateY(-50%);
+  padding: .1rem .5rem; border-radius: 999px;
+  border: 2px solid var(--accent); background: var(--surface);
+  font-size: .74rem; font-weight: 700; color: var(--accent);
+  font-variant-numeric: tabular-nums; letter-spacing: .03em; line-height: 1.5;
 }
-.zerocell { display: flex; flex-direction: column; min-width: 0; }
-.zerocell.up { grid-row: 1; justify-content: flex-end; }
-.zerocell.down { grid-row: 3; justify-content: flex-start; }
-.zerobar {
-  width: 100%; height: calc(var(--f) * var(--unit)); border-radius: 4px 4px 0 0;
-  background: var(--accent);
-  transform: scaleY(0); transform-origin: bottom;
-  transition: transform .75s cubic-bezier(.2,.8,.2,1);
+
+/* ---- the two towers ---- */
+
+.zerostack { grid-column: 1; display: flex; flex-direction: column; min-width: 0; }
+.zerostack.up { grid-row: 1; justify-content: flex-end; }
+.zerostack.down { grid-row: 3; justify-content: flex-start; }
+.zeroseg {
+  height: calc(var(--f) * var(--unit));
+  background-color: var(--accent);
+  background-image: linear-gradient(180deg, rgb(255 255 255 / .17), rgb(255 255 255 / 0) 62%);
 }
-.zerocell.down .zerobar {
-  border-radius: 0 0 4px 4px; transform-origin: top;
-  background: repeating-linear-gradient(
-    135deg, var(--accent), var(--accent) 5px,
-    color-mix(in srgb, var(--accent) 45%, transparent) 5px,
-    color-mix(in srgb, var(--accent) 45%, transparent) 10px);
+/* Ben is the lighter slab, and a hairline in the card colour keeps the join a real edge rather than
+   only a change of tint. The names beside the bars are what actually tells them apart. */
+.zeroseg.tint { background-color: color-mix(in srgb, var(--accent) 70%, var(--surface)); }
+.zerostack.up .zeroseg:first-child { border-radius: 9px 9px 0 0; }
+.zerostack.up .zeroseg + .zeroseg { box-shadow: inset 0 2px 0 var(--surface); }
+.zerostack.down .zeroseg { border-radius: 0 0 9px 9px; }
+/* world is drawn, not filled: an outlined shape with a 45 degree hatch, so it reads as the
+   counterweight to the solid bars rather than as more money. */
+.zeroseg.world {
+  background-color: color-mix(in srgb, var(--accent) 15%, var(--surface));
+  background-image: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 72%, transparent) 0 2px,
+    transparent 2px 7px);
+  border: 2px solid color-mix(in srgb, var(--accent) 72%, var(--surface));
 }
-.zero.is-drawn .zerobar { transform: scaleY(1); }
-.zerolab {
-  font-size: .8rem; font-variant-numeric: tabular-nums; line-height: 1.35;
-  padding: .35rem 0; min-width: 0;
+
+/* ---- the key beside the bars ---- */
+
+.zerokeys { grid-column: 2; display: flex; flex-direction: column; min-width: 0; }
+.zerokeys.up { grid-row: 1; justify-content: flex-end; }
+.zerokeys.down { grid-row: 3; justify-content: flex-start; }
+.zerokey {
+  height: calc(var(--f) * var(--unit));
+  display: flex; flex-direction: column; justify-content: center; gap: .15rem; min-width: 0;
 }
-.zerolab b { display: block; font-size: .92rem; }
-.zerolab i { font-style: normal; color: var(--muted); display: block; font-size: .78rem; }
+.zerokey-row { display: flex; align-items: baseline; gap: .5rem; min-width: 0; }
+.zerokey-name { font-size: .88rem; font-weight: 600; white-space: nowrap; }
+.zerokey-lead {
+  flex: 1 1 auto; min-width: .5rem;
+  border-bottom: 1px dotted color-mix(in srgb, var(--muted) 55%, transparent);
+  transform: translateY(-.2em);
+}
+.zerokey-amt {
+  font-size: clamp(.95rem, 2.7vw, 1.08rem); font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap;
+}
+.zerokey-note { font-size: .76rem; color: var(--muted); line-height: 1.4; }
+
+/* ---- the sum, stated as text so it never rests on colour ---- */
+
+.zerosum {
+  margin: clamp(1rem, 3vw, 1.35rem) 0 0; padding-top: .8rem;
+  border-top: 1px solid var(--border);
+  font-size: .84rem; color: var(--muted); line-height: 1.7;
+}
+.zerosum b {
+  color: var(--text); font-size: 1.02rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+}
 .zerocap { margin: 1.2rem 0 0; font-size: .88rem; color: var(--muted); line-height: 1.6; }
 .zerocap b { color: var(--text); }
-@media (prefers-reduced-motion: reduce) {
-  .zerobar { transform: scaleY(1); transition: none; }
+
+/* ---- the draw-in ---- */
+
+/* The towers are fully drawn by default, so with no JavaScript the figure is simply correct. The
+   script adds .is-armed only when it is going to animate. clip-path reveals rather than scales, so
+   the hatch never stretches, and nothing in the layout moves at any point. */
+.zero.is-armed .zerostack {
+  transition: clip-path .9s cubic-bezier(.22,.85,.28,1);
 }
-@media (max-width: 32rem) {
-  .zerogrid { --unit: 88px; }
-  .zerolab { font-size: .72rem; }
-  .zerolab b { font-size: .8rem; }
+.zero.is-armed .zerostack.up { clip-path: inset(100% 0 0 0); }
+.zero.is-armed .zerostack.down { clip-path: inset(0 0 100% 0); transition-delay: .18s; }
+.zero.is-armed.is-drawn .zerostack.up,
+.zero.is-armed.is-drawn .zerostack.down { clip-path: inset(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) {
+  .zero .zerostack { clip-path: none; transition: none; }
 }
 
 /* ---------- the honesty notice ---------- */
@@ -445,14 +506,14 @@ a:hover { color: var(--accent-strong); }
         <h3>Every payment was written down twice.</h3>
         <p>One line for the money leaving, one line for the money arriving, exactly the same size. Add
           every line in the whole book together and you get nothing, which is why that green tag keeps
-          saying 0.00. The panel calls this &ldquo;double entry&rdquo;. That is all it means.</p>
+          saying 0.00. Bookkeepers call this &ldquo;double entry&rdquo;. That is all it means.</p>
       </li>
       <li>
         <h3>The second send did not become a second payment.</h3>
         <p>Every payment carries a label the sender makes up for it. The service remembers the label
           and the exact answer it gave the first time, so a repeat under that same label gets the same
           receipt handed straight back instead of moving money again. Run
-          &ldquo;Lose a response, retry safely&rdquo; and watch Ben's balance move once, not twice.</p>
+          &ldquo;Lose the reply, send again&rdquo; and watch Ben's balance move once, not twice.</p>
       </li>
       <li>
         <h3>Nothing is taken on trust. It gets recounted.</h3>
@@ -467,33 +528,57 @@ a:hover { color: var(--accent-strong); }
         <div class="zerogrid">
           <!-- Every bar is a fraction of the same unit, where 1 is 500.00: 375.00 is .75, 125.00 is
                .25, and 500.00 is 1. The three amounts are the real balances the Java service
-               reported, docs/data/tally-run.json, step id "transfer". -->
-          <div class="zerocell up">
-            <span class="zerolab"><b>Amara</b><i>375.00</i></span>
-            <div class="zerobar" style="--f: .75"></div>
+               reported, docs/data/tally-run.json, step id "transfer". Amara and Ben are stacked into
+               one tower so that .75 + .25 becomes a single height of 1, which is exactly the height
+               of the world bar mirrored below the rule. The bars themselves carry no text, so they
+               are hidden from screen readers; the key beside them is the readable version. -->
+          <div class="zerostack up" aria-hidden="true">
+            <div class="zeroseg tint" style="--f: .25"></div>
+            <div class="zeroseg" style="--f: .75"></div>
           </div>
-          <div class="zerocell up">
-            <span class="zerolab"><b>Ben</b><i>125.00</i></span>
-            <div class="zerobar" style="--f: .25"></div>
+          <div class="zerokeys up">
+            <div class="zerokey" style="--f: .25">
+              <span class="zerokey-row">
+                <span class="zerokey-name">Ben</span>
+                <span class="zerokey-lead" aria-hidden="true"></span>
+                <span class="zerokey-amt">125.00</span>
+              </span>
+            </div>
+            <div class="zerokey" style="--f: .75">
+              <span class="zerokey-row">
+                <span class="zerokey-name">Amara</span>
+                <span class="zerokey-lead" aria-hidden="true"></span>
+                <span class="zerokey-amt">375.00</span>
+              </span>
+            </div>
           </div>
-          <div class="zerocell up"></div>
 
-          <div class="zerorule"><span>0</span></div>
+          <div class="zerorule"><span aria-hidden="true">0.00</span></div>
 
-          <div class="zerocell down">
-            <div class="zerobar" style="--f: 1"></div>
-            <span class="zerolab"><b>world</b><i>&minus;500.00</i></span>
+          <div class="zerostack down" aria-hidden="true">
+            <div class="zeroseg world" style="--f: 1"></div>
           </div>
-          <div class="zerocell down"></div>
-          <div class="zerocell down"></div>
+          <div class="zerokeys down">
+            <div class="zerokey" style="--f: 1">
+              <span class="zerokey-row">
+                <span class="zerokey-name">world</span>
+                <span class="zerokey-lead" aria-hidden="true"></span>
+                <span class="zerokey-amt">&minus;500.00</span>
+              </span>
+              <span class="zerokey-note">stands for the outside world</span>
+            </div>
+          </div>
         </div>
+        <p class="zerosum"><b>+500.00</b> above the line, <b>&minus;500.00</b> below it,
+          <b>0.00</b> in total.</p>
       </div>
       <figcaption class="zerocap">The whole book, drawn to one scale. Above the line is money people
-        hold. Below it is the account named <b>world</b>, which stands for the outside world: every
-        opening balance is moved out of that account rather than typed in, so it always holds the exact
-        negative of every cent ever issued. <b>500.00 above, 500.00 below, difference nothing.</b>
-        These are real balances, from the recorded run in
-        <a href="./data/tally-run.json">data/tally-run.json</a>.</figcaption>
+        hold, the two amounts stacked into one column. Below it is the account named <b>world</b>,
+        which stands for the outside world: every opening balance is moved out of that account rather
+        than typed in, so it always holds the exact negative of every cent ever issued. That is why the
+        bar below is exactly as tall as the two above it put together.
+        <b>500.00 above, 500.00 below, difference nothing.</b> These are real balances, from the
+        recorded run in <a href="./data/tally-run.json">data/tally-run.json</a>.</figcaption>
     </figure>
   </section>
 
@@ -781,18 +866,17 @@ a:hover { color: var(--accent-strong); }
 
   /* ---------------- the zero line ---------------- */
 
+  /* The figure is already drawn in the CSS, so doing nothing here leaves it correct. Arming it is
+     what hides the towers, and that only happens when there is something to reveal them with. */
   var zero = document.getElementById("zero");
-  if (zero) {
-    if (reduced || typeof IntersectionObserver !== "function") {
-      zero.classList.add("is-drawn");
-    } else {
-      var drawer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) { zero.classList.add("is-drawn"); drawer.disconnect(); }
-        });
-      }, { threshold: 0.35 });
-      drawer.observe(zero);
-    }
+  if (zero && !reduced && typeof IntersectionObserver === "function") {
+    zero.classList.add("is-armed");
+    var drawer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { zero.classList.add("is-drawn"); drawer.disconnect(); }
+      });
+    }, { threshold: 0.35 });
+    drawer.observe(zero);
   }
 
   /* ---------------- the app panel ----------------

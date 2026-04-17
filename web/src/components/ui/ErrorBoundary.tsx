@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, { failed: boole
     return (
       <div className="card">
         <h2>Something broke in the interface</h2>
-        <p className="muted">The ledger itself is fine; this is a display error. Reloading usually clears it.</p>
+        <p className="muted">The books themselves are fine; this is a display error. Reloading usually clears it.</p>
         <Button variant="secondary" onClick={() => window.location.reload()}>
           Reload
         </Button>

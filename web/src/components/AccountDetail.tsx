@@ -156,7 +156,7 @@ export function AccountDetail({ accountId, accounts, refreshSeq }: Props) {
                 </span>
               </div>
               {trend.length > 1 && (
-                <Sparkline values={trend} ariaLabel={`Balance after each of the last ${trend.length} postings`} />
+                <Sparkline values={trend} ariaLabel={`Balance after each of the last ${trend.length} entries`} />
               )}
             </div>
             {entries.length === 0 ? (
