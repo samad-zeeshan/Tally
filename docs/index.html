@@ -593,14 +593,18 @@ a:hover { color: var(--accent-strong); }
     <div class="proof">
 
       <div class="fact">
-        <!-- 210 and 28: measured by running ./mvnw test in this repository on 2026-07-27 (Java 25).
-             Surefire printed 28 per-class lines and the summary "Tests run: 210, Failures: 0,
-             Errors: 0, Skipped: 0", then BUILD SUCCESS in 3.318 s. Sources: src/test/java. -->
-        <span class="fact-n">210<small> tests</small></span>
-        <b>0 failures, 0 errors, 0 skipped.</b>
+        <!-- 240 and 32: measured by running ./mvnw test in this repository on 2026-07-27 (Java 25).
+             Surefire printed 32 per-class lines and the summary "Tests run: 240, Failures: 0,
+             Errors: 0, Skipped: 1", then BUILD SUCCESS in 4.549 s. Sources: src/test/java. The one
+             skip is StaticFileHandlerTest.aLinkToAFileInsideTheRootStillServes, which needs to create
+             a file symlink; Windows refuses that without elevation, and it runs on Linux CI. -->
+        <span class="fact-n">240<small> tests</small></span>
+        <b>0 failures, 0 errors.</b>
         <p><b>How:</b> the command <code>./mvnw test</code>, run in this repository on 27 July 2026 on
-          Java 25. That is the whole of what that one command reports, across 28 test files, and it is
-          the only test count on this page. Tests that need a live database, and the deliberately broken
+          Java 25. That is the whole of what that one command reports, across 32 test files, and it is
+          the only test count on this page. One test is skipped on Windows, because it needs to create a
+          symbolic link and Windows will not do that without administrator rights; it runs on Linux.
+          Tests that need a live database, and the deliberately broken
           version kept around to prove the bug, are run by different commands and are not counted here.</p>
       </div>
 
@@ -644,12 +648,12 @@ a:hover { color: var(--accent-strong); }
       </div>
 
       <div class="fact">
-        <!-- 31 browser tests: npm test (vitest run) in web/ on 2026-07-27 reported
-             "Test Files 5 passed (5)" and "Tests 31 passed (31)". Type check: npx tsc -b exits 0. -->
-        <span class="fact-n">31<small> screen tests</small></span>
+        <!-- 33 browser tests: npm test (vitest run) in web/ on 2026-07-27 reported
+             "Test Files 5 passed (5)" and "Tests 33 passed (33)". Type check: npx tsc -b exits 0. -->
+        <span class="fact-n">33<small> screen tests</small></span>
         <b>The screen has its own checks.</b>
         <p><b>How:</b> <code>npm test</code> in the <code>web</code> folder on 27 July 2026: 5 files,
-          31 tests, all passing, alongside a clean type check. They cover the money arithmetic, so that
+          33 tests, all passing, alongside a clean type check. They cover the money arithmetic, so that
           a value like 0.29 can never arrive on screen as 0.28999.</p>
       </div>
 

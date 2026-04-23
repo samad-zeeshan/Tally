@@ -11,9 +11,19 @@ import java.util.Optional;
  */
 public final class StaticFileHandler {
     private final Path root;
+    private final Path realRoot;
 
     public StaticFileHandler(Path root) {
         this.root = root.toAbsolutePath().normalize();
+        Path real;
+        try {
+            // Resolve the root's own links once, so the per-request comparison is real path against real
+            // path. A root reached through a link would otherwise fail every comparison below.
+            real = this.root.toRealPath();
+        } catch (IOException missingRoot) {
+            real = this.root;   // a root that does not exist serves nothing, which every resolve below already does
+        }
+        this.realRoot = real;
     }
 
     // Present means the file's bytes plus a content type. Empty means not found, a non-GET, or a
@@ -26,13 +36,25 @@ public final class StaticFileHandler {
         String relative = path.equals("/") ? "index.html" : path.substring(1);
         Path resolved = root.resolve(relative).normalize();
         // The normalized path must stay under the root, or a "/../" escape could read arbitrary files.
-        // This traversal check is not optional in a money service.
-        if (!resolved.startsWith(root) || !Files.isRegularFile(resolved)) {
+        // This traversal check is not optional in a money service. It is lexical, though, so it runs
+        // first only to reject the obvious case without touching the disk.
+        if (!resolved.startsWith(root)) {
             return Optional.empty();
         }
         try {
-            return Optional.of(Response.raw(200, Files.readAllBytes(resolved), contentType(relative)));
-        } catch (IOException unreadable) {
+            // The check that counts is on the real path. A lexical comparison says nothing about symlinks:
+            // a link inside the root, or a linked parent directory, points wherever it likes while the
+            // path still reads as being under the root, and Files.isRegularFile follows it happily.
+            // NOFOLLOW_LINKS on the final component would not close it either, since the escaping hop can
+            // be a directory further up. Resolving the whole path and re-checking is what actually holds.
+            Path real = resolved.toRealPath();
+            if (!real.startsWith(realRoot) || !Files.isRegularFile(real)) {
+                return Optional.empty();
+            }
+            return Optional.of(Response.raw(200, Files.readAllBytes(real), contentType(relative)));
+        } catch (IOException missingOrUnreadable) {
+            // Missing files land here too, and stay a plain 404: whether a path exists outside the root
+            // is not something a caller gets to learn from the status code.
             return Optional.empty();
         }
     }

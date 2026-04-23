@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The write/read auth matrix: writes and reconciliation need a bearer token, reads do not.
+ * The auth matrix: every route needs a bearer token, /health excepted.
  */
 class AuthTest extends ApiTestHarness {
     private static final String ACCOUNT_BODY = "{\"name\":\"Ada\",\"openingBalanceMinor\":1000}";
@@ -67,10 +67,25 @@ class AuthTest extends ApiTestHarness {
     }
 
     @Test
-    void readsAreOpenWithoutToken() {
+    void readsRequireToken() {
         String id = createAccount("Ada", 1000);   // created with the token
-        assertEquals(200, rawGet("/accounts/" + id, null).statusCode());
-        assertEquals(200, rawGet("/accounts/" + id + "/statement", null).statusCode());
+        // A balance and a statement are account data. Reads used to be open as a demo convenience; they
+        // are not, because "anyone can list every account and read every statement" is not a small gap.
+        for (String path : new String[]{"/accounts", "/accounts/" + id, "/accounts/" + id + "/statement"}) {
+            HttpResponse<String> r = rawGet(path, null);
+            assertEquals(401, r.statusCode(), path);
+            assertEquals("AUTH_MISSING", errorCode(r), path);
+        }
+        // The same reads succeed with the token, so the client that already sends it keeps working.
+        assertEquals(200, rawGet("/accounts", "Bearer " + TOKEN).statusCode());
+        assertEquals(200, rawGet("/accounts/" + id, "Bearer " + TOKEN).statusCode());
+        assertEquals(200, rawGet("/accounts/" + id + "/statement", "Bearer " + TOKEN).statusCode());
+    }
+
+    @Test
+    void healthStaysOpenWithoutToken() {
+        // A liveness probe must not need a credential, and the container healthcheck has none.
+        assertEquals(200, rawGet("/health", null).statusCode());
     }
 
     @Test

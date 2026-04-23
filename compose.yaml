@@ -1,13 +1,19 @@
+# Every credential here comes from the environment, with no default. Copy .env.example to .env and fill
+# it in; compose reads .env from this directory automatically. The ":?" form makes an unset or empty
+# variable stop the run with that message, which is the same fail-closed rule Auth.requireToken applies
+# at startup: a money service that boots with a guessable password is worse than one that does not boot.
 services:
   db:
     image: postgres:17
     environment:
       POSTGRES_DB: tally
       POSTGRES_USER: tally
-      POSTGRES_PASSWORD: tally
-    # Published so local integration tests can reach it at localhost:5432 with this same file.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env, see .env.example}
+    # Bound to loopback: the local integration tests reach it at localhost:5432 with this same file, and
+    # nothing else needs to. Publishing "5432:5432" binds every interface, which puts the database on
+    # whatever network the laptop is on.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - tally_pgdata:/var/lib/postgresql/data
       # Seeds a separate tally_test database for local integration runs.
@@ -21,17 +27,18 @@ services:
   app:
     build:
       context: .
-      # Baked into the served JS so the demo's create and transfer work. A client-embedded write token
-      # is not protection (ADR-0015), it only exercises the auth handshake.
+      # Baked into the served JS so the demo's create and transfer work. A client-embedded token is not
+      # protection (ADR-0015), it only exercises the auth handshake, which is exactly why it must be the
+      # developer's own throwaway value and not a constant committed to a public repository.
       args:
-        VITE_API_TOKEN: tally-local-dev-token
+        VITE_API_TOKEN: ${TALLY_API_TOKEN:?set TALLY_API_TOKEN in .env, see .env.example}
     depends_on:
       db:
         condition: service_healthy
     environment:
-      TALLY_DB_URL: jdbc:postgresql://db:5432/tally?user=tally&password=tally
-      # Demo token for local use only. The app never logs it (Stage 6 rule).
-      TALLY_API_TOKEN: tally-local-dev-token
+      TALLY_DB_URL: jdbc:postgresql://db:5432/tally?user=tally&password=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env, see .env.example}
+      # The app never logs it (Stage 6 rule).
+      TALLY_API_TOKEN: ${TALLY_API_TOKEN:?set TALLY_API_TOKEN in .env, see .env.example}
     ports:
       - "8080:8080"
 

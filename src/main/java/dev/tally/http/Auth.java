@@ -6,13 +6,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.function.UnaryOperator;
 
 /**
- * Bearer-token auth for write endpoints. It reads only the Authorization header, so a rejected
- * request never touches the body: a 401 is decided before the Idempotency-Key is ever consulted,
- * which is what keeps an unauthenticated retry from consuming or reserving a key. See ADR-0015.
+ * Bearer-token auth for the API. It reads only the Authorization header, so a rejected request never
+ * touches the body: a 401 is decided before the Idempotency-Key is ever consulted, which is what keeps
+ * an unauthenticated retry from consuming or reserving a key. See ADR-0015.
  *
- * Writes and reconciliation are protected; plain reads are open. Reads stay open as a deliberate
- * demo tradeoff so a browser or curl can look around with no setup; a real money API would protect
- * them too, and the ADR says so.
+ * Every endpoint is protected except /health. Reads were open at first, so a browser or curl could look
+ * around with no setup, but a balance and a statement are account data and that trade was not worth the
+ * convenience; the ADR records the change.
  */
 public final class Auth {
     public enum Result { OK, MISSING, INVALID }

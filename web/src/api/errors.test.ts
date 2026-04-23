@@ -8,6 +8,10 @@ describe("messageFor", () => {
   it("unknown 4xx code falls back to the server message", () => {
     expect(messageFor("SOMETHING_NEW", "the server said this")).toBe("the server said this");
   });
+  it("RATE_LIMITED tells the user to wait rather than leaking the limit", () => {
+    expect(messageFor("RATE_LIMITED", "too many requests, slow down and retry later"))
+      .toBe("Too many requests. Wait a moment, then retry.");
+  });
 });
 
 describe("classify", () => {
@@ -22,5 +26,8 @@ describe("classify", () => {
     expect(classify(400, "AMOUNT_NOT_POSITIVE")).toBe("terminal");
     expect(classify(409, "IDEMPOTENCY_KEY_CONFLICT")).toBe("terminal");
     expect(classify(401, "AUTH_MISSING")).toBe("terminal");
+  });
+  it("429 is the one retryable 4xx, so the frozen key can be sent again after the wait", () => {
+    expect(classify(429, "RATE_LIMITED")).toBe("transient");
   });
 });

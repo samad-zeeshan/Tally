@@ -26,3 +26,4 @@ commit that changed the code.
 | 0018 | React, TypeScript, Vite, and vitest for the client | web |
 | 0019 | One idempotency key per intended transfer | web |
 | 0020 | CI on real Postgres, one shaded jar, the app serves the client | ops |
+| 0021 | Rate limits, security headers, and signed cursors | http |

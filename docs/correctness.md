@@ -122,12 +122,19 @@ work instead of starving the pool.
 
 ## The deployed-demo auth trade
 
-Write endpoints require a bearer token, proven server-side by the auth tests and by a `curl` to
-`POST /transfers` with no `Authorization` header returning `401`. The container demo bakes a
-`tally-local-dev-token` into the served JavaScript only so the one-origin demo's create and transfer
-work. A token in served JavaScript is not protection: anyone who opens the page has it. A real client
-would fetch a short-lived token from a login flow the demo does not build. This is the same limit
-ADR-0015 records, restated here where a reader of the demo will meet it.
+Every endpoint except `/health` requires a bearer token, proven server-side by the auth tests and by a
+`curl` to `GET /accounts` or `POST /transfers` with no `Authorization` header returning `401`. Reads were
+open at first, as a demo convenience; they are not any more, because listing every account and reading
+every statement is not a smaller act than writing one. The container demo bakes a token into the served
+JavaScript so the one-origin demo's create and transfer work, but that token is now the developer's own
+value from a gitignored `.env`, never a constant in the repository. A token in served JavaScript is not
+protection either way: anyone who opens the page has it. A real client would fetch a short-lived token
+from a login flow the demo does not build. This is the same limit ADR-0015 records, restated here where a
+reader of the demo will meet it.
+
+Repeated wrong tokens do not get unlimited tries. The kernel throttles by client address, with a small
+failed-auth budget separate from the general request budget, and answers `429` with `Retry-After` once
+either is spent. ADR-0021 records the numbers and why they are what they are.
 
 ## Deliberately out of scope
 

@@ -9,8 +9,9 @@ use. Auth and the key handling have to be ordered, not just present.
 
 ## Decision
 
-One static bearer token, read once from `TALLY_API_TOKEN`. `POST /accounts`, `POST /transfers`, and
-`GET /reconciliation` require it; the plain reads are open. Auth is a handler wrapper applied at route
+One static bearer token, read once from `TALLY_API_TOKEN`. Every route requires it except `GET /health`,
+which must answer a liveness probe without a credential and returns a fixed string that names no account.
+Auth is a handler wrapper applied at route
 registration, so the protected routes are visible in one screenful, and it runs after routing but
 **before the body is read**: the body is a lazy supplier, and the wrapper only ever touches headers.
 That ordering is what makes the idempotency guarantee free: a 401 is produced before the
@@ -28,22 +29,34 @@ never used, because one static token has no permission model to deny.
 
 Per-user auth or JWTs: there is no user model in scope, and a real identity system is a project of its
 own. HMAC request signing: stronger against replay, but it obscures the one lesson this endpoint
-teaches. Protecting reads too: what a real money API would do, traded here for letting a recruiter
-browse balances with `curl` and no setup; the gap is named, not hidden. A `com.sun.net.httpserver.Filter`:
+teaches. A `com.sun.net.httpserver.Filter`:
 filters attach per context, and everything routes through the one kernel context, so a filter would
 duplicate the router's matching. Auto-disabling auth when the env var is unset: a foot-gun that ships an
 open write API by accident.
 
+Leaving reads open, which is what this decision originally said: writes and `GET /reconciliation` were
+protected and the plain reads were not, traded for letting a reader browse balances with `curl` and no
+setup. The gap was named rather than hidden, which is the right way to carry a known gap, but it was
+still a gap: anyone who found the host could list every account and read every statement. The
+convenience was not worth it, and the client already sent the token on every read, so closing it cost
+nothing. Superseded, and the wrapper now goes on every route but `/health`.
+
 ## Consequences
 
 A single shared secret means the logs can say a write happened but not who made it; rotation is a
-restart. HTTP timeout policy stays coarse: `com.sun.net.httpserver` has no per-exchange deadline, only
+restart. Rotating it also invalidates outstanding statement cursors, because ADR-0021 derives their
+signing key from this token; that is the safe direction for a token to fail in. HTTP timeout policy stays
+coarse: `com.sun.net.httpserver` has no per-exchange deadline, only
 the process-wide `sun.net.httpserver.maxReqTime` / `maxRspTime` / `maxReqHeaderSize` limits set at
 startup, and when one fires the client sees a dropped connection, not a clean 503. A reverse proxy owns
-real timeout and rate policy in production; that is out of scope and said out loud. Reconciliation is
-protected despite being a read, because it recomputes every balance and is the one endpoint cheap to
-abuse.
+real timeout policy in production; that is out of scope and said out loud. Rate policy is no longer out
+of scope: a single static token with unlimited guesses is a brute-force target, so the kernel throttles
+failed authentication by client address. ADR-0021 covers it. Reconciliation is protected despite being a
+read, because it recomputes every balance and is the one endpoint cheap to abuse.
+
+The token itself is never a value in this repository. Compose reads it from a gitignored `.env` with no
+default, so an unset variable stops the run rather than starting a service on a published constant.
 
 ## Status
 
-Accepted.
+Accepted. Amended: reads are protected too, and the edge throttles failed authentication (ADR-0021).

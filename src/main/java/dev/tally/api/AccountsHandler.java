@@ -31,9 +31,11 @@ public final class AccountsHandler {
     static final int MAX_LIMIT = 200;
 
     private final Store store;
+    private final Cursor cursor;
 
-    public AccountsHandler(Store store) {
+    public AccountsHandler(Store store, Cursor cursor) {
         this.store = store;
+        this.cursor = cursor;
     }
 
     public Response create(Request request) {
@@ -47,7 +49,7 @@ public final class AccountsHandler {
         return Response.json(200, renderAccount(resolve(request.pathParams().get("id"))));
     }
 
-    // Open, like the other reads. The store already excludes world, so the client never sees it.
+    // The store already excludes world, so the client never sees it.
     public Response list(Request request) {
         List<JsonValue> items = new ArrayList<>();
         for (Account account : store.listAccounts()) {
@@ -68,6 +70,10 @@ public final class AccountsHandler {
         return Response.json(200, renderStatement(page));
     }
 
+    private long parseCursor(String raw) {
+        return raw == null ? Long.MAX_VALUE : cursor.decode(raw);
+    }
+
     private static int parseLimit(String raw) {
         if (raw == null) {
             return DEFAULT_LIMIT;
@@ -83,10 +89,6 @@ public final class AccountsHandler {
             throw new ApiException(ErrorCode.INVALID_LIMIT, "limit", "limit must be between 1 and " + MAX_LIMIT);
         }
         return limit;
-    }
-
-    private static long parseCursor(String cursor) {
-        return cursor == null ? Long.MAX_VALUE : Cursor.decode(cursor);
     }
 
     // A path id is opaque: a string that is not a UUID, or a UUID with no account, is simply not found.
@@ -109,7 +111,7 @@ public final class AccountsHandler {
         return new JsonValue.JsonObject(m);
     }
 
-    private static JsonValue renderStatement(StatementPage page) {
+    private JsonValue renderStatement(StatementPage page) {
         List<JsonValue> entries = new ArrayList<>();
         for (StatementLine line : page.entries()) {
             Map<String, JsonValue> e = new LinkedHashMap<>();
@@ -127,7 +129,7 @@ public final class AccountsHandler {
         // The last returned entry is the oldest on this page; the next page fetches ids below it. null
         // exactly when there are no further entries, from the store's limit+1 probe.
         if (page.hasMore() && !page.entries().isEmpty()) {
-            m.put("nextCursor", str(Cursor.encode(page.entries().getLast().postingId())));
+            m.put("nextCursor", str(cursor.encode(page.entries().getLast().postingId())));
         } else {
             m.put("nextCursor", new JsonValue.JsonNull());
         }

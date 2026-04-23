@@ -5,6 +5,7 @@ import dev.tally.api.AccountsHandler;
 import dev.tally.api.ReconciliationHandler;
 import dev.tally.api.TransfersHandler;
 import dev.tally.http.Auth;
+import dev.tally.http.Cursor;
 import dev.tally.http.HealthHandler;
 import dev.tally.http.HttpKernel;
 import dev.tally.http.Router;
@@ -32,19 +33,22 @@ public final class ApiServer {
     // staticDir non-null serves the built client from that directory as the kernel's fallback, so the
     // whole app lives at one origin. Unset in local dev, where the Vite proxy fronts the client.
     public ApiServer(int port, Store store, String apiToken, Path staticDir) {
-        AccountsHandler accounts = new AccountsHandler(store);
+        // The cursor signing key is derived from the API token, so statements need no key of their own.
+        AccountsHandler accounts = new AccountsHandler(store, new Cursor(apiToken));
         TransfersHandler transfers = new TransfersHandler(store);
         ReconciliationHandler reconciliation = new ReconciliationHandler(store);
         Auth auth = new Auth(apiToken);
         Router router = new Router();
-        // Open liveness route, so the container healthcheck needs no token.
+        // The one open route. A liveness probe must not need a credential, and it answers a fixed string
+        // that names no account, so there is nothing behind it to protect.
         router.add("GET", "/health", new HealthHandler());
-        // Writes and reconciliation are wrapped; reads are registered bare, so the protection boundary
-        // is visible in one screenful. auth.protect checks the token before the body is ever read.
+        // Every other route is wrapped, so the protection boundary is visible in one screenful: balances
+        // and statements are account data, and reading them is not a lesser act than writing them.
+        // auth.protect checks the token before the body is ever read.
         router.add("POST", "/accounts", auth.protect(accounts::create));
-        router.add("GET", "/accounts", accounts::list);
-        router.add("GET", "/accounts/{id}", accounts::get);
-        router.add("GET", "/accounts/{id}/statement", accounts::statement);
+        router.add("GET", "/accounts", auth.protect(accounts::list));
+        router.add("GET", "/accounts/{id}", auth.protect(accounts::get));
+        router.add("GET", "/accounts/{id}/statement", auth.protect(accounts::statement));
         router.add("POST", "/transfers", auth.protect(transfers::create));
         router.add("GET", "/reconciliation", auth.protect(reconciliation::report));
         try {

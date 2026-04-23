@@ -18,19 +18,23 @@ The reasoning lives in [docs/adr/](docs/adr/), one decision per file. The ones t
 - **Hand-written JSON and the JDK's built-in HTTP server.** The API surface is small and fixed, so the project parses and writes its JSON by hand and serves HTTP from the standard library on virtual threads, instead of taking on a framework. The choice was revisited after a hardening review and kept deliberately. ([ADR 0008](docs/adr/0008-hand-written-json.md), [ADR 0009](docs/adr/0009-http-jdk-server.md), [ADR 0017](docs/adr/0017-keep-the-hand-written-json.md))
 - **Postgres as the store, with the constraints as the last line of defense.** Plain SQL migrations run by a small hand-rolled runner, a fixed-size connection pool, pessimistic row locks at read committed, and stored balances with keyset pagination for statements. The invariants the code enforces are also declared as database constraints, so a bug in one layer is caught by another. ([ADR 0011](docs/adr/0011-pessimistic-row-locks-at-read-committed.md), [ADR 0012](docs/adr/0012-plain-sql-migrations-with-a-hand-rolled-runner.md), [ADR 0013](docs/adr/0013-a-hand-rolled-fixed-size-connection-pool.md), [ADR 0014](docs/adr/0014-stored-balances-and-keyset-pagination.md))
 - **A client with two runtime dependencies.** The web app is React, TypeScript, and Vite, and nothing else: no router, no state library, no CSS framework, one hand-written stylesheet. The money, error, and transfer-intent logic are pure modules with their own tests. ([ADR 0018](docs/adr/0018-react-typescript-vite.md))
-- **A static bearer token, checked at the edge.** Writes require a token from the environment; reads are open so the API can be browsed with curl. This is demo-grade auth on purpose, and the ADR names exactly what it does not protect against. ([ADR 0015](docs/adr/0015-a-static-bearer-token-checked-at-the-edge.md))
+- **A static bearer token, checked at the edge.** Every endpoint except `/health` requires a token from the environment, reads included. This is still demo-grade auth on purpose, and the ADR names exactly what it does not protect against. ([ADR 0015](docs/adr/0015-a-static-bearer-token-checked-at-the-edge.md))
+- **A throttle, browser headers, and signed cursors at the edge.** The kernel rate-limits by client address, with a small separate budget for failed authentication, and answers `429` with `Retry-After`. Every response carries a CSP written against the real Vite build plus the usual hardening headers, statement cursors are HMAC-signed so they cannot be forged, and no credential is a literal anywhere in the repository. ([ADR 0021](docs/adr/0021-rate-limits-security-headers-and-signed-cursors.md))
 
 How the guarantees are tested and where each one is enforced is written up in [docs/correctness.md](docs/correctness.md).
 
 ## Running it
 
-The quickest way is Docker, which brings up Postgres and the app (API plus the built web client) on one origin:
+The quickest way is Docker, which brings up Postgres and the app (API plus the built web client) on one origin. Both credentials come from a `.env` you create; nothing is hardcoded, and compose refuses to start without them:
 
 ```
+cp .env.example .env            # then fill in the two values, e.g.
+                                #   POSTGRES_PASSWORD=$(openssl rand -base64 24)
+                                #   TALLY_API_TOKEN=$(openssl rand -hex 24)
 docker compose up --build
 ```
 
-Then open http://localhost:8080. The compose file bakes in a local demo token so creates and transfers work out of the box.
+Then open http://localhost:8080. `TALLY_API_TOKEN` is baked into the served JavaScript so creates and transfers work out of the box, which is exactly why it should be a throwaway local value: anyone who opens the page has it. `.env` is gitignored.
 
 To run the backend by hand you need JDK 25. Maven comes from the wrapper, downloaded and checksum-verified on first use:
 
@@ -39,7 +43,7 @@ To run the backend by hand you need JDK 25. Maven comes from the wrapper, downlo
 TALLY_API_TOKEN=some-local-token-16ch java -jar target/tally.jar
 ```
 
-The token is required (startup fails without one of at least 16 characters). `TALLY_DB_URL` points at Postgres; leave it unset and the server runs on an in-memory store, which is enough to try the API. `TALLY_PORT` defaults to 8080.
+The token is required (startup fails without one of at least 16 characters) and every endpoint but `GET /health` needs it, so a `curl` to the API carries `-H "Authorization: Bearer $TALLY_API_TOKEN"`. `TALLY_DB_URL` points at Postgres; leave it unset and the server runs on an in-memory store, which is enough to try the API. `TALLY_PORT` defaults to 8080.
 
 For the web client in development:
 
@@ -56,8 +60,9 @@ Copy `web/.env.example` to `web/.env.local` and set `VITE_API_TOKEN` to the back
 ```
 ./mvnw test                     # backend unit tests, no database needed
 
-docker compose up -d db         # then the integration suite against real Postgres:
-TALLY_TEST_DB_URL=jdbc:postgresql://localhost:5432/tally_test ./mvnw -Pintegration verify
+docker compose up -d db         # needs .env, and publishes only on 127.0.0.1
+                                # then the integration suite against real Postgres:
+TALLY_TEST_DB_URL="jdbc:postgresql://localhost:5432/tally_test?user=tally&password=$POSTGRES_PASSWORD" ./mvnw -Pintegration verify
 
 cd web
 npm test                        # vitest over the pure client modules

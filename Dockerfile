@@ -20,8 +20,9 @@ WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ .
-# The same-origin demo needs a write token baked into the bundle so create and transfer work. This is a
-# demo token, not protection. See ADR-0015 and docs/correctness.md.
+# The same-origin demo needs a token baked into the bundle so create and transfer work. This is a demo
+# token, not protection: anyone who opens the page has it. compose passes the developer's own value from
+# .env, so no credential is committed. See ADR-0015 and docs/correctness.md.
 ARG VITE_API_TOKEN
 ENV VITE_API_TOKEN=$VITE_API_TOKEN
 RUN npm run build

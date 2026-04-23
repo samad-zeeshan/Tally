@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The single HttpHandler at "/": binds the request id, routes, dispatches, and turns any failure into
- * the error envelope. It is the one place an exception becomes a response.
+ * The single HttpHandler at "/": binds the request id, throttles, routes, dispatches, and turns any
+ * failure into the error envelope. It is the one place an exception becomes a response.
  *
  * The body is read lazily, inside the matched handler, not here: routing and auth run first so an
  * unauthenticated request is rejected before its body (and the 413 cap) is ever touched.
@@ -31,18 +31,54 @@ import java.util.logging.Logger;
 public final class HttpKernel implements HttpHandler {
     static final int MAX_BODY_BYTES = 4_096;
 
+    // The one inline script in the client: web/index.html sets the theme before first paint so the page
+    // never flashes the wrong one. A CSP hash is what keeps script-src free of 'unsafe-inline' for the
+    // sake of one snippet. It covers the script's exact bytes, so editing that snippet without updating
+    // this constant silently breaks the theme; SecurityHeadersTest re-derives the hash from the file and
+    // fails when the two drift.
+    static final String THEME_SCRIPT_HASH = "sha256-HVcZT6+dmTYvPKI/VaotaeNmxttNrYO9NkQqS8Ut5r8=";
+
+    // Sent on every response, because this server also serves the built SPA at the same origin: a header
+    // that only covers some responses is not a control. The CSP is written against the real Vite build,
+    // which emits external module scripts and an external stylesheet, so nothing but the theme snippet
+    // above needs script-src relaxed at all. style-src does need 'unsafe-inline', because React writes
+    // inline style attributes. object-src and base-uri are shut to close the two classic bypasses, and
+    // frame-ancestors matches X-Frame-Options.
+    //
+    // No Strict-Transport-Security. This server speaks plain HTTP locally, and an HSTS header served over
+    // http://localhost pins the whole localhost origin to https in the developer's browser for max-age,
+    // which is painful to undo and breaks every other local project. A deployment that really terminates
+    // TLS should send it from the proxy that owns the certificate, which is also where it belongs.
+    private static final Map<String, String> SECURITY_HEADERS = Map.of(
+            "X-Content-Type-Options", "nosniff",
+            // SAMEORIGIN rather than DENY, so the project keeps the option of embedding its own UI.
+            "X-Frame-Options", "SAMEORIGIN",
+            "Referrer-Policy", "no-referrer",
+            "Permissions-Policy", "camera=(), microphone=(), geolocation=()",
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self' '" + THEME_SCRIPT_HASH + "'; "
+                    + "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; "
+                    + "connect-src 'self'; object-src 'none'; base-uri 'none'; "
+                    + "frame-ancestors 'self'; form-action 'self'");
+
     private static final Logger LOG = Logs.get(HttpKernel.class);
 
     private final Router router;
     private final StaticFileHandler staticFiles;   // null unless TALLY_STATIC_DIR is set
+    private final RateLimiter rateLimiter;
 
     public HttpKernel(Router router) {
         this(router, null);
     }
 
     public HttpKernel(Router router, StaticFileHandler staticFiles) {
+        this(router, staticFiles, new RateLimiter());
+    }
+
+    public HttpKernel(Router router, StaticFileHandler staticFiles, RateLimiter rateLimiter) {
         this.router = router;
         this.staticFiles = staticFiles;
+        this.rateLimiter = rateLimiter;
     }
 
     @Override
@@ -52,18 +88,43 @@ public final class HttpKernel implements HttpHandler {
         String method = exchange.getRequestMethod();
         String rawPath = exchange.getRequestURI().getPath();
         Router.RouteResult route = router.match(method, rawPath);
+        String client = clientAddress(exchange);
 
         // Everything that reads the request id happens inside the binding: the error envelope's requestId
         // and the access log both pull it from RequestContext.CURRENT. The write happens after, with the
         // id set explicitly on the header, so a response outside the scope still carries it.
         Response[] holder = new Response[1];
         ScopedValue.where(RequestContext.CURRENT, ctx).run(() -> {
-            Response response = dispatch(exchange, route, method, rawPath);
+            Response response = throttled(exchange, route, method, rawPath, client);
             long ms = (System.nanoTime() - startNanos) / 1_000_000;
             logAccess(method, logPath(route, rawPath), response.status(), ms);
             holder[0] = response;
         });
         write(exchange, holder[0].withHeader("X-Request-Id", ctx.requestId()));
+    }
+
+    // The throttle runs before dispatch, so a limited caller never reaches a handler or the store, and
+    // every 401 is charged back to the address afterwards. 401 is the only brute-force signal the edge
+    // has: Auth deliberately says nothing about *why* a token was rejected, so the count is all there is.
+    private Response throttled(HttpExchange exchange, Router.RouteResult route, String method,
+                               String rawPath, String client) {
+        RateLimiter.Decision decision = rateLimiter.check(client);
+        if (!decision.allowed()) {
+            return Response.error(ErrorCode.RATE_LIMITED, "too many requests, slow down and retry later")
+                    .withHeader("Retry-After", Integer.toString(decision.retryAfterSeconds()));
+        }
+        Response response = dispatch(exchange, route, method, rawPath);
+        if (response.status() == 401) {
+            rateLimiter.recordAuthFailure(client);
+        }
+        return response;
+    }
+
+    // The socket peer, never a client-supplied forwarding header: see the note on RateLimiter. A missing
+    // remote address (possible on a closed exchange) shares one bucket rather than escaping the limiter.
+    private static String clientAddress(HttpExchange exchange) {
+        var remote = exchange.getRemoteAddress();
+        return remote == null || remote.getAddress() == null ? "unknown" : remote.getAddress().getHostAddress();
     }
 
     private Response dispatch(HttpExchange exchange, Router.RouteResult route, String method, String rawPath) {
@@ -193,6 +254,11 @@ public final class HttpKernel implements HttpHandler {
         }
         var headers = exchange.getResponseHeaders();
         headers.set("Content-Type", contentType);
+        // Security headers go on before the per-response ones so a handler could override one deliberately,
+        // and after nothing else, so there is no path out of this method that skips them.
+        for (Map.Entry<String, String> h : SECURITY_HEADERS.entrySet()) {
+            headers.set(h.getKey(), h.getValue());
+        }
         for (Map.Entry<String, String> h : response.extraHeaders().entrySet()) {
             headers.set(h.getKey(), h.getValue());
         }

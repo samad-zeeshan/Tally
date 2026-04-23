@@ -25,8 +25,12 @@
  *
  * Two things the real service has that this copy does not, because a browser has neither:
  * locks (there is one thread here, so no two transfers can interleave) and durability (closing
- * the tab empties the book). The bearer token the real service requires on writes is ignored
- * here; this copy has nothing to protect.
+ * the tab empties the book). The bearer token the real service requires on every route but
+ * /health is ignored here, along with its rate limits; this copy has nothing to protect and no
+ * network to be flooded over. Its cursors are unsigned for the same reason: the real codec signs
+ * them with a key derived from the API token, and a page with no server has no key to sign with.
+ * Both formats are the same shape, opaque and "v1:"-tagged, and both reject a cursor they did not
+ * issue with the same INVALID_CURSOR; this copy just checks less.
  */
 (function () {
   "use strict";

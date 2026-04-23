@@ -12,6 +12,7 @@ const MESSAGES: Record<string, string> = {
   IDEMPOTENCY_KEY_CONFLICT: "This transfer was already submitted with different details. Start a new one.",
   AUTH_MISSING: "The API token is missing. Set VITE_API_TOKEN and restart the dev server.",
   AUTH_INVALID: "The API token is wrong. Check VITE_API_TOKEN and restart the dev server.",
+  RATE_LIMITED: "Too many requests. Wait a moment, then retry.",
   UNSAFE_AMOUNT: "The server returned an amount too large to show safely.",
   NETWORK: "Could not reach the server. Your transfer was not lost, you can retry safely.",
   NETWORK_SIMULATED: "Could not reach the server. Your transfer was not lost, you can retry safely.",
@@ -20,8 +21,10 @@ const MESSAGES: Record<string, string> = {
 
 // Keys on status only: retrying the identical request cannot change a definite 4xx no, so it is terminal.
 // A null status (response never arrived) or a 5xx (the server's own fault, outcome unknown) is transient.
+// 429 is the one 4xx that waiting does change: the throttle runs before the handler, so the transfer
+// certainly did not apply, and the frozen key can be sent again once the Retry-After has passed.
 export function classify(status: number | null, _code: string): FailureKind {
-  return status === null || status >= 500 ? "transient" : "terminal";
+  return status === null || status === 429 || status >= 500 ? "transient" : "terminal";
 }
 
 // Keys on code. Known codes get a written message; granular validation codes read cleanly already, so

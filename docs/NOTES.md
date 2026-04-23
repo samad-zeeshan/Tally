@@ -53,7 +53,7 @@ handlers under `api/`. Behaviour it reproduces on purpose:
 
 Two things it does not reproduce, because a browser has neither: per-account locking (there is one
 thread, so nothing can interleave) and durability (closing the tab empties the book). It also
-ignores the bearer token entirely; it has nothing to protect.
+ignores the bearer token entirely, and signs no cursors; it has nothing to protect.
 
 Anything that is not one of the three Tally path shapes is passed through to the browser's own
 fetch and logged as a warning, so an escaping request would be visible rather than silent. In
@@ -75,14 +75,14 @@ with accounts in it.
 
 | Claim | Source | Method |
 | --- | --- | --- |
-| 210 tests, 0 failures, 0 errors, 0 skipped, 28 test files | `./mvnw test` | Run in this repository on 2026-07-27 on Java 25. Surefire's summary line is `Tests run: 210, Failures: 0, Errors: 0, Skipped: 0`, preceded by 28 per-class lines, then `BUILD SUCCESS` in 3.318 s. |
+| 240 tests, 0 failures, 0 errors, 1 skipped, 32 test files | `./mvnw test` | Run in this repository on 2026-07-27 on Java 25. Surefire's summary line is `Tests run: 240, Failures: 0, Errors: 0, Skipped: 1`, preceded by 32 per-class lines, then `BUILD SUCCESS` in 4.549 s. The skip is `StaticFileHandlerTest.aLinkToAFileInsideTheRootStillServes`: it needs a file symlink, and Windows refuses to create one without elevation. Its sibling `aLinkInsideTheRootCannotReachOutsideIt`, the one that proves a link cannot escape the served root, does run on Windows, via a directory junction. Both run on Linux CI. |
 | 20,000 payments across 8 accounts | `src/test/java/dev/tally/testsupport/StressHarness.java` line 42 | `Config.standard`: 8 accounts, 10,000 opening balance, 20,000 operations, 30 second timeout. |
 | Up to 32 workers at once, two per processor core, floor 8, ceiling 32 | `StressHarness.java` line 39 | `Math.clamp(2L * Runtime.getRuntime().availableProcessors(), 8, 32)`. |
 | 3 accounts checked, book sums to 0, no disagreements | `docs/data/tally-run.json`, step `reconciliation` | `{"consistent":true,"globalSumMinor":0,"accountsChecked":3,"drifts":[]}`, copied verbatim from the real Java service at code version `1b44ebf`. |
 | Amara 375.00, Ben 125.00, world -500.00 (the zero line figure) | `docs/data/tally-run.json`, step `transfer` | The `book` array of that step. Bar heights are fractions of one unit where 1 is 500.00. Amara and Ben are stacked into one column, so .75 + .25 is a single height of 1, which is the height of the world bar below: the two halves are equal by construction and measure equal in the browser (126 px each at 360 px wide, 188 px each at 768 px and above). |
 | Exactly 1 third party library at run time | `pom.xml` lines 46 to 51 | The PostgreSQL JDBC driver, `runtime` scope. JUnit is `test` scope, so it is not in the shipped artifact. |
 | 51 Java files, about 3,155 lines | `src/main/java` | `find src/main -name '*.java' \| wc -l` and the same piped through `cat \| wc -l`, on 2026-07-27. |
-| 31 browser tests across 5 files, clean type check | `npm test` and `npx tsc -b` in `web/` | Run on 2026-07-27: `Test Files 5 passed (5)`, `Tests 31 passed (31)`; `tsc -b` exits 0. |
+| 33 browser tests across 5 files, clean type check | `npm test` and `npx tsc -b` in `web/` | Run on 2026-07-27: `Test Files 5 passed (5)`, `Tests 33 passed (33)`; `tsc -b` exits 0. |
 | No amount above a thousand billion cents | `src/main/java/dev/tally/http/Validation.java` line 22 | `MAX_AMOUNT_MINOR = 1_000_000_000_000L`. |
 
 Each of these also carries an HTML comment next to it in `docs/index.html` naming the same source.
@@ -91,8 +91,9 @@ Each of these also carries an HTML comment next to it in `docs/index.html` namin
 
 1. **"257 tests, with no database."** Wrong. `target/surefire-reports/` holds XML from several runs
    on two different dates, so counting the files there mixes the no-database run with a Postgres
-   run and a race-demo run. The corrected figure is **210**, taken from the summary line that
-   `./mvnw test` itself prints, and the page now names the command beside the number.
+   run and a race-demo run. The corrected figure was **210** when this was written, taken from the
+   summary line that `./mvnw test` itself prints, and the page now names the command beside the
+   number so it stays right as the suite grows. It reads **240** today, after the security pass.
 2. **"One thread per two processor cores."** Inverted. `StressHarness.java` line 39 is
    `Math.clamp(2L * Runtime.getRuntime().availableProcessors(), 8, 32)`, which is **two threads per
    core**, clamped between 8 and 32.

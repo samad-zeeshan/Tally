@@ -21,7 +21,9 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class StaticFileHandlerTest {
     @TempDir
@@ -93,5 +95,49 @@ class StaticFileHandlerTest {
         Request escape = new Request("GET", "/../pom.xml", Map.of(), Map.of(), new Headers(), () -> "");
         Optional<Response> served = handler.resolve(escape);
         assertTrue(served.isEmpty(), "a traversal escape must not resolve to a file");
+    }
+
+    @Test
+    void aLinkInsideTheRootCannotReachOutsideIt(@TempDir Path elsewhere) throws Exception {
+        // The traversal check above is lexical, so it says nothing about links: a link inside the root
+        // points wherever it likes while the path still reads as being under the root. This is the case
+        // that a startsWith plus Files.isRegularFile pair lets through.
+        Path secret = elsewhere.resolve("secret.txt");
+        Files.writeString(secret, "TALLY_API_TOKEN=leaked");
+        assumeTrue(link(staticRoot.resolve("escape"), elsewhere), "this platform will not create links unprivileged");
+
+        StaticFileHandler handler = new StaticFileHandler(staticRoot);
+        Request through = new Request("GET", "/escape/secret.txt", Map.of(), Map.of(), new Headers(), () -> "");
+        assertTrue(handler.resolve(through).isEmpty(), "a link must not hand out a file outside the root");
+        // Nothing else broke: a real file in the root still serves.
+        Request ordinary = new Request("GET", "/app.js", Map.of(), Map.of(), new Headers(), () -> "");
+        assertFalse(handler.resolve(ordinary).isEmpty());
+    }
+
+    @Test
+    void aLinkToAFileInsideTheRootStillServes() throws Exception {
+        // The rule is "must resolve inside the root", not "must not be a link", so a link that stays put
+        // keeps working. NOFOLLOW_LINKS on the final component alone would have broken this.
+        assumeTrue(link(staticRoot.resolve("alias.js"), staticRoot.resolve("app.js")),
+                "this platform will not create links unprivileged");
+        StaticFileHandler handler = new StaticFileHandler(staticRoot);
+        Request request = new Request("GET", "/alias.js", Map.of(), Map.of(), new Headers(), () -> "");
+        assertFalse(handler.resolve(request).isEmpty());
+    }
+
+    // Links are a privileged operation on Windows unless developer mode is on, so make one the way the
+    // platform allows: a symlink where that works, an unprivileged directory junction otherwise. Both are
+    // reparse points that toRealPath resolves, which is exactly what the guard has to catch.
+    private static boolean link(Path link, Path target) throws Exception {
+        try {
+            Files.createSymbolicLink(link, target);
+            return true;
+        } catch (IOException | UnsupportedOperationException unprivileged) {
+            if (!Files.isDirectory(target)) {
+                return false;   // a junction only links directories
+            }
+            return new ProcessBuilder("cmd", "/c", "mklink", "/J", link.toString(), target.toString())
+                    .redirectErrorStream(true).start().waitFor() == 0 && Files.exists(link);
+        }
     }
 }

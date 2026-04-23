@@ -19,7 +19,7 @@ import java.util.UUID;
  * A fresh server over a fresh in-memory store per test. The error helpers read error.code and
  * message only, never whole bodies, so a later requestId or field addition does not churn a test.
  *
- * Writes go out authenticated by default so the account and transfer tests stay about their own
+ * Every request goes out authenticated by default so the account and transfer tests stay about their own
  * behaviour; the auth tests build raw requests through send to exercise the missing/wrong-token paths.
  */
 abstract class ApiTestHarness {
@@ -41,12 +41,8 @@ abstract class ApiTestHarness {
         server.stop();
     }
 
+    // Reads carry the token too: every route but /health is protected.
     protected HttpResponse<String> get(String path) {
-        return send(HttpRequest.newBuilder(base.resolve(path)).GET().build());
-    }
-
-    // Reads are open, but reconciliation is a protected read, so its test needs an authenticated GET.
-    protected HttpResponse<String> getAuthed(String path) {
         return send(HttpRequest.newBuilder(base.resolve(path)).header("Authorization", "Bearer " + TOKEN).GET().build());
     }
 
