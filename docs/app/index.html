@@ -14,14 +14,21 @@
         stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     </script>
     <!--
-      Added after the build, only to this copy under docs/. A fresh build drops this tag, so it has
-      to be put back by hand every time. This classic script runs before the module below and answers
-      the app's requests in the browser, so the page needs no server. It is a copy of Tally's rules,
-      not the Java service.
+      Added after the build, only to this copy under docs/. A fresh build drops these two tags, so
+      they have to be put back by hand every time; docs/NOTES.md carries them verbatim.
+
+      tally-server.js is a classic script that runs before the module below and answers the app's
+      requests in the browser, so the page needs no server. It is a copy of Tally's rules, not the
+      Java service.
+
+      tally-embed.js reports this document's height to the page that frames it, so the frame grows to
+      fit and never scrolls inside itself, and it takes back how far the frame falls below the reader's
+      window so the toast shelf can lift itself into view. Outside a frame it does nothing.
     -->
     <script src="./tally-server.js"></script>
-    <script type="module" crossorigin src="./assets/index-_kEgVUFl.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-B2cLsb35.css">
+    <script src="./tally-embed.js"></script>
+    <script type="module" crossorigin src="./assets/index-Sm-2pL0u.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-23Dpc2EK.css">
   </head>
   <body>
     <div id="root"></div>

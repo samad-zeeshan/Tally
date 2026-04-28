@@ -27,8 +27,13 @@
   --radius-s: 7px;
   --radius-m: 10px;
   --radius-l: 14px;
-  --read: 44rem;
-  --wide: 70rem;
+  /* One content column for the whole page. --content is the band every section shares, --gutter is the
+     only horizontal padding on it, and --read is the narrower measure long paragraphs wrap at. A
+     paragraph is narrower than the band, but it still begins on the band's left edge, so every section
+     starts on the same pixel at every width. */
+  --content: 54rem;
+  --gutter: clamp(1.25rem, 4vw, 2rem);
+  --read: 38rem;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -61,7 +66,6 @@ body {
   font-size: 17px;
   line-height: 1.65;
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
 }
 
 a { color: var(--accent); text-underline-offset: 3px; }
@@ -75,8 +79,18 @@ a:hover { color: var(--accent-strong); }
 }
 .skip:focus-visible { left: 8px; }
 
-.wrap { width: min(100% - 2.5rem, var(--read)); margin-inline: auto; }
-.wrap-wide { width: min(100% - 2.5rem, var(--wide)); margin-inline: auto; }
+/* The one content container. Every band on the page uses it: the masthead, the hero, all six numbered
+   sections, the proof grid and the footer. The single exception is the app frame, which is deliberately
+   full bleed and therefore sits outside this container rather than breaking out of it. */
+.wrap {
+  width: 100%;
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Long copy reads at a narrower measure (--read, applied below as a max-width on the paragraph or list
+   itself), which keeps it starting on the container's left edge rather than centred inside it. */
 
 /* ---------- masthead ---------- */
 
@@ -85,24 +99,35 @@ a:hover { color: var(--accent-strong); }
   background: var(--surface);
   position: sticky; top: 0; z-index: 30;
 }
+/* padding-block, not the padding shorthand: these bands are .wrap as well, and the shorthand would
+   wipe out the container's single horizontal padding. */
 .masthead-in {
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-  padding: .7rem 0;
+  padding-block: .35rem;
+}
+/* The mark and the name are one lockup, so the wordmark's own left edge is the column's left edge. */
+.wordmark {
+  display: inline-flex; align-items: center; gap: .6rem;
+  font-weight: 700; letter-spacing: -.01em; margin-right: auto;
 }
 .mark {
   display: inline-grid; place-items: center;
   width: 30px; height: 30px; border-radius: 8px;
   background: var(--accent); color: #fff; font-weight: 700; font-size: 1rem;
 }
-.wordmark { font-weight: 700; letter-spacing: -.01em; margin-right: auto; }
-.masthead nav { display: flex; gap: 1.1rem; font-size: .88rem; }
-.masthead nav a { text-decoration: none; color: var(--muted); }
+.masthead nav { display: flex; gap: .9rem; font-size: .88rem; }
+/* 44 px square at the smallest, so every link in the bar is a comfortable thumb target on a phone. */
+.masthead nav a {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; min-width: 44px;
+  padding-inline: .25rem; text-decoration: none; color: var(--muted);
+}
 .masthead nav a:hover { color: var(--accent); }
 
 /* ---------- the ruled column ---------- */
 
 /* Sections are numbered in the margin against a short rule, the way a ruled book is. */
-.section { padding: 3.6rem 0 .5rem; }
+.section { padding-block: 3.6rem .5rem; }
 .section-head { position: relative; margin-bottom: 1.1rem; }
 .section-no {
   display: block; font-size: .78rem; font-variant-numeric: tabular-nums;
@@ -111,20 +136,20 @@ a:hover { color: var(--accent-strong); }
 .section h2 {
   font-size: clamp(1.45rem, 3.6vw, 1.95rem);
   line-height: 1.22; letter-spacing: -.02em; margin: 0 0 .55rem;
-  max-width: 22ch;
+  max-width: 22ch; overflow-wrap: break-word;
 }
 .section-head::after {
   content: ""; display: block; width: 44px; height: 3px; border-radius: 2px;
   background: var(--accent);
 }
-.section p { margin: 0 0 1rem; }
+.section p { margin: 0 0 1rem; max-width: var(--read); }
 .lede { font-size: 1.08rem; }
 .muted { color: var(--muted); }
 .small { font-size: .9rem; }
 
 /* ---------- hero ---------- */
 
-.hero { padding: 4rem 0 1rem; }
+.hero { padding-block: 4rem 1rem; }
 .eyebrow {
   font-size: .78rem; letter-spacing: .16em; text-transform: uppercase;
   color: var(--accent); font-weight: 700; margin: 0 0 .9rem;
@@ -132,10 +157,10 @@ a:hover { color: var(--accent-strong); }
 .hero h1 {
   font-size: clamp(2.1rem, 7vw, 3.4rem);
   line-height: 1.05; letter-spacing: -.035em; margin: 0 0 1.1rem;
-  max-width: 15ch;
+  max-width: 15ch; overflow-wrap: break-word;
 }
-.hero-lede { font-size: clamp(1.05rem, 2.4vw, 1.22rem); max-width: 40ch; margin: 0 0 1rem; }
-.hero-who { color: var(--muted); max-width: 44ch; }
+.hero-lede { font-size: clamp(1.05rem, 2.4vw, 1.22rem); max-width: var(--read); margin: 0 0 1rem; }
+.hero-who { color: var(--muted); max-width: var(--read); }
 .cta-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.6rem; align-items: center; }
 
 .btn {
@@ -151,6 +176,7 @@ a:hover { color: var(--accent-strong); }
 .btn-quiet { background: var(--surface); color: var(--text); border-color: var(--border); }
 .btn-quiet:hover { border-color: var(--muted); color: var(--text); }
 .btn-text {
+  display: inline-flex; align-items: center; min-height: 44px;
   background: none; border: none; color: var(--muted);
   font: inherit; font-size: .85rem; text-decoration: underline;
   cursor: pointer; padding: .4rem .2rem;
@@ -161,7 +187,10 @@ a:hover { color: var(--accent-strong); }
 
 /* Without JavaScript this is an ordinary paragraph. JavaScript adds .is-armed, which hides the real
    sentence but keeps it in the layout, so the block never changes height while it types. */
-.typer { position: relative; color: var(--muted); font-size: .98rem; margin: 1.2rem 0 0; }
+.typer {
+  position: relative; color: var(--muted); font-size: .98rem;
+  margin: 1.2rem 0 0; max-width: var(--read);
+}
 .typer.is-armed .typer-ghost { visibility: hidden; }
 .typer-sr {
   position: absolute; width: 1px; height: 1px;
@@ -279,7 +308,7 @@ a:hover { color: var(--accent-strong); }
   color: var(--text); font-size: 1.02rem; font-weight: 700;
   font-variant-numeric: tabular-nums; letter-spacing: -.01em;
 }
-.zerocap { margin: 1.2rem 0 0; font-size: .88rem; color: var(--muted); line-height: 1.6; }
+.zerocap { margin: 1.2rem 0 0; font-size: .88rem; color: var(--muted); line-height: 1.6; max-width: var(--read); }
 .zerocap b { color: var(--text); }
 
 /* ---- the draw-in ---- */
@@ -306,6 +335,7 @@ a:hover { color: var(--accent-strong); }
   background: var(--accent-soft);
   padding: 1.15rem 1.3rem;
   margin: 1.6rem 0;
+  max-width: var(--read);
 }
 .honest p { margin: 0 0 .6rem; }
 .honest p:last-child { margin-bottom: 0; }
@@ -321,22 +351,30 @@ a:hover { color: var(--accent-strong); }
   background: var(--surface); border: 1px solid var(--border);
   border-left: 4px solid var(--accent);
   border-radius: var(--radius-m); padding: .85rem 1rem;
-  margin: 0 0 1rem; font-size: .95rem;
+  margin: 0 0 1rem; font-size: .95rem; max-width: var(--read);
 }
 
+/* The app frame is the one band that leaves the content column. It is a sibling of the .wrap blocks
+   rather than a child of one, so it is exactly as wide as the page and can never push a horizontal
+   scrollbar out the way a 100vw breakout would. Square edges and rules top and bottom, because a
+   rounded card that touches both screen edges only looks like a mistake. */
 .frame {
-  border: 1px solid var(--border); border-radius: var(--radius-l);
-  overflow: hidden; box-shadow: var(--shadow-2); background: var(--surface);
-  margin-top: 1.2rem;
+  width: 100%;
+  border-block: 1px solid var(--border);
+  background: var(--surface);
+  margin: 1.6rem 0 1.8rem;
 }
 .frame-bar {
   display: flex; align-items: center; gap: .6rem;
-  padding: .55rem .9rem; border-bottom: 1px solid var(--border);
+  padding: .55rem var(--gutter); border-bottom: 1px solid var(--border);
   background: var(--surface-2); font-size: .78rem; color: var(--muted);
 }
 .frame-dots { display: flex; gap: 5px; }
 .frame-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); display: block; }
-.frame-body { position: relative; height: clamp(560px, 78vh, 820px); }
+/* The fallback height, used until the app reports its own. It is never zero and never collapsed, so a
+   browser that drops the message still shows a usable panel. The script replaces it with the app's
+   measured content height, which is what removes the frame's inner scrollbar. */
+.frame-body { position: relative; height: clamp(560px, 80vh, 900px); }
 .frame iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--surface); }
 .frame-load {
   position: absolute; inset: 0; display: grid; place-items: center;
@@ -346,6 +384,7 @@ a:hover { color: var(--accent-strong); }
 .offline {
   border: 1px solid var(--border); border-radius: var(--radius-l);
   background: var(--surface); padding: 1.5rem; margin-top: 1.2rem;
+  max-width: var(--read);
 }
 .offline[hidden] { display: none; }
 .offline h3 { margin: 0 0 .5rem; font-size: 1.05rem; }
@@ -353,12 +392,18 @@ a:hover { color: var(--accent-strong); }
 
 /* ---------- lists ---------- */
 
-.points { list-style: none; margin: 1.4rem 0 0; padding: 0; display: grid; gap: 1.4rem; }
+.points {
+  list-style: none; margin: 1.4rem 0 0; padding: 0;
+  display: grid; gap: 1.4rem; max-width: var(--read);
+}
 .points > li { padding-left: 1.15rem; border-left: 3px solid var(--accent); }
 .points h3 { margin: 0 0 .35rem; font-size: 1.05rem; line-height: 1.35; }
 .points p { margin: 0; color: var(--muted); font-size: .97rem; }
 
-.limits { list-style: none; margin: 1.4rem 0 0; padding: 0; display: grid; gap: 1rem; }
+.limits {
+  list-style: none; margin: 1.4rem 0 0; padding: 0;
+  display: grid; gap: 1rem; max-width: var(--read);
+}
 .limits > li {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-m); padding: .95rem 1.1rem;
@@ -366,7 +411,7 @@ a:hover { color: var(--accent-strong); }
 .limits b { display: block; margin-bottom: .2rem; }
 .limits span { color: var(--muted); font-size: .95rem; }
 
-.works { list-style: none; margin: 1.4rem 0 0; padding: 0; }
+.works { list-style: none; margin: 1.4rem 0 0; padding: 0; max-width: var(--read); }
 .works > li { padding: .95rem 0; border-bottom: 1px solid var(--border); }
 .works > li:first-child { border-top: 1px solid var(--border); }
 .works b { display: block; }
@@ -401,7 +446,7 @@ a:hover { color: var(--accent-strong); }
   background: var(--surface); padding: 2.2rem 0 3rem;
   font-size: .9rem; color: var(--muted);
 }
-.foot p { margin: 0 0 .6rem; }
+.foot p { margin: 0 0 .6rem; max-width: var(--read); }
 </style>
 </head>
 
@@ -409,9 +454,8 @@ a:hover { color: var(--accent-strong); }
 <a class="skip" href="#demo">Skip to the working demo</a>
 
 <header class="masthead">
-  <div class="wrap-wide masthead-in">
-    <span class="mark" aria-hidden="true">&Sigma;</span>
-    <span class="wordmark">Tally</span>
+  <div class="wrap masthead-in">
+    <span class="wordmark"><span class="mark" aria-hidden="true">&Sigma;</span>Tally</span>
     <nav aria-label="Sections">
       <a href="#demo">Try it</a>
       <a href="#proof">Proof</a>
@@ -451,48 +495,53 @@ a:hover { color: var(--accent-strong); }
       Tally is built around that single moment.</p>
   </section>
 
-  <!-- 3. The demo -->
-  <section class="section wrap-wide" id="demo">
-    <div class="section-head">
-      <span class="section-no">02</span>
-      <h2>Try it yourself, right here.</h2>
-    </div>
+  <!-- 3. The demo. The frame is a direct child of the section, outside the .wrap blocks, so it runs
+       the full width of the page while its heading and prose stay in the shared content column. -->
+  <section class="section" id="demo">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-no">02</span>
+        <h2>Try it yourself, right here.</h2>
+      </div>
 
-    <div class="honest">
-      <span class="tag">Read this first</span>
-      <p><b>The screen below is the real Tally app</b>, the same React code that runs against the real
-        service. <b>The bank behind it is a small copy of Tally's rules written in JavaScript</b>, so
-        the whole thing runs inside your browser with nothing to install. The real service is written
-        in Java and keeps its data in Postgres.</p>
-      <p class="small">The copy follows the same rules file by file, but it is not the real thing, so
-        every number in the <a href="#proof">proof section</a> below was measured on the real Java
-        system and never on this browser copy. Two accounts, Amara and Ben, are already open when the
-        panel loads. Closing this tab empties them.</p>
-    </div>
+      <div class="honest">
+        <span class="tag">Read this first</span>
+        <p><b>The screen below is the real Tally app</b>, the same React code that runs against the real
+          service. <b>The bank behind it is a small copy of Tally's rules written in JavaScript</b>, so
+          the whole thing runs inside your browser with nothing to install. The real service is written
+          in Java and keeps its data in Postgres.</p>
+        <p class="small">The copy follows the same rules file by file, but it is not the real thing, so
+          every number in the <a href="#proof">proof section</a> below was measured on the real Java
+          system and never on this browser copy. Two accounts, Amara and Ben, are already open when the
+          panel loads. Closing this tab empties them.</p>
+      </div>
 
-    <p class="doline"><b>What to do:</b> in the panel below, click
-      <b>&ldquo;Make a sample transfer&rdquo;</b>. Then watch the small green tag in the dark green bar
-      at the top: it says whether the books balance, and it rechecks after every single change.</p>
+      <p class="doline"><b>What to do:</b> in the panel below, click
+        <b>&ldquo;Make a sample transfer&rdquo;</b>. Then watch the small green tag in the dark green bar
+        at the top: it says whether the books balance, and it rechecks after every single change.</p>
+    </div>
 
     <div class="frame" id="frame">
       <div class="frame-bar">
         <span class="frame-dots" aria-hidden="true"><i></i><i></i><i></i></span>
         <span>Tally, running in your browser</span>
       </div>
-      <div class="frame-body">
+      <div class="frame-body" id="frame-body">
         <div class="frame-load" id="frame-load">Starting the app&hellip;</div>
         <iframe id="app" src="./app/index.html" title="The Tally app, running against a copy of its rules in your browser"></iframe>
       </div>
     </div>
 
-    <div class="offline" id="offline" hidden>
-      <h3>This page was opened straight off a disk.</h3>
-      <p>Browsers refuse to start the app that way, so the panel is not shown. Everything else on this
-        page reads normally. To use the app, visit
-        <a href="https://samad-zeeshan.github.io/Tally/">samad-zeeshan.github.io/Tally</a>.</p>
-    </div>
+    <div class="wrap">
+      <div class="offline" id="offline" hidden>
+        <h3>This page was opened straight off a disk.</h3>
+        <p>Browsers refuse to start the app that way, so the panel is not shown. Everything else on this
+          page reads normally. To use the app, visit
+          <a href="https://samad-zeeshan.github.io/Tally/">samad-zeeshan.github.io/Tally</a>.</p>
+      </div>
 
-    <p class="typer" data-typer>Three buttons run themselves. One sends a payment, one loses the answer and retries it, and one recounts the whole book in front of you.</p>
+      <p class="typer" data-typer>Three buttons run themselves. One sends a payment, one loses the answer and retries it, and one recounts the whole book in front of you.</p>
+    </div>
   </section>
 
   <!-- 4. What makes it different -->
@@ -890,15 +939,68 @@ a:hover { color: var(--accent-strong); }
   var frame = document.getElementById("frame");
   var offline = document.getElementById("offline");
   var loading = document.getElementById("frame-load");
+  var frameBody = document.getElementById("frame-body");
+  var appFrame = document.getElementById("app");
 
   if (window.location.protocol === "file:") {
     if (frame) { frame.hidden = true; frame.style.display = "none"; }
     if (offline) { offline.hidden = false; }
   } else {
+    /* Two messages come out of the app, both from docs/app/tally-embed.js:
+
+       "ready"  the stand-in is installed, so the placeholder can go;
+       "height" the app's own content height, which this page copies onto the frame. That is what
+                removes the frame's inner scrollbar: the frame is exactly as tall as the app, so
+                there is nothing left inside it to scroll.
+
+       One message goes the other way. The app's toast shelf is fixed to the bottom of its own
+       window, and its window is now the whole tall frame, so a toast would sit far below whatever
+       the reader is looking at. This page tells the app how far the frame's bottom edge falls below
+       the bottom of the reader's window, and the app lifts the shelf by that much. */
+
+    var viewPending = 0;
+
+    function sendView() {
+      viewPending = 0;
+      if (!appFrame || !appFrame.contentWindow || !frameBody) { return; }
+      var box = frameBody.getBoundingClientRect();
+      if (box.height <= 0) { return; }
+      // Where the reader's window cuts the frame, measured from the top of the app's own document.
+      var seenTo = Math.min(box.height, window.innerHeight - box.top);
+      // Off screen either way: park the shelf at the near edge rather than somewhere impossible.
+      if (seenTo < 160) { seenTo = Math.min(box.height, 160); }
+      appFrame.contentWindow.postMessage({ tally: "view", lift: Math.round(box.height - seenTo) }, "*");
+    }
+
+    function queueView() {
+      if (viewPending) { return; }
+      viewPending = window.setTimeout(sendView, 60);
+    }
+
     window.addEventListener("message", function (event) {
-      if (event.data && event.data.tally === "ready" && loading) { loading.hidden = true; }
+      // Only the app's own frame is listened to; anything else on the page is ignored.
+      if (!appFrame || event.source !== appFrame.contentWindow) { return; }
+      var data = event.data;
+      if (!data) { return; }
+      if (data.tally === "ready" && loading) { loading.hidden = true; }
+      if (data.tally === "height" && typeof data.height === "number" && frameBody) {
+        // Clamped at both ends, so a wrong number can neither collapse the frame nor run away with
+        // the page. The CSS height stays as the fallback until a real one arrives.
+        var height = Math.max(320, Math.min(Math.round(data.height), 6000));
+        frameBody.style.height = height + "px";
+        // Straight away, not on the timer: the app grows at the moment a demo raises its first toast,
+        // and a toast placed against last frame's height would land off the bottom of the window.
+        if (viewPending) { clearTimeout(viewPending); }
+        sendView();
+      }
     });
-    // If that message never lands, the placeholder still gets out of the way.
+
+    window.addEventListener("scroll", queueView, { passive: true });
+    window.addEventListener("resize", queueView);
+    if (appFrame) { appFrame.addEventListener("load", sendView); }
+
+    // If that message never lands, the placeholder still gets out of the way, and the frame keeps
+    // the height its stylesheet gave it.
     setTimeout(function () { if (loading) { loading.hidden = true; } }, 4000);
   }
 })();

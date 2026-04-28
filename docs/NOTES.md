@@ -24,6 +24,36 @@ The empty `VITE_API_TOKEN` is deliberate. Vite lets a real environment variable 
 grepping `docs/app` for the token value and for the string `Bearer`: neither appears, because the
 minifier removed the whole `if (TOKEN)` branch as dead code.
 
+### What is injected into the copied `docs/app/index.html`, and how to put it back
+
+A fresh build regenerates `docs/app/index.html` and **drops both of these tags**. They are hand added
+afterwards, immediately before the app's own module script, so that both classic scripts have run
+before the app starts. Paste this block back verbatim after every rebuild:
+
+```html
+    <script src="./tally-server.js"></script>
+    <script src="./tally-embed.js"></script>
+```
+
+Neither file is build output, so a rebuild leaves both of them alone; only the tags have to be
+restored. The whole refresh step, start to finish:
+
+```
+cd web
+VITE_API_TOKEN= npx vite build --base=./
+rm docs/app/assets/*            # the hashed names change every build; stale ones would linger
+cp web/dist/assets/* docs/app/assets/
+cp web/dist/index.html docs/app/index.html
+# then paste the two <script> tags above back in, before <script type="module" ...>
+```
+
+`tally-server.js` is the bank (below). `tally-embed.js` is the bridge to the page that frames the
+app: it reports this document's height to `docs/index.html`, which makes the frame that tall so
+nothing scrolls inside it, and it receives back how far the frame's bottom edge falls below the
+reader's window so the toast shelf can lift itself into view. It also sets `data-embedded` on the
+app's root element, which is what the two `:root[data-embedded]` rules in `web/src/styles.css` key
+off. Outside a frame the whole file is a no-op, so the app on its own is unchanged.
+
 ### The stand-in
 
 `docs/app/tally-server.js` is a classic (non-module) script injected into the copied
@@ -58,7 +88,8 @@ ignores the bearer token entirely, and signs no cursors; it has nothing to prote
 Anything that is not one of the three Tally path shapes is passed through to the browser's own
 fetch and logged as a warning, so an escaping request would be visible rather than silent. In
 practice nothing escapes: a full session of clicking every demo, a manual transfer and an overdraft
-produced exactly five network requests, all of them this page's own files.
+produced exactly six network requests, all of them this page's own files (the page, the app's HTML,
+`tally-server.js`, `tally-embed.js`, and the app's two hashed assets).
 
 The stand-in was checked against 47 assertions covering the whole contract before the page was
 wired up: seeding, a transfer, a replay, a key conflict, an overdraft, a replayed refusal,
@@ -155,8 +186,8 @@ on the script to reveal them.
 - `docs/correctness.md`, `docs/adr/` and `docs/media/` were not touched. `docs/media/demo.gif` is
   5 MB and is deliberately not loaded by the page.
 - All paths are relative, no leading slashes. `docs/.nojekyll` stays.
-- Page weight: one 21 KB HTML file plus the app's 219 KB of JavaScript, 17 KB of CSS and the 13 KB
-  stand-in.
+- Page weight: one 46 KB HTML file plus the app's 214 KB of JavaScript, 17 KB of CSS, the 26 KB
+  stand-in and the 4 KB embed bridge.
 - No Java source was touched. `web/vite.config.ts` and `web/package.json` are unchanged, and
   `web/dist/` is regenerated but is listed in `web/.gitignore`. `web/src` is no longer off limits:
   its user-facing strings were rewritten in plain English (see below), which is a change to the app
@@ -176,9 +207,75 @@ on the script to reveal them.
   quote of "Lose a response, retry safely" was updated to the new "Lose the reply, send again". One
   sentence that read "the panel calls this double entry" no longer described the panel, so it now
   credits bookkeepers with the term instead.
-- The frame is a fixed height with its own scrollbar. That is on purpose: the app's toasts are
-  fixed to the bottom of their own viewport, and a frame that grew to fit its content would push
-  them off screen just as the demo narrates itself.
 - Opening `docs/index.html` straight off a disk cannot run the app, because browsers refuse ES
   modules over `file://`. The page detects that, hides the empty frame and says where to go
   instead; every other section still reads.
+- The statement table at 360 px fits by a couple of pixels, on the demo's own two names. A longer
+  account name spends a second line rather than the table's width, and anything longer still falls
+  back to scrolling inside `.table-scroll`, which is what that wrapper has always been for.
+
+## One content column
+
+The page used to have two: a 44 rem reading column for the prose sections and a 70 rem one for the
+masthead and the demo, so consecutive bands started roughly 200 px apart at desktop widths. There is
+now a single `.wrap` (`--content: 54rem`, one `--gutter`) used by the masthead, the hero, all six
+numbered sections, the proof grid and the footer. Long copy still wraps at a narrower measure
+(`--read: 38rem`), but as a `max-width` on the paragraph, so it begins on the container's left edge
+rather than being centred inside it.
+
+Two things that had to change with it:
+
+- The masthead's mark and name are one `.wordmark` lockup, so the wordmark's own left edge is the
+  column's left edge rather than 46 px inside it.
+- `.section`, `.hero` and `.masthead-in` set `padding-block`, not the `padding` shorthand. They are
+  `.wrap` themselves, and the shorthand silently wiped out the container's horizontal padding.
+
+Measured left edge of the masthead wordmark, the hero eyebrow, every section number and heading, the
+proof grid and the footer, at 1920, 1440, 1280, 1024, 768, 430 and 360 px: identical at every width
+(552.5, 312.5, 232.5, 104.5, 30.7, 20, 20). `document.documentElement.scrollWidth` never exceeds
+`clientWidth` at any of them, and `body { overflow-x: hidden }` was removed so that check means
+something.
+
+## The frame, and why it has no scrollbar of its own
+
+The demo section is the one band allowed out of the content column. The frame is a sibling of the
+`.wrap` blocks rather than a child of one, so it is full bleed at `width: 100%` and cannot push a
+horizontal scrollbar the way a `100vw` breakout would.
+
+Its height is the app's own content height, reported by `tally-embed.js` over `postMessage` and
+copied onto `.frame-body` by the page. A `ResizeObserver` and a `MutationObserver` keep it current,
+so running a demo that adds statement rows grows the frame instead of hiding them. The stylesheet
+keeps `height: clamp(560px, 80vh, 900px)` as the fallback, so a browser that drops the message shows
+a usable panel rather than a collapsed one, and the page clamps whatever arrives to 320 to 6000 px.
+
+Two things had to be true for that to work:
+
+- `:root[data-embedded] body { min-height: 0 }`. The app's `min-height: 100vh` would otherwise be a
+  floor equal to the frame the page had just set, so the measured height could grow but never come
+  back down.
+- The toast shelf stays `position: fixed` and is moved with `translateY(calc(-1 * var(--embed-lift)))`.
+  An absolutely positioned shelf was tried first and was wrong: an absolute box counts toward the
+  document's scrollable overflow, so placing it against the reader's window made the document taller,
+  which made the frame taller, which moved the shelf again. A fixed box is outside that overflow, so
+  the transform moves it with nothing feeding back.
+
+Checked in Chrome at all seven widths: the app document's `scrollHeight` equals its `clientHeight`
+(no inner scrollbar) and its `scrollWidth` equals its `clientWidth` (no sideways scroll). Running all
+three Try it demos with the frame's top pinned near the top of the window, sampling every 120 ms for
+the life of each toast: the shelf was inside the window on every sample.
+
+## The app on a phone
+
+Two changes in `web/src/styles.css`, both inside media queries, so nothing above 840 px moved:
+
+- At 840 px and below the single column is `minmax(0, 1fr)` rather than `1fr`. A bare `1fr` track is
+  floored at its widest item's minimum size, so the statement table pushed the whole column past the
+  screen: at 360 px the cards measured 413 px wide and the app scrolled sideways by 69 px. Capping
+  the track's minimum at 0 keeps the column inside the container.
+- At 480 px and below the panels give back some padding and the statement gives back some of its own
+  (smaller type, 6 px cell padding, cells allowed to wrap, less letter-spacing on the headers). All
+  four columns then sit inside a 360 px screen with no sideways scroll.
+
+On the page itself the masthead links are 44 by 44 px at the smallest and the buttons are 44 px tall
+or more. The zero line still measures 126 px above the rule and 126 px below it at 360 px, and all
+three narration lines still type themselves out and still fill in instantly under reduced motion.
