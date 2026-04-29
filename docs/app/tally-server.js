@@ -1,36 +1,14 @@
 /*
- * tally-server.js
+ * THIS IS NOT THE REAL TALLY SERVER. The real one is Java and keeps its data in Postgres.
  *
- * THIS IS NOT THE REAL TALLY SERVER.
+ * This is a copy of that service's rules as a window.fetch interceptor, so the real React client in
+ * this folder runs on a static host with nothing to install. Every rule below names the Java file it
+ * was transcribed from. Nothing here reaches a network.
  *
- * The real Tally service is Java (src/main/java/dev/tally, 51 files) and keeps its data in
- * Postgres. This file is a small copy of that service's rules, written in plain JavaScript and
- * installed as a window.fetch interceptor, so that the real React client in this folder (built
- * unchanged from web/) can run on a static host with nothing to install and no server to reach.
- *
- * Nothing here talks to a network. Every request the client makes is answered in this file.
- *
- * Each rule below is a transcription of a named Java file, so the two can be compared:
- *
- *   store             src/main/java/dev/tally/store/InMemoryStore.java
- *   balancing rule    src/main/java/dev/tally/core/Ledger.java
- *   world account     src/main/java/dev/tally/core/WorldAccount.java
- *   request checks    src/main/java/dev/tally/http/Validation.java
- *   error codes       src/main/java/dev/tally/http/ErrorCode.java
- *   routes            src/main/java/dev/tally/ApiServer.java
- *   response shapes   src/main/java/dev/tally/api/AccountsHandler.java
- *                     src/main/java/dev/tally/api/TransfersHandler.java
- *                     src/main/java/dev/tally/api/ReconciliationHandler.java
- *   cursor codec      src/main/java/dev/tally/http/Cursor.java
- *
- * Two things the real service has that this copy does not, because a browser has neither:
- * locks (there is one thread here, so no two transfers can interleave) and durability (closing
- * the tab empties the book). The bearer token the real service requires on every route but
- * /health is ignored here, along with its rate limits; this copy has nothing to protect and no
- * network to be flooded over. Its cursors are unsigned for the same reason: the real codec signs
- * them with a key derived from the API token, and a page with no server has no key to sign with.
- * Both formats are the same shape, opaque and "v1:"-tagged, and both reject a cursor they did not
- * issue with the same INVALID_CURSOR; this copy just checks less.
+ * Missing on purpose, because a browser has neither: locks (one thread, so no two transfers can
+ * interleave) and durability (closing the tab empties the book). The bearer token, the rate limits and
+ * the cursor signature are all ignored too. A page with no server has nothing to protect and no key to
+ * sign with, though the cursor keeps the same opaque "v1:" shape and the same INVALID_CURSOR refusal.
  */
 (function () {
   "use strict";
@@ -228,14 +206,14 @@
     return { kind: "applied", id: transferId, at: at };
   }
 
-  // Only these two outcomes write something durable, so only these two are remembered against a
-  // key and replayed. InMemoryStore.consumes.
+  // InMemoryStore.consumes. Only an outcome that wrote something is worth replaying, so an unknown
+  // account leaves the key free for a later real transfer.
   function consumes(outcome) {
     return outcome.kind === "applied" || outcome.kind === "insufficientFunds";
   }
 
-  // InMemoryStore.apply: first claim on a key wins, an identical repeat replays the first answer,
-  // and the same key with different details is a conflict.
+  // InMemoryStore.apply. The slot is claimed before the outcome is known, which is what makes the
+  // first caller the winner rather than the fastest one to finish.
   function applyTransfer(req) {
     var existing = reservations.get(req.key);
     if (existing === undefined) {
@@ -273,9 +251,8 @@
     return { entries: page, hasMore: hasMore };
   }
 
-  // InMemoryStore.reconcile: recompute every balance from its own entries and compare.
-  // The real store sorts ids the way Java orders UUIDs; only the count is ever reported, so a
-  // plain string sort here changes nothing an answer can depend on.
+  // InMemoryStore.reconcile. The real store sorts ids the way Java orders UUIDs, but only the count of
+  // them is ever reported, so a plain string sort here changes nothing an answer can rest on.
   function reconcile() {
     var ids = Array.from(accounts.keys()).sort();
     var drifts = [];
@@ -416,7 +393,6 @@
     return { from: from, to: to, amountMinor: obj.amountMinor };
   }
 
-  // Checked before the body is read, exactly as TransfersHandler.create does it.
   function idempotencyKey(header) {
     if (header === null || header === undefined) {
       reject("IDEMPOTENCY_KEY_MISSING", "the Idempotency-Key header is required");
@@ -631,8 +607,8 @@
 
   var realFetch = window.fetch ? window.fetch.bind(window) : null;
 
-  // Only these three shapes are answered here. Anything else is left alone, and says so loudly in
-  // the console, so a request that tried to leave the page would be visible rather than silent.
+  // Anything that is not one of these three shapes is handed back to the browser and logged, so a
+  // request trying to leave the page would be visible rather than silent.
   function apiPath(pathname) {
     var match = /\/(accounts|transfers|reconciliation)(\/|$)/.exec(pathname);
     return match === null ? null : pathname.slice(match.index);
@@ -669,8 +645,8 @@
     return new Response(JSON.stringify(result.body), { status: result.status, headers: headers });
   }
 
-  // A short pause so the client's own loading states are real rather than skipped over. The real
-  // service answers over a network, and the client is built to show that wait.
+  // Answering instantly would skip past the client's own loading states, which are built for a real
+  // network and are part of what there is to look at.
   function pause() {
     return new Promise(function (resolve) {
       setTimeout(resolve, 60 + Math.random() * 60);
@@ -704,9 +680,8 @@
 
   /* --------------------------------------------------------------- opening state */
 
-  // Two accounts are already open when the page loads, the same two names as the recorded run in
-  // ../data/tally-run.json. They are opened through createAccount above, so their money comes out
-  // of world like any other opening and the book starts at zero.
+  // The same two names as the recorded run in ../data/tally-run.json, opened through createAccount so
+  // their money comes out of world like any other opening and the book starts at zero.
   createAccount("Amara", 50000);
   createAccount("Ben", 0);
 
@@ -716,7 +691,7 @@
     "src/main/java/dev/tally in the repository."
   );
 
-  // Lets the page around this frame drop its placeholder once the client is really up.
+  // Tells the page framing this app to drop its placeholder, once the client is really up.
   window.addEventListener("load", function () {
     if (window.parent !== window) {
       try {

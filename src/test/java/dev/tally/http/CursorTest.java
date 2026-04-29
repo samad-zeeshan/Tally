@@ -27,12 +27,12 @@ class CursorTest {
         return new String(Base64.getUrlDecoder().decode(encoded), StandardCharsets.UTF_8);
     }
 
+    // The same message whatever failed, so a caller cannot learn which check caught it.
     private void assertRejected(String bad) {
         ApiException e = assertThrows(ApiException.class, () -> cursor.decode(bad));
         assertEquals(ErrorCode.INVALID_CURSOR, e.code);
         assertEquals("cursor", e.field);
         assertEquals(400, e.code.status);
-        // The same message whatever failed: a caller learns it is not valid, never which check caught it.
         assertEquals("cursor is not valid", e.getMessage());
     }
 
@@ -48,7 +48,6 @@ class CursorTest {
         // The whole point. Before signing, this was base64 of "v1:<id>" and anyone could edit the number.
         String forged = encodeRaw("v1:999999");
         assertRejected(forged);
-        // And the same forgery with a signature-shaped tail bolted on is no better.
         assertRejected(encodeRaw("v1:999999:" + encodeRaw("not-a-real-signature")));
     }
 
@@ -62,7 +61,7 @@ class CursorTest {
 
     @Test
     void aCursorFromAnotherTokenIsRejected() {
-        // The key is derived from the API token, so rotating it invalidates outstanding cursors.
+        // Rotating the API token has to invalidate outstanding cursors, since the key comes from it.
         String fromElsewhere = new Cursor("a-different-api-token").encode(77L);
         assertRejected(fromElsewhere);
     }
@@ -89,7 +88,6 @@ class CursorTest {
     @Test
     void theCursorStaysOpaqueAndCarriesASignature() {
         String encoded = cursor.encode(31337L);
-        // Opaque to the caller, and the raw posting id is still not readable as a bare number.
         assertNotEquals("31337", encoded);
         String plaintext = decodeRaw(encoded);
         assertTrue(plaintext.startsWith("v1:31337:"), plaintext);
@@ -99,7 +97,7 @@ class CursorTest {
 
     @Test
     void encodingIsDeterministicForOneKey() {
-        // Two instances built from the same token agree, so a restart does not invalidate live cursors.
+        // Two instances from the same token agree, so a restart does not invalidate live cursors.
         assertEquals(cursor.encode(12L), new Cursor(TOKEN).encode(12L));
     }
 }

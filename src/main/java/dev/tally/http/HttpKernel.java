@@ -31,27 +31,21 @@ import java.util.logging.Logger;
 public final class HttpKernel implements HttpHandler {
     static final int MAX_BODY_BYTES = 4_096;
 
-    // The one inline script in the client: web/index.html sets the theme before first paint so the page
-    // never flashes the wrong one. A CSP hash is what keeps script-src free of 'unsafe-inline' for the
-    // sake of one snippet. It covers the script's exact bytes, so editing that snippet without updating
-    // this constant silently breaks the theme; SecurityHeadersTest re-derives the hash from the file and
-    // fails when the two drift.
+    // A hash is what keeps script-src free of 'unsafe-inline' for the sake of one snippet: web/index.html
+    // sets the theme before first paint. It covers exact bytes, so editing that snippet without editing
+    // this line breaks the theme, and SecurityHeadersTest re-derives it from the file to catch the drift.
     static final String THEME_SCRIPT_HASH = "sha256-HVcZT6+dmTYvPKI/VaotaeNmxttNrYO9NkQqS8Ut5r8=";
 
-    // Sent on every response, because this server also serves the built SPA at the same origin: a header
-    // that only covers some responses is not a control. The CSP is written against the real Vite build,
-    // which emits external module scripts and an external stylesheet, so nothing but the theme snippet
-    // above needs script-src relaxed at all. style-src does need 'unsafe-inline', because React writes
-    // inline style attributes. object-src and base-uri are shut to close the two classic bypasses, and
-    // frame-ancestors matches X-Frame-Options.
+    // On every response, because this server also serves the built SPA at the same origin, and a header
+    // that covers only some responses is not a control. Vite emits external module scripts, so only
+    // style-src has to allow inline, for the style attributes React writes. X-Frame-Options is
+    // SAMEORIGIN rather than DENY so the project keeps the option of embedding its own UI.
     //
-    // No Strict-Transport-Security. This server speaks plain HTTP locally, and an HSTS header served over
-    // http://localhost pins the whole localhost origin to https in the developer's browser for max-age,
-    // which is painful to undo and breaks every other local project. A deployment that really terminates
-    // TLS should send it from the proxy that owns the certificate, which is also where it belongs.
+    // No Strict-Transport-Security: sent over http://localhost it pins that whole origin to https in the
+    // developer's browser for max-age, which breaks every other local project and is painful to undo.
+    // The proxy that owns the certificate should send it.
     private static final Map<String, String> SECURITY_HEADERS = Map.of(
             "X-Content-Type-Options", "nosniff",
-            // SAMEORIGIN rather than DENY, so the project keeps the option of embedding its own UI.
             "X-Frame-Options", "SAMEORIGIN",
             "Referrer-Policy", "no-referrer",
             "Permissions-Policy", "camera=(), microphone=(), geolocation=()",
@@ -90,9 +84,8 @@ public final class HttpKernel implements HttpHandler {
         Router.RouteResult route = router.match(method, rawPath);
         String client = clientAddress(exchange);
 
-        // Everything that reads the request id happens inside the binding: the error envelope's requestId
-        // and the access log both pull it from RequestContext.CURRENT. The write happens after, with the
-        // id set explicitly on the header, so a response outside the scope still carries it.
+        // The envelope and the access log both read the id from RequestContext.CURRENT, so everything
+        // that needs it runs inside the binding. ScopedValue.run gives nothing back, hence the holder.
         Response[] holder = new Response[1];
         ScopedValue.where(RequestContext.CURRENT, ctx).run(() -> {
             Response response = throttled(exchange, route, method, rawPath, client);
@@ -103,9 +96,8 @@ public final class HttpKernel implements HttpHandler {
         write(exchange, holder[0].withHeader("X-Request-Id", ctx.requestId()));
     }
 
-    // The throttle runs before dispatch, so a limited caller never reaches a handler or the store, and
-    // every 401 is charged back to the address afterwards. 401 is the only brute-force signal the edge
-    // has: Auth deliberately says nothing about *why* a token was rejected, so the count is all there is.
+    // Before dispatch, so a throttled caller never reaches a handler or the store. A 401 is the only
+    // brute-force signal the edge gets, since Auth says nothing about why a token was rejected.
     private Response throttled(HttpExchange exchange, Router.RouteResult route, String method,
                                String rawPath, String client) {
         RateLimiter.Decision decision = rateLimiter.check(client);
@@ -120,8 +112,9 @@ public final class HttpKernel implements HttpHandler {
         return response;
     }
 
-    // The socket peer, never a client-supplied forwarding header: see the note on RateLimiter. A missing
-    // remote address (possible on a closed exchange) shares one bucket rather than escaping the limiter.
+    // The socket peer, never X-Forwarded-For: a client that picks its own key can mint buckets without
+    // limit. A missing remote address, possible on a closed exchange, shares one bucket rather than
+    // escaping the limiter.
     private static String clientAddress(HttpExchange exchange) {
         var remote = exchange.getRemoteAddress();
         return remote == null || remote.getAddress() == null ? "unknown" : remote.getAddress().getHostAddress();
@@ -137,8 +130,8 @@ public final class HttpKernel implements HttpHandler {
                 case Router.RouteResult.MethodMismatch(var allowed) ->
                         Response.error(ErrorCode.METHOD_NOT_ALLOWED, method + " is not allowed on " + rawPath)
                                 .withHeader("Allow", String.join(", ", allowed));
-                // A path the router does not own may still be a static file, but only when a static
-                // directory is configured. The router runs first, so /accounts and the rest always win.
+                // Static files are the fallback, not a competing context, so /accounts always wins over
+                // a file that happens to be named the same.
                 case Router.RouteResult.NoRoute() -> {
                     if (staticFiles != null) {
                         Request request = new Request(method, rawPath, Map.of(), Map.of(),
@@ -162,8 +155,8 @@ public final class HttpKernel implements HttpHandler {
         }
     }
 
-    // Log the route template for a match, never the raw path, which carries account ids. An unmatched
-    // path is sanitized (printable ASCII, truncated) so it cannot inject newlines into the log.
+    // The route template for a match, never the raw path, which carries account ids. An unmatched path is
+    // cut down to printable ASCII so it cannot inject newlines into the log.
     private static String logPath(Router.RouteResult route, String rawPath) {
         return route instanceof Router.RouteResult.Matched(var _, var _, var template) ? template : sanitize(rawPath);
     }
@@ -182,8 +175,6 @@ public final class HttpKernel implements HttpHandler {
         LOG.log(level, "method=" + method + " path=" + path + " status=" + status + " ms=" + ms);
     }
 
-    // Read the body at most once, on demand: a handler may read it more than once (validate, then log),
-    // and an auth wrapper must be able to skip it entirely.
     private static Supplier<String> bodySupplier(HttpExchange exchange) {
         return new Supplier<>() {
             private String cached;
@@ -218,20 +209,20 @@ public final class HttpKernel implements HttpHandler {
         return java.net.URLDecoder.decode(s, StandardCharsets.UTF_8);
     }
 
-    // Cap before trusting the body: read at most MAX+1 bytes, and if that many arrive it is too big.
+    // One byte past the cap is read, never the whole stream: that extra byte is how an oversized body is
+    // recognised without buffering it.
     private static String readBody(HttpExchange exchange) {
         byte[] bytes;
         try {
             bytes = exchange.getRequestBody().readNBytes(MAX_BODY_BYTES + 1);
         } catch (IOException e) {
-            // A broken request stream is not a clean client error we can envelope; let it surface as 500.
             throw new UncheckedIOException(e);
         }
         if (bytes.length > MAX_BODY_BYTES) {
             throw new ApiException(ErrorCode.BODY_TOO_LARGE,
                     "request body must be " + MAX_BODY_BYTES + " bytes or fewer");
         }
-        // Strict UTF-8: bad bytes are a client error, not a silent replacement character.
+        // REPORT, not replace: bad bytes are a client error, not a quiet U+FFFD in somebody's name.
         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
                 .onUnmappableCharacter(CodingErrorAction.REPORT);
@@ -254,8 +245,8 @@ public final class HttpKernel implements HttpHandler {
         }
         var headers = exchange.getResponseHeaders();
         headers.set("Content-Type", contentType);
-        // Security headers go on before the per-response ones so a handler could override one deliberately,
-        // and after nothing else, so there is no path out of this method that skips them.
+        // Every response leaves through here, so there is no path that skips them. Per-response headers
+        // go on after, which lets a handler override one deliberately.
         for (Map.Entry<String, String> h : SECURITY_HEADERS.entrySet()) {
             headers.set(h.getKey(), h.getValue());
         }

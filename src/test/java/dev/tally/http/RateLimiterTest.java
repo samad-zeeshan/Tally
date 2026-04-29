@@ -49,8 +49,7 @@ class RateLimiterTest {
 
     @Test
     void aFewFailedTokensThrottleTheAddressLongBeforeTheRequestBudget() {
-        // The brute-force path: the failure budget is an order of magnitude under the request budget, so
-        // an address guessing tokens is stopped while a busy honest client is nowhere near its limit.
+        // A guesser is stopped while a busy honest client is nowhere near its own limit.
         for (int i = 0; i < RateLimiter.MAX_AUTH_FAILURES_PER_WINDOW; i++) {
             assertTrue(limiter.check("10.0.0.2").allowed(), "attempt " + i + " is still within budget");
             limiter.recordAuthFailure("10.0.0.2");
@@ -65,7 +64,6 @@ class RateLimiterTest {
             limiter.check("10.0.0.3");
             limiter.recordAuthFailure("10.0.0.3");
         }
-        // Nothing about the next request identifies it as an auth attempt; the address is throttled outright.
         assertFalse(limiter.check("10.0.0.3").allowed(), "a locked-out address cannot go probing elsewhere");
     }
 
@@ -101,7 +99,7 @@ class RateLimiterTest {
             limiter.check("10.1." + (i / 256) + "." + (i % 256));
         }
         assertEquals(500, limiter.trackedClients());
-        // Two windows on, every one of those addresses has gone quiet and the sweep has run.
+        // Two windows, because the sweep runs at most once a window and the check below has to be past it.
         advance(RateLimiter.WINDOW_MILLIS * 2);
         limiter.check("10.2.0.1");
         assertEquals(1, limiter.trackedClients(), "expired entries must not be held forever");
@@ -109,22 +107,21 @@ class RateLimiterTest {
 
     @Test
     void theTableIsBoundedUnderASpoofedSourceFlood() {
-        // The limiter must not be the denial of service. An attacker varying its source address decides
-        // how many entries exist, so the table has a hard ceiling and sheds beyond it.
+        // The limiter must not become the denial of service it is there to stop.
         for (int i = 0; i < RateLimiter.MAX_TRACKED_CLIENTS + 500; i++) {
             limiter.check("192.168." + (i / 256 % 256) + "." + (i % 256) + ":" + i);
         }
         assertTrue(limiter.trackedClients() <= RateLimiter.MAX_TRACKED_CLIENTS,
                 "tracked " + limiter.trackedClients() + " addresses, over the cap");
-        // And it heals: once the flood's windows expire the table sweeps clean and new callers are served.
+        // And it heals on its own once the flood's windows expire, with no operator involved.
         advance(RateLimiter.WINDOW_MILLIS * 2);
         assertTrue(limiter.check("10.3.0.1").allowed());
     }
 
     @Test
     void concurrentCallersFromOneAddressGetExactlyTheBudget() throws Exception {
-        // The server runs a virtual thread per exchange, so the counters are hit concurrently. A lost
-        // increment here would hand an attacker extra attempts for free.
+        // A virtual thread per exchange means the counters are hit concurrently, and a lost increment
+        // would hand a guesser free attempts.
         int threads = 16;
         int perThread = 100;
         ExecutorService pool = Executors.newFixedThreadPool(threads);

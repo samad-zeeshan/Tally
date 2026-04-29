@@ -90,8 +90,8 @@ body {
   transition: background-color var(--slow) var(--ease), color var(--slow) var(--ease);
 }
 
-/* Embedded, the frame is sized to this document, so a screenful of its own would be a floor the frame
-   could grow to but never come back down from. Dropping it lets the measured height shrink again. */
+/* Embedded, the frame is sized to this document, so a screenful of min-height becomes a floor the
+   measured height can grow to but never come back down from. */
 :root[data-embedded] body {
   min-height: 0;
 }
@@ -974,13 +974,10 @@ select[aria-invalid="true"] {
   max-width: min(360px, calc(100vw - 32px));
 }
 
-/* Embedded in the demo page (docs/index.html), the app's window is the whole frame, and the frame is
-   as tall as this document, so the shelf's usual place is a long way below whatever the reader can see.
-   The page sends how far the frame's bottom edge sits below the bottom of the reader's window, and the
-   shelf is lifted by exactly that much. It stays position: fixed and moves with a transform, because a
-   fixed box is outside the document's scrollable overflow: an absolutely positioned one would make the
-   document taller, which would make the frame taller, which would move the shelf again. See
-   docs/app/tally-embed.js, which is what sets data-embedded. */
+/* Embedded, this document's window is the whole frame, so the shelf's usual place is far below what the
+   reader can see and it is lifted by however much the page reports. It stays fixed and moves with a
+   transform: an absolute box counts toward scrollable overflow, so it would make the document taller,
+   which makes the frame taller, which moves the shelf again. */
 :root[data-embedded] .toast-shelf {
   transform: translateY(calc(-1 * var(--embed-lift, 0px)));
 }
@@ -1126,11 +1123,9 @@ select[aria-invalid="true"] {
 /* ---------- responsive ---------- */
 
 @media (max-width: 840px) {
-  /* One column: list, then the detail it drives, then the transfer form.
-     minmax(0, 1fr) rather than 1fr: a bare 1fr track is floored at its widest item's minimum size, so
-     the statement table used to push the whole column past the screen and take the page's horizontal
-     scrollbar with it. Capping the track's minimum at 0 keeps the column inside the container and
-     leaves the table to scroll inside .table-scroll, which is what that wrapper is for. */
+  /* One column: list, then the detail it drives, then the transfer form. minmax(0, 1fr) and not a bare
+     1fr, which is floored at its widest item's minimum size: the statement table used to push the whole
+     column past the screen. At 0 the table scrolls inside .table-scroll instead, which is its job. */
   .grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
@@ -1158,9 +1153,8 @@ select[aria-invalid="true"] {
   }
 }
 
-/* Phone widths. The panels give back some of their padding and the statement gives back some of its
-   own, which is enough for all four columns to sit inside a 360 px screen without a sideways scroll.
-   Cells wrap here too, so a long account name costs a second line rather than the table's width. */
+/* Phone widths. Padding given back by the panels and the statement is what fits all four columns into
+   a 360 px screen, and wrapping cells spend a long account name on a second line, not on width. */
 @media (max-width: 480px) {
   .card,
   .card-detail {

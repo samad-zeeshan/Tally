@@ -1,6 +1,7 @@
-// Turns a backend error code into a user message and a transient/terminal classification. The rule in
-// one sentence: a definite server no (4xx, or a 2xx that failed the client's own safe-integer guard) is
-// terminal; only a lost response or a 5xx is transient, and the idempotency key makes retrying those safe.
+// Turns a backend error code into a user message and a transient or terminal classification.
+//
+// Only a failure whose outcome is unknown is worth retrying, and the idempotency key is what makes
+// retrying one safe.
 
 export type FailureKind = "transient" | "terminal";
 
@@ -19,16 +20,15 @@ const MESSAGES: Record<string, string> = {
   INTERNAL: "The server hit an error. It is safe to retry.",
 };
 
-// Keys on status only: retrying the identical request cannot change a definite 4xx no, so it is terminal.
-// A null status (response never arrived) or a 5xx (the server's own fault, outcome unknown) is transient.
-// 429 is the one 4xx that waiting does change: the throttle runs before the handler, so the transfer
-// certainly did not apply, and the frozen key can be sent again once the Retry-After has passed.
+// Status is enough: a definite 4xx no cannot be changed by asking again, while a null status or a 5xx
+// leaves the outcome unknown. 429 is the one 4xx that waiting does change, because the throttle runs
+// ahead of the handler, so nothing applied and the frozen key can go out again after the Retry-After.
 export function classify(status: number | null, _code: string): FailureKind {
   return status === null || status === 429 || status >= 500 ? "transient" : "terminal";
 }
 
-// Keys on code. Known codes get a written message; granular validation codes read cleanly already, so
-// their server message passes through, with a last-resort fallback for an unknown code.
+// The granular validation codes already read cleanly, so their server message passes straight through
+// rather than being restated here.
 export function messageFor(code: string, serverMessage: string): string {
   return MESSAGES[code] ?? serverMessage ?? "The request was rejected.";
 }

@@ -68,15 +68,14 @@ class AuthTest extends ApiTestHarness {
 
     @Test
     void readsRequireToken() {
-        String id = createAccount("Ada", 1000);   // created with the token
-        // A balance and a statement are account data. Reads used to be open as a demo convenience; they
-        // are not, because "anyone can list every account and read every statement" is not a small gap.
+        String id = createAccount("Ada", 1000);
+        // Reads were open as a demo convenience until "anyone can list every account and read every
+        // statement" was written out in those words.
         for (String path : new String[]{"/accounts", "/accounts/" + id, "/accounts/" + id + "/statement"}) {
             HttpResponse<String> r = rawGet(path, null);
             assertEquals(401, r.statusCode(), path);
             assertEquals("AUTH_MISSING", errorCode(r), path);
         }
-        // The same reads succeed with the token, so the client that already sends it keeps working.
         assertEquals(200, rawGet("/accounts", "Bearer " + TOKEN).statusCode());
         assertEquals(200, rawGet("/accounts/" + id, "Bearer " + TOKEN).statusCode());
         assertEquals(200, rawGet("/accounts/" + id + "/statement", "Bearer " + TOKEN).statusCode());
@@ -84,7 +83,7 @@ class AuthTest extends ApiTestHarness {
 
     @Test
     void healthStaysOpenWithoutToken() {
-        // A liveness probe must not need a credential, and the container healthcheck has none.
+        // The container healthcheck has no credential to send.
         assertEquals(200, rawGet("/health", null).statusCode());
     }
 

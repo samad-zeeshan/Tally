@@ -1,22 +1,11 @@
 /* The bridge between the app and the page that frames it (docs/index.html).
 
-   It is not build output. It is a hand written classic script that lives beside the built app and is
-   pulled in by one tag added to docs/app/index.html after every build, next to the tally-server.js
-   tag. See docs/NOTES.md for the exact two lines to put back.
+   It reports this document's height so the page can make the frame that tall, leaving nothing to scroll
+   inside it, and takes back how far the frame's bottom edge falls below the reader's window so the toast
+   shelf can lift itself into view. Outside a frame every line is skipped, so the app alone is unchanged.
 
-   Standalone, this file does nothing at all: every line below is behind the check that the app is
-   inside a frame. Embedded, it does three things.
-
-   1. It marks the document with data-embedded. web/src/styles.css keys two rules off that attribute
-      and is otherwise untouched, so the app on its own is unchanged.
-   2. It measures the app's own content height and hands it to the page, which makes the frame that
-      tall. A frame the height of its content has nothing left to scroll, which is the whole point:
-      the reader scrolls the page, never a small window inside it. A ResizeObserver and a
-      MutationObserver keep it reported, so a longer statement list or a new row grows the frame.
-   3. It listens for the page saying how far the frame's bottom edge sits below the reader's window,
-      and puts that on a custom property the toast shelf lifts itself by. Without it a toast would be
-      fixed to the bottom of a frame that is now taller than the screen, which is nowhere the reader
-      is looking. */
+   Not build output. The tag that pulls it in has to be put back into docs/app/index.html after every
+   build, see docs/NOTES.md. */
 
 (function () {
   "use strict";
@@ -36,9 +25,8 @@
     if (!body) {
       return 0;
     }
-    // data-embedded drops the app's min-height: 100vh, so these all measure real content rather than
-    // the frame we are about to size. The rect covers the case where a top margin collapses out of
-    // the body and scrollHeight alone reads short.
+    // data-embedded drops the app's min-height: 100vh, so this measures real content and not the frame
+    // we are about to size. The rect covers a top margin collapsing out, where scrollHeight reads short.
     var box = body.getBoundingClientRect();
     return Math.ceil(Math.max(root.scrollHeight, body.scrollHeight, box.bottom + (window.scrollY || 0)));
   }
@@ -52,9 +40,8 @@
     }
   }
 
-  // A short timer rather than requestAnimationFrame: frames that are scrolled out of view can have
-  // their animation frames throttled, and the first height has to arrive whether or not the reader
-  // has got down to the panel yet.
+  // A timer, not requestAnimationFrame: a frame scrolled out of view can have its animation frames
+  // throttled, and the first height has to arrive before the reader gets down to the panel.
   function schedule() {
     if (pending) {
       return;
@@ -69,8 +56,7 @@
       new ResizeObserver(schedule).observe(document.body);
     }
     if (typeof MutationObserver === "function") {
-      // The observer watches the body only, so setting the custom property on the root element below
-      // cannot feed back into it.
+      // The body only. Watching the root would see the custom property set below and loop on itself.
       new MutationObserver(schedule).observe(document.body, {
         childList: true,
         subtree: true,
@@ -81,7 +67,7 @@
 
     window.addEventListener("resize", schedule);
     window.addEventListener("load", schedule);
-    // Panels arrive on a short entrance animation; these two catch the settled height.
+    // Panels arrive on an entrance animation, so these two catch the settled height.
     window.setTimeout(schedule, 350);
     window.setTimeout(schedule, 1400);
   }

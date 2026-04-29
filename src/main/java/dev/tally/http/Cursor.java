@@ -11,39 +11,35 @@ import java.util.Base64;
 /**
  * The opaque statement cursor codec. One instance encodes and decodes, so the two can never drift.
  *
- * The cursor is signed. Unsigned it was only base64 of the posting id, which anyone could rewrite to any
- * number; that was contained because the query is scoped to the account in the path, but "contained by a
- * check somewhere else" is not a property you want a public identifier to depend on. An HMAC makes the
- * cursor a token the server issued rather than a number the client asserts.
+ * The HMAC is what makes a cursor a token the server issued. Unsigned it was base64 of the posting id,
+ * which anyone could rewrite, and "contained by a check somewhere else" is a bad thing for a public
+ * identifier to rest on.
  */
 public final class Cursor {
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
-    // 128 bits of HMAC-SHA-256 is far past forgery reach and keeps the cursor short. RFC 2104 sanctions
-    // truncation to at least half the output; this is exactly half.
+    // RFC 2104 sanctions truncating an HMAC to half its output, and 128 bits keeps the cursor short.
     private static final int SIGNATURE_BYTES = 16;
     private static final String HMAC = "HmacSHA256";
 
     private final SecretKeySpec key;
 
-    // The key is derived from the configured API token rather than being new configuration of its own,
-    // and the label keeps it a different key from the token: a cursor signature can never be replayed as
-    // a credential, and rotating the token invalidates outstanding cursors, which is the safe direction.
+    // Derived from the API token so statements need no second secret, and labelled so it is a different
+    // key from the token itself: a signature can never be replayed as a credential, and rotating the
+    // token invalidates outstanding cursors, which is the safe direction to fail.
     public Cursor(String apiToken) {
         this.key = new SecretKeySpec(sha256("tally-cursor-v1:" + apiToken), HMAC);
     }
 
-    // Opaque and versioned on purpose: the raw posting id never leaks into the public API, and the
-    // "v1:" tag keeps a future format change detectable.
+    // The "v1:" tag keeps a future format change detectable, and the raw posting id stays inside.
     public String encode(long postingId) {
         String payload = "v1:" + postingId;
         String signed = payload + ":" + ENCODER.encodeToString(sign(payload));
         return ENCODER.encodeToString(signed.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Every rejection is the same 400 INVALID_CURSOR with the same message, whether the cursor was
-    // truncated, re-encoded, or signed with the wrong key: a caller learns that it is not valid, never
-    // which check caught it.
+    // Truncated, re-encoded or signed with the wrong key all land on the same 400: a caller learns the
+    // cursor is not valid, never which check caught it.
     public long decode(String cursor) {
         String decoded;
         try {
@@ -62,8 +58,8 @@ public final class Cursor {
         } catch (IllegalArgumentException notBase64) {
             throw invalid();
         }
-        // Constant time, the same way Auth compares the token: a byte-at-a-time comparison would let a
-        // caller time its way to a valid signature one byte per round.
+        // Constant time, as Auth compares the token: a byte-at-a-time comparison lets a caller time its
+        // way to a valid signature one byte per round.
         if (!MessageDigest.isEqual(sign(payload), presented)) {
             throw invalid();
         }

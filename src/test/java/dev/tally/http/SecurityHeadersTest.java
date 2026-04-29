@@ -66,7 +66,6 @@ class SecurityHeadersTest {
 
     private void assertHardened(HttpResponse<String> r) {
         assertEquals("nosniff", header(r, "X-Content-Type-Options"));
-        // SAMEORIGIN, not DENY: the project keeps the option of embedding its own UI.
         assertEquals("SAMEORIGIN", header(r, "X-Frame-Options"));
         assertEquals("no-referrer", header(r, "Referrer-Policy"));
         String permissions = header(r, "Permissions-Policy");
@@ -98,8 +97,8 @@ class SecurityHeadersTest {
     void theCspFitsAViteBuiltClient() throws Exception {
         String csp = header(get("/"), "Content-Security-Policy");
         assertTrue(csp.contains("default-src 'self'"), csp);
-        // Vite emits external module scripts, so scripts never need to be inlined. React writes inline
-        // style attributes, so styles do; the loosening is confined to exactly one directive.
+        // The loosening is confined to one directive: React writes inline style attributes, but Vite
+        // emits external module scripts, so nothing has to inline a script.
         assertTrue(csp.contains("script-src 'self'"), csp);
         assertFalse(csp.contains("script-src 'self' 'unsafe-inline'"), csp);
         assertFalse(csp.contains("unsafe-eval"), csp);
@@ -113,10 +112,9 @@ class SecurityHeadersTest {
 
     @Test
     void theCspHashMatchesTheClientsInlineThemeScript() throws Exception {
-        // The one inline script the client keeps. Its hash is what lets script-src stay free of
-        // 'unsafe-inline', and a hash covers exact bytes, so this re-derives it from the file rather than
-        // trusting that whoever edits the snippet remembers to edit the header too. Vite copies the tag
-        // through untouched, so hashing the source is hashing what ships.
+        // A hash covers exact bytes, so this re-derives it from the file rather than trusting that
+        // whoever edits the snippet remembers to edit the header. Vite copies the tag through untouched,
+        // so hashing the source is hashing what ships.
         Path clientHtml = Path.of("web", "index.html");
         assertTrue(Files.isRegularFile(clientHtml), "expected the client's index.html at " + clientHtml.toAbsolutePath());
         Matcher inline = Pattern.compile("<script>(.*?)</script>", Pattern.DOTALL)
@@ -131,8 +129,8 @@ class SecurityHeadersTest {
 
     @Test
     void noHstsOverPlainHttp() throws Exception {
-        // An HSTS header served over http://localhost pins the whole localhost origin to https in the
-        // developer's browser for max-age. TLS termination belongs to a proxy, and so does this header.
+        // Sent over http://localhost it would pin that whole origin to https for max-age, in the
+        // developer's own browser. The header belongs to whatever terminates TLS.
         assertTrue(get("/echo").headers().firstValue("Strict-Transport-Security").isEmpty());
     }
 }

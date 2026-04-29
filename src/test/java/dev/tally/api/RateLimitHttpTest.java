@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The throttle over real HTTP: a token guesser is cut off by address, and the refusal is the ordinary
- * error envelope with a 429 and a Retry-After a client can act on.
+ * error envelope with a Retry-After a client can act on.
  */
 class RateLimitHttpTest extends ApiTestHarness {
 
@@ -39,8 +39,7 @@ class RateLimitHttpTest extends ApiTestHarness {
         for (int i = 0; i < RateLimiter.MAX_AUTH_FAILURES_PER_WINDOW; i++) {
             assertEquals(401, guess("wrong-token-attempt-" + i).statusCode());
         }
-        // Even the real token is refused now: the throttle is on the address, so a guesser cannot keep
-        // working the API while it burns through the failure budget.
+        // Even the real token is refused, which is the point: the throttle is on the address.
         assertEquals(429, post("/accounts", "{\"name\":\"Ada\"}").statusCode());
         assertEquals(429, get("/accounts").statusCode());
     }
@@ -54,7 +53,7 @@ class RateLimitHttpTest extends ApiTestHarness {
         }
         String key = freshKey();
         assertEquals(429, transfer(a, b, 250, key).statusCode());
-        // Nothing moved and the key is untouched, because the limiter runs before the handler: the same
+        // The key is still free, because the limiter runs ahead of the handler that would claim it. Same
         // ordering argument as auth, one step earlier.
         assertEquals(429, get("/accounts/" + a).statusCode());
     }

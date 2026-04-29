@@ -16,11 +16,10 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.UUID;
 
 /**
- * A fresh server over a fresh in-memory store per test. The error helpers read error.code and
- * message only, never whole bodies, so a later requestId or field addition does not churn a test.
+ * A fresh server over a fresh in-memory store per test.
  *
- * Every request goes out authenticated by default so the account and transfer tests stay about their own
- * behaviour; the auth tests build raw requests through send to exercise the missing/wrong-token paths.
+ * Requests go out authenticated by default, so the account and transfer tests stay about their own
+ * behaviour. The auth tests build raw requests through send to reach the missing and wrong-token paths.
  */
 abstract class ApiTestHarness {
     protected static final String TOKEN = "test-token-0123456789";   // >= 16 chars, the fail-closed floor
@@ -41,7 +40,6 @@ abstract class ApiTestHarness {
         server.stop();
     }
 
-    // Reads carry the token too: every route but /health is protected.
     protected HttpResponse<String> get(String path) {
         return send(HttpRequest.newBuilder(base.resolve(path)).header("Authorization", "Bearer " + TOKEN).GET().build());
     }
@@ -81,6 +79,8 @@ abstract class ApiTestHarness {
         return (JsonValue.JsonObject) Json.parse(r.body());
     }
 
+    // Reach for one field rather than comparing a whole body, so adding a field to the envelope later
+    // does not churn every error test.
     protected String errorCode(HttpResponse<String> r) {
         JsonValue.JsonObject error = (JsonValue.JsonObject) body(r).members().get("error");
         return ((JsonValue.JsonString) error.members().get("code")).value();

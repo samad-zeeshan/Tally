@@ -1,4 +1,6 @@
 <!doctype html>
+<!-- The demo page for Tally. One hand written file, with the real app framed from ./app.
+     Working notes, and every number's source, are in ./NOTES.md. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -9,8 +11,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f6b4f'/%3E%3Cpath d='M9 11h14M16 11v11' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <style>
-/* Tally's own colours and spacing, taken from the app's stylesheet (web/src/styles.css) so the page
-   and the running app read as one thing. No shared kit, no framework. */
+/* Colours lifted from the app's own stylesheet (web/src/styles.css), so the page and the app running
+   inside it read as one thing. No shared kit, no framework. */
 :root {
   --accent: #0f6b4f;
   --accent-strong: #0c5940;
@@ -27,10 +29,8 @@
   --radius-s: 7px;
   --radius-m: 10px;
   --radius-l: 14px;
-  /* One content column for the whole page. --content is the band every section shares, --gutter is the
-     only horizontal padding on it, and --read is the narrower measure long paragraphs wrap at. A
-     paragraph is narrower than the band, but it still begins on the band's left edge, so every section
-     starts on the same pixel at every width. */
+  /* --read is a max-width on the paragraph, never a narrower centred box, so long copy wraps early but
+     still starts on the band's left edge. That is what keeps every section beginning on one pixel. */
   --content: 54rem;
   --gutter: clamp(1.25rem, 4vw, 2rem);
   --read: 38rem;
@@ -79,18 +79,14 @@ a:hover { color: var(--accent-strong); }
 }
 .skip:focus-visible { left: 8px; }
 
-/* The one content container. Every band on the page uses it: the masthead, the hero, all six numbered
-   sections, the proof grid and the footer. The single exception is the app frame, which is deliberately
-   full bleed and therefore sits outside this container rather than breaking out of it. */
+/* The one content container, shared by every band on the page. The app frame is the single exception:
+   it is full bleed, and sits outside this rather than breaking out of it. */
 .wrap {
   width: 100%;
   max-width: var(--content);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
-
-/* Long copy reads at a narrower measure (--read, applied below as a max-width on the paragraph or list
-   itself), which keeps it starting on the container's left edge rather than centred inside it. */
 
 /* ---------- masthead ---------- */
 
@@ -99,8 +95,8 @@ a:hover { color: var(--accent-strong); }
   background: var(--surface);
   position: sticky; top: 0; z-index: 30;
 }
-/* padding-block, not the padding shorthand: these bands are .wrap as well, and the shorthand would
-   wipe out the container's single horizontal padding. */
+/* padding-block, never the padding shorthand: this band is a .wrap too, and the shorthand silently
+   wipes out the container's horizontal padding. */
 .masthead-in {
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
   padding-block: .35rem;
@@ -126,7 +122,6 @@ a:hover { color: var(--accent-strong); }
 
 /* ---------- the ruled column ---------- */
 
-/* Sections are numbered in the margin against a short rule, the way a ruled book is. */
 .section { padding-block: 3.6rem .5rem; }
 .section-head { position: relative; margin-bottom: 1.1rem; }
 .section-no {
@@ -207,9 +202,8 @@ a:hover { color: var(--accent-strong); }
 
 /* ---------- the zero line ---------- */
 
-/* The figure is a mirror. Everything people hold is stacked into one tower above the rule; the world
-   account is one bar of the same width below it. Equal totals become equal heights, so the claim is
-   settled by looking rather than by arithmetic. */
+/* Everything people hold is stacked into one tower above the rule, and world is one bar of the same
+   width below. Equal totals become equal heights, so the claim is settled by looking. */
 
 .zero { margin: 2.4rem 0 0; padding: 0; }
 .zerobox {
@@ -221,8 +215,7 @@ a:hover { color: var(--accent-strong); }
   overflow: hidden;   /* lets the zero rule run to the card's edges without escaping its corners */
 }
 .zerogrid {
-  /* One scale for the whole figure: --unit is the height of 500.00, and every bar is a plain
-     fraction of it, so the two halves are always comparable by eye. The rows size themselves to
+  /* One scale for the figure: --unit is 500.00, and every bar is a fraction of it. The rows size to
      their content, so a bar is never quietly cropped to fit. */
   --unit: clamp(126px, 26vw, 188px);
   display: grid;
@@ -259,8 +252,8 @@ a:hover { color: var(--accent-strong); }
   background-color: var(--accent);
   background-image: linear-gradient(180deg, rgb(255 255 255 / .17), rgb(255 255 255 / 0) 62%);
 }
-/* Ben is the lighter slab, and a hairline in the card colour keeps the join a real edge rather than
-   only a change of tint. The names beside the bars are what actually tells them apart. */
+/* A tint alone would only be a colour difference, so the join carries a hairline as well. The names
+   beside the bars are what actually tells the two apart. */
 .zeroseg.tint { background-color: color-mix(in srgb, var(--accent) 70%, var(--surface)); }
 .zerostack.up .zeroseg:first-child { border-radius: 9px 9px 0 0; }
 .zerostack.up .zeroseg + .zeroseg { box-shadow: inset 0 2px 0 var(--surface); }
@@ -313,9 +306,8 @@ a:hover { color: var(--accent-strong); }
 
 /* ---- the draw-in ---- */
 
-/* The towers are fully drawn by default, so with no JavaScript the figure is simply correct. The
-   script adds .is-armed only when it is going to animate. clip-path reveals rather than scales, so
-   the hatch never stretches, and nothing in the layout moves at any point. */
+/* Drawn by default, so with no JavaScript the figure is simply correct. clip-path reveals rather than
+   scales, which keeps the hatch on the world bar from stretching as it grows. */
 .zero.is-armed .zerostack {
   transition: clip-path .9s cubic-bezier(.22,.85,.28,1);
 }
@@ -354,10 +346,9 @@ a:hover { color: var(--accent-strong); }
   margin: 0 0 1rem; font-size: .95rem; max-width: var(--read);
 }
 
-/* The app frame is the one band that leaves the content column. It is a sibling of the .wrap blocks
-   rather than a child of one, so it is exactly as wide as the page and can never push a horizontal
-   scrollbar out the way a 100vw breakout would. Square edges and rules top and bottom, because a
-   rounded card that touches both screen edges only looks like a mistake. */
+/* A sibling of the .wrap blocks rather than a child of one, so it is exactly as wide as the page and
+   can never push a horizontal scrollbar the way a 100vw breakout would. Square edges, because a
+   rounded card that touches both screen edges reads as a mistake. */
 .frame {
   width: 100%;
   border-block: 1px solid var(--border);
@@ -371,9 +362,8 @@ a:hover { color: var(--accent-strong); }
 }
 .frame-dots { display: flex; gap: 5px; }
 .frame-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); display: block; }
-/* The fallback height, used until the app reports its own. It is never zero and never collapsed, so a
-   browser that drops the message still shows a usable panel. The script replaces it with the app's
-   measured content height, which is what removes the frame's inner scrollbar. */
+/* The fallback until the app reports its own height, never zero and never collapsed, so a browser that
+   drops that message still shows a usable panel. */
 .frame-body { position: relative; height: clamp(560px, 80vh, 900px); }
 .frame iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--surface); }
 .frame-load {
@@ -575,12 +565,9 @@ a:hover { color: var(--accent-strong); }
     <figure class="zero" id="zero">
       <div class="zerobox">
         <div class="zerogrid">
-          <!-- Every bar is a fraction of the same unit, where 1 is 500.00: 375.00 is .75, 125.00 is
-               .25, and 500.00 is 1. The three amounts are the real balances the Java service
-               reported, docs/data/tally-run.json, step id "transfer". Amara and Ben are stacked into
-               one tower so that .75 + .25 becomes a single height of 1, which is exactly the height
-               of the world bar mirrored below the rule. The bars themselves carry no text, so they
-               are hidden from screen readers; the key beside them is the readable version. -->
+          <!-- Balances from docs/data/tally-run.json, step id "transfer". Each --f is a fraction of
+               500.00, so stacking .75 and .25 gives a height of 1, exactly the world bar below.
+               The bars carry no text, so they are hidden and the key beside them is the readable copy. -->
           <div class="zerostack up" aria-hidden="true">
             <div class="zeroseg tint" style="--f: .25"></div>
             <div class="zeroseg" style="--f: .75"></div>
@@ -646,7 +633,7 @@ a:hover { color: var(--accent-strong); }
              Surefire printed 32 per-class lines and the summary "Tests run: 240, Failures: 0,
              Errors: 0, Skipped: 1", then BUILD SUCCESS in 4.549 s. Sources: src/test/java. The one
              skip is StaticFileHandlerTest.aLinkToAFileInsideTheRootStillServes, which needs to create
-             a file symlink; Windows refuses that without elevation, and it runs on Linux CI. -->
+             a file symlink. Windows refuses that without elevation, and it runs on Linux CI. -->
         <span class="fact-n">240<small> tests</small></span>
         <b>0 failures, 0 errors.</b>
         <p><b>How:</b> the command <code>./mvnw test</code>, run in this repository on 27 July 2026 on
@@ -819,10 +806,9 @@ a:hover { color: var(--accent-strong); }
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------------- the typewriter narration ----------------
-     It is a garnish, never a gate. The full sentence sits in the HTML, so a reader with no
-     JavaScript, or with reduced motion turned on, simply reads it. While it types, the finished
-     sentence stays in the page at full size but invisible, which reserves the exact height and stops
-     anything jumping. Screen readers get the sentence once, from a copy that is never rewritten. */
+     A garnish, never a gate: the sentence is in the HTML already, so with no JavaScript it just reads.
+     The finished copy stays in the layout at full size but invisible, which reserves the exact height
+     and stops anything jumping, and a second copy carries it to screen readers once. */
 
   var typers = [];
 
@@ -904,9 +890,8 @@ a:hover { color: var(--accent-strong); }
         });
       }, { threshold: 0.35 });
       typers.forEach(function (t) { watcher.observe(t.el); });
-      // A safety net for a browser whose watcher never calls back: after a moment, anything already
-      // on screen types anyway. Lines further down are left to the watcher, so a reader who lingers
-      // up here does not arrive to find them already finished.
+      // A net for a browser whose watcher never calls back. Only what is already on screen is started,
+      // so a reader who lingers up here does not arrive to find the lower lines already over.
       setTimeout(function () {
         typers.forEach(function (t) {
           if (t.started || t.done) { return; }
@@ -919,8 +904,8 @@ a:hover { color: var(--accent-strong); }
 
   /* ---------------- the zero line ---------------- */
 
-  /* The figure is already drawn in the CSS, so doing nothing here leaves it correct. Arming it is
-     what hides the towers, and that only happens when there is something to reveal them with. */
+  /* Arming is what hides the towers, so it only happens when there is something here to reveal them
+     with. Doing nothing leaves the figure drawn and correct. */
   var zero = document.getElementById("zero");
   if (zero && !reduced && typeof IntersectionObserver === "function") {
     zero.classList.add("is-armed");
@@ -933,8 +918,8 @@ a:hover { color: var(--accent-strong); }
   }
 
   /* ---------------- the app panel ----------------
-     Browsers refuse to start the app when this page is opened straight off a disk, so say that
-     plainly rather than leave an empty box looking broken. */
+     Browsers refuse to start an ES module over file://, so an empty frame there would just look
+     broken. The page says so instead, and the rest of it still reads. */
 
   var frame = document.getElementById("frame");
   var offline = document.getElementById("offline");
@@ -946,17 +931,13 @@ a:hover { color: var(--accent-strong); }
     if (frame) { frame.hidden = true; frame.style.display = "none"; }
     if (offline) { offline.hidden = false; }
   } else {
-    /* Two messages come out of the app, both from docs/app/tally-embed.js:
+    /* Two messages arrive from docs/app/tally-embed.js: "ready", so the placeholder can go, and
+       "height", which this page copies onto the frame. Matching the frame to the app's own height is
+       what removes the inner scrollbar, since there is then nothing left inside it to scroll.
 
-       "ready"  the stand-in is installed, so the placeholder can go;
-       "height" the app's own content height, which this page copies onto the frame. That is what
-                removes the frame's inner scrollbar: the frame is exactly as tall as the app, so
-                there is nothing left inside it to scroll.
-
-       One message goes the other way. The app's toast shelf is fixed to the bottom of its own
-       window, and its window is now the whole tall frame, so a toast would sit far below whatever
-       the reader is looking at. This page tells the app how far the frame's bottom edge falls below
-       the bottom of the reader's window, and the app lifts the shelf by that much. */
+       One goes back the other way. The app's toast shelf is fixed to the bottom of its window, and its
+       window is now the whole tall frame, so a toast would sit far below what the reader can see. This
+       page sends how far the frame's bottom edge falls past the window, and the app lifts by that. */
 
     var viewPending = 0;
 
@@ -967,7 +948,7 @@ a:hover { color: var(--accent-strong); }
       if (box.height <= 0) { return; }
       // Where the reader's window cuts the frame, measured from the top of the app's own document.
       var seenTo = Math.min(box.height, window.innerHeight - box.top);
-      // Off screen either way: park the shelf at the near edge rather than somewhere impossible.
+      // Scrolled off either end, park the shelf at the near edge rather than somewhere impossible.
       if (seenTo < 160) { seenTo = Math.min(box.height, 160); }
       appFrame.contentWindow.postMessage({ tally: "view", lift: Math.round(box.height - seenTo) }, "*");
     }
@@ -978,18 +959,16 @@ a:hover { color: var(--accent-strong); }
     }
 
     window.addEventListener("message", function (event) {
-      // Only the app's own frame is listened to; anything else on the page is ignored.
       if (!appFrame || event.source !== appFrame.contentWindow) { return; }
       var data = event.data;
       if (!data) { return; }
       if (data.tally === "ready" && loading) { loading.hidden = true; }
       if (data.tally === "height" && typeof data.height === "number" && frameBody) {
-        // Clamped at both ends, so a wrong number can neither collapse the frame nor run away with
-        // the page. The CSS height stays as the fallback until a real one arrives.
+        // Clamped both ways, so a wrong number can neither collapse the frame nor run away with the page.
         var height = Math.max(320, Math.min(Math.round(data.height), 6000));
         frameBody.style.height = height + "px";
-        // Straight away, not on the timer: the app grows at the moment a demo raises its first toast,
-        // and a toast placed against last frame's height would land off the bottom of the window.
+        // Straight away rather than on the timer: the app grows at the moment a demo raises its first
+        // toast, and a shelf placed against the old height lands off the bottom of the window.
         if (viewPending) { clearTimeout(viewPending); }
         sendView();
       }
@@ -999,8 +978,8 @@ a:hover { color: var(--accent-strong); }
     window.addEventListener("resize", queueView);
     if (appFrame) { appFrame.addEventListener("load", sendView); }
 
-    // If that message never lands, the placeholder still gets out of the way, and the frame keeps
-    // the height its stylesheet gave it.
+    // If "ready" never lands the placeholder still gets out of the way, over a panel that keeps the
+    // height its stylesheet gave it.
     setTimeout(function () { if (loading) { loading.hidden = true; } }, 4000);
   }
 })();

@@ -25,6 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+/**
+ * Serving the built client from a directory, and the two ways a request can try to leave it: a "/../"
+ * path, and a link that resolves somewhere else.
+ */
 class StaticFileHandlerTest {
     @TempDir
     Path staticRoot;
@@ -80,8 +84,8 @@ class StaticFileHandlerTest {
 
     @Test
     void routesWinOverStaticFallback() throws Exception {
-        // A decoy file named "health" sits in the static root, but the /health route runs before the
-        // fallback, which is the whole reason static serving is a fallback and not a "/" context.
+        // The decoy file named "health" in the static root loses, which is the whole reason static
+        // serving is a fallback and not a "/" context of its own.
         HttpResponse<String> r = get("/health");
         assertEquals(200, r.statusCode());
         assertEquals("{\"status\":\"ok\"}", r.body());
@@ -89,8 +93,7 @@ class StaticFileHandlerTest {
 
     @Test
     void pathTraversalIsRejected() {
-        // Checked at the resolver: an HTTP client normalizes "/../" out of the path before it is sent,
-        // so the guard is exercised directly with a raw escaping path.
+        // Straight at the resolver, because an HTTP client normalizes "/../" out before it sends.
         StaticFileHandler handler = new StaticFileHandler(staticRoot);
         Request escape = new Request("GET", "/../pom.xml", Map.of(), Map.of(), new Headers(), () -> "");
         Optional<Response> served = handler.resolve(escape);
@@ -99,9 +102,8 @@ class StaticFileHandlerTest {
 
     @Test
     void aLinkInsideTheRootCannotReachOutsideIt(@TempDir Path elsewhere) throws Exception {
-        // The traversal check above is lexical, so it says nothing about links: a link inside the root
-        // points wherever it likes while the path still reads as being under the root. This is the case
-        // that a startsWith plus Files.isRegularFile pair lets through.
+        // The case a startsWith plus isRegularFile pair lets through: the path reads as being under the
+        // root the whole way, and the link points somewhere else entirely.
         Path secret = elsewhere.resolve("secret.txt");
         Files.writeString(secret, "TALLY_API_TOKEN=leaked");
         assumeTrue(link(staticRoot.resolve("escape"), elsewhere), "this platform will not create links unprivileged");
@@ -109,15 +111,14 @@ class StaticFileHandlerTest {
         StaticFileHandler handler = new StaticFileHandler(staticRoot);
         Request through = new Request("GET", "/escape/secret.txt", Map.of(), Map.of(), new Headers(), () -> "");
         assertTrue(handler.resolve(through).isEmpty(), "a link must not hand out a file outside the root");
-        // Nothing else broke: a real file in the root still serves.
         Request ordinary = new Request("GET", "/app.js", Map.of(), Map.of(), new Headers(), () -> "");
         assertFalse(handler.resolve(ordinary).isEmpty());
     }
 
     @Test
     void aLinkToAFileInsideTheRootStillServes() throws Exception {
-        // The rule is "must resolve inside the root", not "must not be a link", so a link that stays put
-        // keeps working. NOFOLLOW_LINKS on the final component alone would have broken this.
+        // The rule is "resolves inside the root", not "is not a link", which is what NOFOLLOW_LINKS on
+        // the final component would have made it.
         assumeTrue(link(staticRoot.resolve("alias.js"), staticRoot.resolve("app.js")),
                 "this platform will not create links unprivileged");
         StaticFileHandler handler = new StaticFileHandler(staticRoot);
@@ -125,9 +126,8 @@ class StaticFileHandlerTest {
         assertFalse(handler.resolve(request).isEmpty());
     }
 
-    // Links are a privileged operation on Windows unless developer mode is on, so make one the way the
-    // platform allows: a symlink where that works, an unprivileged directory junction otherwise. Both are
-    // reparse points that toRealPath resolves, which is exactly what the guard has to catch.
+    // Windows will not create a symlink without elevation, so fall back to a directory junction, which is
+    // unprivileged. Both are reparse points that toRealPath resolves, which is what the guard catches.
     private static boolean link(Path link, Path target) throws Exception {
         try {
             Files.createSymbolicLink(link, target);

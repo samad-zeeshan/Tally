@@ -21,6 +21,9 @@ import java.util.concurrent.Executors;
 
 /**
  * Wires the router and handlers over a Store onto the JDK HTTP server. Port 0 binds an ephemeral port.
+ *
+ * A non-null staticDir serves the built client from that directory as well, so the whole app lives at
+ * one origin. It is unset in local dev, where the Vite proxy fronts the client.
  */
 public final class ApiServer {
     private final HttpServer server;
@@ -30,21 +33,16 @@ public final class ApiServer {
         this(port, store, apiToken, null);
     }
 
-    // staticDir non-null serves the built client from that directory as the kernel's fallback, so the
-    // whole app lives at one origin. Unset in local dev, where the Vite proxy fronts the client.
     public ApiServer(int port, Store store, String apiToken, Path staticDir) {
-        // The cursor signing key is derived from the API token, so statements need no key of their own.
         AccountsHandler accounts = new AccountsHandler(store, new Cursor(apiToken));
         TransfersHandler transfers = new TransfersHandler(store);
         ReconciliationHandler reconciliation = new ReconciliationHandler(store);
         Auth auth = new Auth(apiToken);
         Router router = new Router();
-        // The one open route. A liveness probe must not need a credential, and it answers a fixed string
-        // that names no account, so there is nothing behind it to protect.
+        // /health is the one open route: a liveness probe cannot carry a credential, and it answers a
+        // fixed string that names no account. Everything else is wrapped, reads included, because a
+        // balance and a statement are account data. The whole boundary is meant to fit on one screen.
         router.add("GET", "/health", new HealthHandler());
-        // Every other route is wrapped, so the protection boundary is visible in one screenful: balances
-        // and statements are account data, and reading them is not a lesser act than writing them.
-        // auth.protect checks the token before the body is ever read.
         router.add("POST", "/accounts", auth.protect(accounts::create));
         router.add("GET", "/accounts", auth.protect(accounts::list));
         router.add("GET", "/accounts/{id}", auth.protect(accounts::get));
@@ -52,7 +50,6 @@ public final class ApiServer {
         router.add("POST", "/transfers", auth.protect(transfers::create));
         router.add("GET", "/reconciliation", auth.protect(reconciliation::report));
         try {
-            // Wildcard bind: the container needs to reach it from another host.
             server = HttpServer.create(new InetSocketAddress(port), 0);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -72,7 +69,7 @@ public final class ApiServer {
         return server.getAddress().getPort();
     }
 
-    // Stop the server first, then close the executor, which waits for in-flight virtual threads.
+    // Server first, then the executor, whose close waits for the in-flight exchanges to finish.
     public void stop() {
         server.stop(0);
         executor.close();
