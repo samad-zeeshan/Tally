@@ -171,6 +171,12 @@ one, so it reads as the counterweight and not as more money. The key beside the 
 name and amount to the middle of its own segment, right-aligned into one column of tabular figures,
 and a `+500.00 / -500.00 / 0.00` line under the figure states the sum in words as well as in shape.
 
+It now opens the page rather than sitting in section 03. The hero's right half was empty at desktop
+widths, and the zero line is the one claim on the page worth seeing before any prose, so it moved up
+into the hero and the first screen has a reason to be wide. Under 62rem it falls back under the
+heading and the buttons, exactly as it used to sit under the three points. Section 03 keeps its three
+points and nothing else.
+
 The draw-in reveals with `clip-path`, not `transform: scaleY`, for two reasons: scaling stretches
 the hatch on the world bar as it grows, and clipping the two stacks as whole units keeps the
 segments in proportion the entire way. Neither touches layout. The figure is fully drawn by default
@@ -214,14 +220,13 @@ on the script to reveal them.
   account name spends a second line rather than the table's width, and anything longer still falls
   back to scrolling inside `.table-scroll`, which is what that wrapper has always been for.
 
-## One content column
+## One content column, widening in steps
 
-The page used to have two: a 44 rem reading column for the prose sections and a 70 rem one for the
-masthead and the demo, so consecutive bands started roughly 200 px apart at desktop widths. There is
-now a single `.wrap` (`--content: 54rem`, one `--gutter`) used by the masthead, the hero, all six
-numbered sections, the proof grid and the footer. Long copy still wraps at a narrower measure
-(`--read: 38rem`), but as a `max-width` on the paragraph, so it begins on the container's left edge
-rather than being centred inside it.
+The page used to have two containers: a 44 rem reading column for the prose sections and a 70 rem one
+for the masthead and the demo, so consecutive bands started roughly 200 px apart at desktop widths.
+There is now a single `.wrap` used by the masthead, the hero, all six numbered sections, the proof
+grid and the footer. Long copy wraps at a narrower measure (`--read: 38rem`), but as a `max-width` on
+the paragraph, so it begins on the container's left edge rather than being centred inside it.
 
 Two things that had to change with it:
 
@@ -230,11 +235,60 @@ Two things that had to change with it:
 - `.section`, `.hero` and `.masthead-in` set `padding-block`, not the `padding` shorthand. They are
   `.wrap` themselves, and the shorthand silently wiped out the container's horizontal padding.
 
-Measured left edge of the masthead wordmark, the hero eyebrow, every section number and heading, the
-proof grid and the footer, at 1920, 1440, 1280, 1024, 768, 430 and 360 px: identical at every width
-(552.5, 312.5, 232.5, 104.5, 30.7, 20, 20). `document.documentElement.scrollWidth` never exceeds
+That single column was then too narrow: at 1896 px the prose ended around x = 1150 and half the
+display was empty. `--content` now grows in steps (54rem, then 66rem at 1200 px, 78rem at 1440 px,
+88rem at 1760 px) and the extra width is spent on columns rather than on longer lines:
+
+- the hero is two tracks above 62rem, text beside the zero line (below);
+- section 01 and the demo section's two notices use `.cols`, a plain two-track grid;
+- the three points in section 03 and the six proof cards go three across at 75rem, and the limits and
+  the file list go two across at 62rem. Each list drops `--read` only once it is in columns, because
+  a column is already narrower than the measure `--read` was there to hold.
+
+At 1920 the band is 1408 px inside a 1905 px viewport, so the content runs from x = 280 to x = 1625
+instead of 552 to 1352.
+
+Measured left edge of the masthead wordmark, the hero eyebrow and h1, every section number and
+heading, the proof grid and the footer, at 1920, 1440, 1280, 1024, 768, 430 and 360 px: identical at
+every width (280.5, 120.5, 136.5, 104.5, 30.7, 20, 20). It is not monotonic, because the band grows
+by more than the viewport does at a step. `document.documentElement.scrollWidth` never exceeds
 `clientWidth` at any of them, and `body { overflow-x: hidden }` was removed so that check means
 something.
+
+## The wash under the hero
+
+A radial gradient in Tally's green sits behind the hero and follows the pointer. It is deliberately
+small in every dimension that matters:
+
+- **Hero only.** The layer lives in `.hero-wash`, an absolutely positioned box the size of the hero
+  with `overflow: hidden`, so the gradient is clipped to the first screen. Moving light under the
+  reading sections or the app frame would be a distraction while someone is reading, and this way it
+  cannot reach them. `pointermove` is bound to the hero, not the window, so scrolling past it costs
+  nothing at all.
+- **One frame at a time.** The handler stores the coordinates and asks for a frame only when none is
+  pending; the callback reads the last coordinates it was given. Measured: 30 events between two
+  frames requested exactly one frame, and 10 more after it requested one more.
+- **Composited, not laid out.** The layer's resting place is plain CSS (`left: 68%; top: 34%`), and
+  the pointer moves it with `transform: translate3d(...)`, a delta from that resting point. Across 60
+  pointer-driven frames the `layout-shift` observer recorded nothing at all, and `scrollHeight`,
+  `scrollWidth` and the h1's position were unchanged. `will-change: transform` is added only while the
+  effect is actually live.
+- **Reduced motion, checked live.** `matchMedia('(prefers-reduced-motion: reduce)')` is read at load
+  and listened to, so turning the setting on mid page detaches the listeners and returns the wash to
+  rest on the spot rather than at the next reload. Verified by driving a stubbed MediaQueryList
+  through off, on and off again.
+- **Touch gets the resting state.** The effect only arms under `(hover: hover) and (pointer: fine)`.
+  A finger dragged across the hero would otherwise leave the wash wherever it lifted, and the resting
+  position is what the design is drawn around anyway. The same is true with JavaScript off.
+- **Nothing to click through.** The layer is `pointer-events: none` at `z-index: -1` inside the hero's
+  own stacking context. `elementFromPoint` over the primary button returns the button and over the
+  headline returns the h1, and selecting the hero text still works.
+
+Contrast at the brightest point of the wash, which is its centre at 10 per cent of `--accent`
+composited over `--bg`: the worst case on the page is the muted grey `#5c6660` on the light theme, at
+**4.79:1** (it is 5.53:1 with no wash at all). Body text is 13.44:1 and the accent eyebrow 5.22:1. On
+the dark theme the same three are 5.99, 13.23 and 6.83. Ten per cent is the ceiling for that reason:
+at 14 per cent the muted grey lands on 4.51:1, which is too close to the line to keep.
 
 ## The frame, and why it has no scrollbar of its own
 

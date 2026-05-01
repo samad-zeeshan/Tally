@@ -36,6 +36,12 @@
   --read: 38rem;
   color-scheme: light;
 }
+
+/* The band widens in steps on a big display, and the grids below turn that width into columns. Widening
+   alone would only stretch paragraphs, which --read exists to prevent. */
+@media (min-width: 75rem) { :root { --content: 66rem; } }
+@media (min-width: 90rem) { :root { --content: 78rem; } }
+@media (min-width: 110rem) { :root { --content: 88rem; } }
 @media (prefers-color-scheme: dark) {
   :root {
     --accent: #3dbf92;
@@ -142,9 +148,55 @@ a:hover { color: var(--accent-strong); }
 .muted { color: var(--muted); }
 .small { font-size: .9rem; }
 
+/* Two tracks for a section's body, so supporting material sits beside the prose instead of under it.
+   Both tracks start at the container's left edge, which is what keeps the heading above them aligned. */
+.cols { display: grid; gap: clamp(1.4rem, 3vw, 3rem); align-items: start; }
+@media (min-width: 62rem) {
+  .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* The column is already about the reading measure, so --read would only cut it short again. */
+  .cols > * { margin-top: 0; max-width: none; }
+}
+
 /* ---------- hero ---------- */
 
-.hero { padding-block: 4rem 1rem; }
+.hero { padding-block: 4rem 1rem; position: relative; isolation: isolate; }
+
+/* One radial layer behind the hero, and only the hero: it is clipped by its own wrapper, so nothing
+   below the first screen is ever repainted, and a page about money does not get moving light under its
+   reading sections. The pointer moves it with a transform, which the compositor can do on its own.
+   10 per cent at the centre is the ceiling. Past that the muted grey on this page falls under 4.5:1
+   against the washed background, and this effect is not worth a contrast failure. */
+/* Fixed to the viewport, not to the hero, so the light follows the cursor down the whole page. body
+   paints its background to the canvas, which is below a negative z-index layer, so this stays visible
+   without body needing a stacking context of its own. */
+.page-wash {
+  position: fixed; inset: 0; z-index: -1;
+  overflow: hidden; pointer-events: none;
+}
+.page-wash > span {
+  --wash-size: clamp(22rem, 52vw, 44rem);
+  position: absolute; left: 68%; top: 34%;
+  width: var(--wash-size); height: var(--wash-size);
+  margin: calc(var(--wash-size) / -2) 0 0 calc(var(--wash-size) / -2);
+  background: radial-gradient(closest-side circle,
+    color-mix(in srgb, var(--accent) 10%, transparent),
+    color-mix(in srgb, var(--accent) 5%, transparent) 48%,
+    transparent 76%);
+  /* Eased rather than glued to the cursor, so it reads as a surface catching light. */
+  transition: transform .45s cubic-bezier(.22,.61,.36,1);
+}
+.page-wash.is-live > span { will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .page-wash > span { transition: none; }
+}
+
+/* The zero line is the page's one claim worth seeing before any prose, so on a wide screen it takes the
+   half of the first screen the text was leaving empty. Under 62rem it falls back under the text. */
+.hero-in { display: grid; gap: clamp(2rem, 4vw, 3.5rem); align-items: center; }
+@media (min-width: 62rem) {
+  .hero-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+  .hero-in .zero { margin-top: 0; }
+}
 .eyebrow {
   font-size: .78rem; letter-spacing: .16em; text-transform: uppercase;
   color: var(--accent); font-weight: 700; margin: 0 0 .9rem;
@@ -155,7 +207,6 @@ a:hover { color: var(--accent-strong); }
   max-width: 15ch; overflow-wrap: break-word;
 }
 .hero-lede { font-size: clamp(1.05rem, 2.4vw, 1.22rem); max-width: var(--read); margin: 0 0 1rem; }
-.hero-who { color: var(--muted); max-width: var(--read); }
 .cta-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.6rem; align-items: center; }
 
 .btn {
@@ -303,6 +354,9 @@ a:hover { color: var(--accent-strong); }
 }
 .zerocap { margin: 1.2rem 0 0; font-size: .88rem; color: var(--muted); line-height: 1.6; max-width: var(--read); }
 .zerocap b { color: var(--text); }
+/* The real account names live here rather than on the bars, so the picture reads without context
+   while the citation stays honest. */
+.zerocap-src { display: block; margin-top: .55rem; font-size: .8rem; opacity: .78; }
 
 /* ---- the draw-in ---- */
 
@@ -404,6 +458,16 @@ a:hover { color: var(--accent-strong); }
 .works { list-style: none; margin: 1.4rem 0 0; padding: 0; max-width: var(--read); }
 .works > li { padding: .95rem 0; border-bottom: 1px solid var(--border); }
 .works > li:first-child { border-top: 1px solid var(--border); }
+/* The lists carry --read while they are one column. Across two or three they drop it, because each
+   column is already narrower than the measure it was there to hold. */
+@media (min-width: 62rem) {
+  .limits, .works { max-width: none; grid-template-columns: 1fr 1fr; }
+  .works { display: grid; column-gap: clamp(1.5rem, 3vw, 3rem); }
+  .works > li:nth-child(2) { border-top: 1px solid var(--border); }
+}
+@media (min-width: 75rem) {
+  .points { max-width: none; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6rem; }
+}
 .works b { display: block; }
 .works span { color: var(--muted); font-size: .95rem; display: block; margin: .1rem 0 .4rem; }
 .works a { font-size: .82rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-word; }
@@ -428,6 +492,7 @@ a:hover { color: var(--accent-strong); }
   background: var(--surface-2); padding: .1em .4em; border-radius: 4px;
 }
 @media (min-width: 42rem) { .proof { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 75rem) { .proof { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* ---------- footer ---------- */
 
@@ -437,6 +502,14 @@ a:hover { color: var(--accent-strong); }
   font-size: .9rem; color: var(--muted);
 }
 .foot p { margin: 0 0 .6rem; max-width: var(--read); }
+
+/* A solid card hides the wash behind it, which is what made the light look like it only worked in the
+   gaps. 86 per cent still reads as a card and lets the tint through. Four surfaces stay solid on
+   purpose: the masthead sits over scrolling content, the app frame is a separate document, the 0.00
+   pill belongs to the graphic, and the skip link has to be legible the instant it is focused. */
+.zerobox, .doline, .offline, .limits > li, .fact, .foot {
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+}
 </style>
 </head>
 
@@ -456,19 +529,77 @@ a:hover { color: var(--accent-strong); }
 
 <main id="main">
 
-  <!-- 1. Hero -->
+  <!-- 1. Hero. The zero line sits beside the text on a wide screen and under it on a narrow one. -->
   <section class="hero wrap">
-    <p class="eyebrow">A small banking service</p>
-    <h1>Money that arrives exactly once.</h1>
-    <p class="hero-lede">Tally moves money from one person's account to another and keeps a written
-      record of every movement, so a payment can never quietly go missing and can never be paid twice.</p>
-    <p class="hero-who">Built by Abdul Samad Zeeshan as a study in getting the boring, critical parts
-      right: Java behind the scenes, a React screen in front, and a great many tests.</p>
-    <p class="typer" data-typer>You can send a payment yourself further down this page. Nothing to install, nothing to sign up for.</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#demo">Send a payment</a>
-      <a class="btn btn-quiet" href="https://github.com/samad-zeeshan/Tally">Read the code</a>
-      <button class="btn-text" type="button" id="skip-typing" hidden>Show all text now</button>
+    <div class="page-wash" aria-hidden="true"><span></span></div>
+    <div class="hero-in">
+      <div class="hero-text">
+        <p class="eyebrow">A small banking service</p>
+        <h1>Money that arrives exactly once.</h1>
+        <p class="hero-lede">Tally moves money from one person's account to another and keeps a written
+          record of every movement, so a payment can never quietly go missing and can never be paid twice.</p>
+        <p class="typer" data-typer>You can send a payment yourself further down this page. Nothing to install, nothing to sign up for.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#demo">Send a payment</a>
+          <a class="btn btn-quiet" href="https://github.com/samad-zeeshan/Tally">Read the code</a>
+          <button class="btn-text" type="button" id="skip-typing" hidden>Show all text now</button>
+        </div>
+      </div>
+
+      <figure class="zero" id="zero">
+        <div class="zerobox">
+          <div class="zerogrid">
+            <!-- Balances from docs/data/tally-run.json, step id "transfer". Each --f is a fraction of
+                 500.00, so stacking .75 and .25 gives a height of 1, exactly the world bar below.
+                 The bars carry no text, so they are hidden and the key beside them is the readable copy. -->
+            <div class="zerostack up" aria-hidden="true">
+              <div class="zeroseg tint" style="--f: .25"></div>
+              <div class="zeroseg" style="--f: .75"></div>
+            </div>
+            <div class="zerokeys up">
+              <div class="zerokey" style="--f: .25">
+                <span class="zerokey-row">
+                  <span class="zerokey-name">Person 1</span>
+                  <span class="zerokey-lead" aria-hidden="true"></span>
+                  <span class="zerokey-amt">125.00</span>
+                </span>
+              </div>
+              <div class="zerokey" style="--f: .75">
+                <span class="zerokey-row">
+                  <span class="zerokey-name">Person 2</span>
+                  <span class="zerokey-lead" aria-hidden="true"></span>
+                  <span class="zerokey-amt">375.00</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="zerorule"><span aria-hidden="true">0.00</span></div>
+
+            <div class="zerostack down" aria-hidden="true">
+              <div class="zeroseg world" style="--f: 1"></div>
+            </div>
+            <div class="zerokeys down">
+              <div class="zerokey" style="--f: 1">
+                <span class="zerokey-row">
+                  <span class="zerokey-name">Where it came from</span>
+                  <span class="zerokey-lead" aria-hidden="true"></span>
+                  <span class="zerokey-amt">&minus;500.00</span>
+                </span>
+                <span class="zerokey-note">money is moved out of here, never typed in</span>
+              </div>
+            </div>
+          </div>
+          <p class="zerosum"><b>+500.00</b> above the line, <b>&minus;500.00</b> below it,
+            <b>0.00</b> in total.</p>
+        </div>
+        <figcaption class="zerocap"><b>Money cannot appear from nowhere.</b> The two people above hold
+          500.00 between them, so the place it came from is 500.00 down. The bar below is exactly as tall
+          as the two above it, and it always will be. That is how you know nothing was invented and
+          nothing went missing.
+          <span class="zerocap-src">Real balances from the recorded run in
+          <a href="./data/tally-run.json">data/tally-run.json</a>, where the three accounts are named
+          Ben, Amara and world.</span></figcaption>
+      </figure>
     </div>
   </section>
 
@@ -478,11 +609,13 @@ a:hover { color: var(--accent-strong); }
       <span class="section-no">01</span>
       <h2>A payment has to land once, even when the line drops.</h2>
     </div>
-    <p class="lede">You tap send. Your phone loses signal before the answer comes back. Did the money
-      go, or not? So you tap send again.</p>
-    <p>Now two requests exist for one payment, and only one of them may count. Get that wrong in one
-      direction and somebody is charged twice. Get it wrong in the other and the rent never arrives.
-      Tally is built around that single moment.</p>
+    <div class="cols">
+      <p class="lede">You tap send. Your phone loses signal before the answer comes back. Did the money
+        go, or not? So you tap send again.</p>
+      <p>Now two requests exist for one payment, and only one of them may count. Get that wrong in one
+        direction and somebody is charged twice. Get it wrong in the other and the rent never arrives.
+        Tally is built around that single moment.</p>
+    </div>
   </section>
 
   <!-- 3. The demo. The frame is a direct child of the section, outside the .wrap blocks, so it runs
@@ -494,21 +627,23 @@ a:hover { color: var(--accent-strong); }
         <h2>Try it yourself, right here.</h2>
       </div>
 
-      <div class="honest">
-        <span class="tag">Read this first</span>
-        <p><b>The screen below is the real Tally app</b>, the same React code that runs against the real
-          service. <b>The bank behind it is a small copy of Tally's rules written in JavaScript</b>, so
-          the whole thing runs inside your browser with nothing to install. The real service is written
-          in Java and keeps its data in Postgres.</p>
-        <p class="small">The copy follows the same rules file by file, but it is not the real thing, so
-          every number in the <a href="#proof">proof section</a> below was measured on the real Java
-          system and never on this browser copy. Two accounts, Amara and Ben, are already open when the
-          panel loads. Closing this tab empties them.</p>
-      </div>
+      <div class="cols">
+        <div class="honest">
+          <span class="tag">Read this first</span>
+          <p><b>The screen below is the real Tally app</b>, the same React code that runs against the real
+            service. <b>The bank behind it is a small copy of Tally's rules written in JavaScript</b>, so
+            the whole thing runs inside your browser with nothing to install. The real service is written
+            in Java and keeps its data in Postgres.</p>
+          <p class="small">The copy follows the same rules file by file, but it is not the real thing, so
+            every number in the <a href="#proof">proof section</a> below was measured on the real Java
+            system and never on this browser copy. Two accounts, Amara and Ben, are already open when the
+            panel loads. Closing this tab empties them.</p>
+        </div>
 
-      <p class="doline"><b>What to do:</b> in the panel below, click
-        <b>&ldquo;Make a sample transfer&rdquo;</b>. Then watch the small green tag in the dark green bar
-        at the top: it says whether the books balance, and it rechecks after every single change.</p>
+        <p class="doline"><b>What to do:</b> in the panel below, click
+          <b>&ldquo;Make a sample transfer&rdquo;</b>. Then watch the small green tag in the dark green bar
+          at the top: it says whether the books balance, and it rechecks after every single change.</p>
+      </div>
     </div>
 
     <div class="frame" id="frame">
@@ -561,61 +696,6 @@ a:hover { color: var(--accent-strong); }
           single cent, the check would name the account rather than hide it.</p>
       </li>
     </ul>
-
-    <figure class="zero" id="zero">
-      <div class="zerobox">
-        <div class="zerogrid">
-          <!-- Balances from docs/data/tally-run.json, step id "transfer". Each --f is a fraction of
-               500.00, so stacking .75 and .25 gives a height of 1, exactly the world bar below.
-               The bars carry no text, so they are hidden and the key beside them is the readable copy. -->
-          <div class="zerostack up" aria-hidden="true">
-            <div class="zeroseg tint" style="--f: .25"></div>
-            <div class="zeroseg" style="--f: .75"></div>
-          </div>
-          <div class="zerokeys up">
-            <div class="zerokey" style="--f: .25">
-              <span class="zerokey-row">
-                <span class="zerokey-name">Ben</span>
-                <span class="zerokey-lead" aria-hidden="true"></span>
-                <span class="zerokey-amt">125.00</span>
-              </span>
-            </div>
-            <div class="zerokey" style="--f: .75">
-              <span class="zerokey-row">
-                <span class="zerokey-name">Amara</span>
-                <span class="zerokey-lead" aria-hidden="true"></span>
-                <span class="zerokey-amt">375.00</span>
-              </span>
-            </div>
-          </div>
-
-          <div class="zerorule"><span aria-hidden="true">0.00</span></div>
-
-          <div class="zerostack down" aria-hidden="true">
-            <div class="zeroseg world" style="--f: 1"></div>
-          </div>
-          <div class="zerokeys down">
-            <div class="zerokey" style="--f: 1">
-              <span class="zerokey-row">
-                <span class="zerokey-name">world</span>
-                <span class="zerokey-lead" aria-hidden="true"></span>
-                <span class="zerokey-amt">&minus;500.00</span>
-              </span>
-              <span class="zerokey-note">stands for the outside world</span>
-            </div>
-          </div>
-        </div>
-        <p class="zerosum"><b>+500.00</b> above the line, <b>&minus;500.00</b> below it,
-          <b>0.00</b> in total.</p>
-      </div>
-      <figcaption class="zerocap">The whole book, drawn to one scale. Above the line is money people
-        hold, the two amounts stacked into one column. Below it is the account named <b>world</b>,
-        which stands for the outside world: every opening balance is moved out of that account rather
-        than typed in, so it always holds the exact negative of every cent ever issued. That is why the
-        bar below is exactly as tall as the two above it put together.
-        <b>500.00 above, 500.00 below, difference nothing.</b> These are real balances, from the
-        recorded run in <a href="./data/tally-run.json">data/tally-run.json</a>.</figcaption>
-    </figure>
   </section>
 
   <!-- 5. Proof -->
@@ -915,6 +995,77 @@ a:hover { color: var(--accent-strong); }
       });
     }, { threshold: 0.35 });
     drawer.observe(zero);
+  }
+
+  /* ---------------- the page wash ---------------- */
+
+  var wash = document.querySelector(".page-wash");
+  if (wash && wash.firstElementChild) {
+    var layer = wash.firstElementChild;
+    var lessMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // A phone has no pointer to follow, and a dragged finger would leave the wash wherever it lifted.
+    // Those visits get the resting position the stylesheet already gives it.
+    var hasPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    var pending = 0;
+    var at = null;
+    var restX = 0;
+    var restY = 0;
+
+    // The layer is fixed, so its rest point is a fraction of the viewport and pointer coordinates need
+    // no offset. Scrolling therefore costs nothing: the light stays under the cursor on its own.
+    function measureRest() {
+      restX = window.innerWidth * 0.68;
+      restY = window.innerHeight * 0.34;
+    }
+
+    // The frame callback reads the last coordinates it was given, so a burst of pointer events between
+    // two frames costs one move and not one each.
+    function draw() {
+      pending = 0;
+      if (!at) { return; }
+      layer.style.transform =
+        "translate3d(" + Math.round(at.x - restX) + "px," + Math.round(at.y - restY) + "px,0)";
+    }
+
+    function onMove(event) {
+      at = { x: event.clientX, y: event.clientY };
+      if (!pending) { pending = requestAnimationFrame(draw); }
+    }
+
+    function rest() {
+      at = null;
+      if (pending) { cancelAnimationFrame(pending); pending = 0; }
+      layer.style.transform = "";
+    }
+
+    function onResize() {
+      measureRest();
+      rest();
+    }
+
+    // Re-read on every change rather than only at load, so turning reduced motion on in the middle of
+    // reading stops it there and then.
+    function apply() {
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerleave", rest);
+      window.removeEventListener("resize", onResize);
+      rest();
+      if (lessMotion.matches || !hasPointer.matches) {
+        wash.classList.remove("is-live");
+        return;
+      }
+      measureRest();
+      wash.classList.add("is-live");
+      window.addEventListener("pointermove", onMove, { passive: true });
+      document.addEventListener("pointerleave", rest);
+      window.addEventListener("resize", onResize);
+    }
+
+    if (lessMotion.addEventListener) {
+      lessMotion.addEventListener("change", apply);
+      hasPointer.addEventListener("change", apply);
+    }
+    apply();
   }
 
   /* ---------------- the app panel ----------------
