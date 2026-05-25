@@ -1,0 +1,36 @@
+# kind has no load balancer, so the host reaches the cluster through node ports that the kind config
+# in deploy/k8s/kind/cluster.yaml maps to 127.0.0.1. Shared by both overlays.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: Service
+      name: tally-api
+    patch: |-
+      - op: add
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30080
+  - target:
+      kind: Service
+      name: grafana
+    patch: |-
+      - op: add
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30300
+  - target:
+      kind: Service
+      name: prometheus
+    patch: |-
+      - op: add
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30090

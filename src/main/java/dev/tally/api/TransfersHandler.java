@@ -9,6 +9,7 @@ import dev.tally.http.Validation;
 import dev.tally.json.Json;
 import dev.tally.json.JsonValue;
 import dev.tally.obs.Logs;
+import dev.tally.obs.Metrics;
 import dev.tally.obs.Redact;
 import dev.tally.store.Store;
 
@@ -26,9 +27,15 @@ public final class TransfersHandler {
     private static final Logger LOG = Logs.get(TransfersHandler.class);
 
     private final Store store;
+    private final Metrics metrics;
 
     public TransfersHandler(Store store) {
+        this(store, new Metrics());
+    }
+
+    public TransfersHandler(Store store, Metrics metrics) {
         this.store = store;
+        this.metrics = metrics;
     }
 
     // The key is read before the body so a missing or malformed key is caught without a parse; then
@@ -37,7 +44,19 @@ public final class TransfersHandler {
         String key = Validation.idempotencyKey(request.headers().getFirst("Idempotency-Key"));
         Validation.TransferFields fields = Validation.transfer(Json.parse(request.body()));
         TransferRequest transferRequest = new TransferRequest(key, fields.from(), fields.to(), fields.amountMinor());
-        return render(store.apply(transferRequest), transferRequest);
+        TransferOutcome outcome = store.apply(transferRequest);
+        metrics.transfers.inc(outcomeLabel(outcome));
+        return render(outcome, transferRequest);
+    }
+
+    // Three labels, not one per outcome record: the dashboard question is whether money moved, moved
+    // again on a retry, or did not move. The error codes already split the rejections in the access log.
+    private static String outcomeLabel(TransferOutcome outcome) {
+        return switch (outcome) {
+            case TransferOutcome.Applied _ -> "applied";
+            case TransferOutcome.Replayed _ -> "replayed";
+            default -> "rejected";
+        };
     }
 
     // Replay reproduces the original status on purpose (see ADR-0010): it recurses once into the same

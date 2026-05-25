@@ -1,0 +1,27 @@
+# Everything Tally needs in one namespace. The Secret tally-secrets is deliberately not listed: the up
+# script creates it from .env so no credential is ever a file in this tree. See ADR-0022.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tally
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: tally
+
+resources:
+  - namespace.yaml
+  - config.yaml
+  - postgres.yaml
+  - migrate-job.yaml
+  - api.yaml
+  - api-policy.yaml
+  - monitoring/prometheus.yaml
+  - monitoring/grafana.yaml
+
+# The dashboard is a plain JSON file so it can be diffed and imported by hand. The generated name gets a
+# content hash, so editing the JSON rolls Grafana onto the new version.
+configMapGenerator:
+  - name: grafana-dashboards
+    files:
+      - tally.json=monitoring/tally-dashboard.json

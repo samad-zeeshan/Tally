@@ -1,0 +1,13 @@
+# A laptop: the image the up script built and loaded into kind as tally:local.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/kind-nodeports
+
+images:
+  - name: tally
+    newTag: local

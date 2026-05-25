@@ -5,6 +5,7 @@ import dev.tally.core.ReconciliationReport;
 import dev.tally.http.Request;
 import dev.tally.http.Response;
 import dev.tally.json.JsonValue;
+import dev.tally.obs.Metrics;
 import dev.tally.store.Store;
 
 import java.util.ArrayList;
@@ -21,15 +22,24 @@ import static dev.tally.api.Fields.str;
  */
 public final class ReconciliationHandler {
     private final Store store;
+    private final Metrics metrics;
 
     public ReconciliationHandler(Store store) {
+        this(store, new Metrics());
+    }
+
+    public ReconciliationHandler(Store store, Metrics metrics) {
         this.store = store;
+        this.metrics = metrics;
     }
 
     // Always 200: an inconsistent book is a real answer the caller must see, reported in the body as
     // consistent:false with the offending accounts, not signalled by an error status.
     public Response report(Request _request) {
-        return Response.json(200, render(store.reconcile()));
+        long start = System.nanoTime();
+        ReconciliationReport report = store.reconcile();
+        metrics.reconciliationDuration.observeNanos(System.nanoTime() - start);
+        return Response.json(200, render(report));
     }
 
     private static JsonValue render(ReconciliationReport report) {

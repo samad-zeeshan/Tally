@@ -10,7 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Applies .sql files from a directory, once each, in file-name order, recording them in schema_version.
@@ -46,6 +48,31 @@ public final class MigrationRunner {
         } finally {
             conn.setAutoCommit(priorAutoCommit);
         }
+    }
+
+    // Read-only on purpose: every API pod calls this from its init container while the Job migrates, so
+    // it must not create schema_version or take any lock the runner needs.
+    public List<String> pending() throws SQLException, IOException {
+        Set<String> applied = new HashSet<>();
+        try (Statement s = conn.createStatement();
+             ResultSet rs = s.executeQuery("SELECT to_regclass('schema_version') IS NOT NULL")) {
+            rs.next();
+            if (rs.getBoolean(1)) {
+                try (ResultSet versions = s.executeQuery("SELECT version FROM schema_version")) {
+                    while (versions.next()) {
+                        applied.add(versions.getString(1));
+                    }
+                }
+            }
+        }
+        List<String> pending = new ArrayList<>();
+        for (Path file : sqlFilesInOrder()) {
+            String version = file.getFileName().toString();
+            if (!applied.contains(version)) {
+                pending.add(version);
+            }
+        }
+        return pending;
     }
 
     private void applyOne(Path file, String version) throws SQLException, IOException {

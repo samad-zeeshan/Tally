@@ -1,5 +1,8 @@
 package dev.tally.api;
 
+import dev.tally.json.Json;
+import dev.tally.json.JsonValue;
+import dev.tally.obs.JsonFormatter;
 import dev.tally.obs.LogCapture;
 import org.junit.jupiter.api.Test;
 
@@ -64,5 +67,22 @@ class LoggingTest extends ApiTestHarness {
         }
         String last4 = a.substring(a.length() - 4);
         assertTrue(lines.stream().anyMatch(l -> l.contains("..." + last4)), "expected a redacted from id in the logs");
+    }
+
+    @Test
+    void aJsonAccessLineCarriesTheSameRequestIdAsTheResponseHeader() {
+        HttpResponse<String> r;
+        List<String> lines;
+        try (LogCapture capture = new LogCapture(new JsonFormatter())) {
+            r = get("/accounts");
+            lines = capture.lines();
+        }
+        String id = r.headers().firstValue("X-Request-Id").orElseThrow();
+        JsonValue.JsonObject access = lines.stream()
+                .map(l -> (JsonValue.JsonObject) Json.parse(l.strip()))
+                .filter(o -> o.members().get("path") instanceof JsonValue.JsonString(var p) && p.equals("/accounts"))
+                .findFirst().orElseThrow(() -> new AssertionError(lines.toString()));
+        assertEquals(new JsonValue.JsonString(id), access.members().get("requestId"));
+        assertEquals(new JsonValue.JsonNumber(200), access.members().get("status"));
     }
 }

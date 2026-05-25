@@ -68,4 +68,16 @@ class RateLimitHttpTest extends ApiTestHarness {
         assertTrue(throttled.headers().firstValue("X-Request-Id").isPresent());
         assertTrue(throttled.headers().firstValue("Content-Type").orElseThrow().contains("application/json"));
     }
+
+    // Under Kubernetes the kubelet probes from the node address, which a NodePort can share with every
+    // browser behind it. A throttled probe would pull the pod out of service, so /health is never counted.
+    @Test
+    void healthStaysUpForAThrottledAddress() {
+        for (int i = 0; i < RateLimiter.MAX_AUTH_FAILURES_PER_WINDOW; i++) {
+            guess("wrong-token-attempt-" + i);
+        }
+        assertEquals(429, get("/accounts").statusCode());
+        HttpResponse<String> health = send(HttpRequest.newBuilder(base.resolve("/health")).GET().build());
+        assertEquals(200, health.statusCode());
+    }
 }

@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import dev.tally.json.Json;
 import dev.tally.json.JsonParseException;
 import dev.tally.obs.Logs;
+import dev.tally.obs.Metrics;
 import dev.tally.obs.RequestContext;
 
 import java.io.IOException;
@@ -60,6 +61,7 @@ public final class HttpKernel implements HttpHandler {
     private final Router router;
     private final StaticFileHandler staticFiles;   // null unless TALLY_STATIC_DIR is set
     private final RateLimiter rateLimiter;
+    private final Metrics metrics;
 
     public HttpKernel(Router router) {
         this(router, null);
@@ -70,9 +72,14 @@ public final class HttpKernel implements HttpHandler {
     }
 
     public HttpKernel(Router router, StaticFileHandler staticFiles, RateLimiter rateLimiter) {
+        this(router, staticFiles, rateLimiter, new Metrics());
+    }
+
+    public HttpKernel(Router router, StaticFileHandler staticFiles, RateLimiter rateLimiter, Metrics metrics) {
         this.router = router;
         this.staticFiles = staticFiles;
         this.rateLimiter = rateLimiter;
+        this.metrics = metrics;
     }
 
     @Override
@@ -89,8 +96,11 @@ public final class HttpKernel implements HttpHandler {
         Response[] holder = new Response[1];
         ScopedValue.where(RequestContext.CURRENT, ctx).run(() -> {
             Response response = throttled(exchange, route, method, rawPath, client);
-            long ms = (System.nanoTime() - startNanos) / 1_000_000;
-            logAccess(method, logPath(route, rawPath), response.status(), ms);
+            long elapsed = System.nanoTime() - startNanos;
+            logAccess(method, logPath(route, rawPath), response.status(), elapsed / 1_000_000);
+            String routeLabel = routeLabel(route, response.status());
+            metrics.httpRequests.inc(method, routeLabel, Integer.toString(response.status()));
+            metrics.httpDuration.observeNanos(elapsed, method, routeLabel);
             holder[0] = response;
         });
         write(exchange, holder[0].withHeader("X-Request-Id", ctx.requestId()));
@@ -100,8 +110,15 @@ public final class HttpKernel implements HttpHandler {
     // brute-force signal the edge gets, since Auth says nothing about why a token was rejected.
     private Response throttled(HttpExchange exchange, Router.RouteResult route, String method,
                                String rawPath, String client) {
+        // The liveness route is exempt. Kubelet probes come from the node address, which a NodePort can
+        // share with every outside caller, and a probe that sees 429 takes a healthy pod out of service.
+        // It is a fixed string with no store behind it, so there is nothing to protect.
+        if (route instanceof Router.RouteResult.Matched(var _, var _, var template) && template.equals("/health")) {
+            return dispatch(exchange, route, method, rawPath);
+        }
         RateLimiter.Decision decision = rateLimiter.check(client);
         if (!decision.allowed()) {
+            metrics.rateLimited.inc();
             return Response.error(ErrorCode.RATE_LIMITED, "too many requests, slow down and retry later")
                     .withHeader("Retry-After", Integer.toString(decision.retryAfterSeconds()));
         }
@@ -159,6 +176,16 @@ public final class HttpKernel implements HttpHandler {
     // cut down to printable ASCII so it cannot inject newlines into the log.
     private static String logPath(Router.RouteResult route, String rawPath) {
         return route instanceof Router.RouteResult.Matched(var _, var _, var template) ? template : sanitize(rawPath);
+    }
+
+    // A label value must come from a small fixed set, or every scanner probing random paths mints a new
+    // series. Unmatched paths share one label and a served static file shares another.
+    private String routeLabel(Router.RouteResult route, int status) {
+        return switch (route) {
+            case Router.RouteResult.Matched(var _, var _, var template) -> template;
+            case Router.RouteResult.MethodMismatch _ -> "unmatched";
+            case Router.RouteResult.NoRoute() -> staticFiles != null && status != 404 ? "static" : "unmatched";
+        };
     }
 
     private static String sanitize(String path) {

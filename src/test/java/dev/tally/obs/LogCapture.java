@@ -2,13 +2,14 @@ package dev.tally.obs;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * Attaches a handler to the "dev.tally" logger and collects lines formatted through LineFormatter.
+ * Attaches a handler to the "dev.tally" logger and collects lines, through LineFormatter unless told otherwise.
  * Formatting happens in publish, synchronously on the logging thread, so the request id binding is
  * still in scope and the captured lines carry the right req=.
  */
@@ -21,7 +22,10 @@ public final class LogCapture implements AutoCloseable {
     private final Handler handler;
 
     public LogCapture() {
-        LineFormatter formatter = new LineFormatter();
+        this(new LineFormatter());
+    }
+
+    public LogCapture(Formatter formatter) {
         handler = new Handler() {
             @Override
             public void publish(LogRecord record) {

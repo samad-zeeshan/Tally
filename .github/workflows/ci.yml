@@ -1,4 +1,4 @@
-# Two jobs so backend and web fail independently and run in parallel.
+# Three jobs so backend, web and the cluster fail independently and run in parallel.
 name: ci
 
 on:
@@ -59,3 +59,61 @@ jobs:
       - run: npm run typecheck
       - run: npm run test --if-present
       - run: npm run build
+
+  # The Kubernetes proof: a kind cluster built from the same script a developer runs, then the four
+  # deployment gates, then the existing integration suite against the Postgres inside the cluster.
+  k8s:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OVERLAY: ci
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Install kind and kubeconform
+        run: |
+          curl -sSLo kind https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64
+          chmod +x kind && sudo mv kind /usr/local/bin/kind
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/kubeconform
+          kind version && kubectl version --client
+      - name: Validate both overlays against the Kubernetes schemas
+        run: |
+          for overlay in local ci; do
+            kubectl kustomize "deploy/k8s/overlays/$overlay" | kubeconform -strict -summary -kubernetes-version 1.33.0
+          done
+      # Fresh random values for this run only, masked in the log, never stored.
+      - name: Write a throwaway .env
+        run: |
+          password="$(openssl rand -hex 24)"
+          token="$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          echo "::add-mask::$token"
+          {
+            echo "POSTGRES_PASSWORD=$password"
+            echo "TALLY_API_TOKEN=$token"
+          } > .env
+      - name: Create the cluster, build and load the image, apply, wait
+        run: ./scripts/k8s-up.sh
+      - name: Four deployment gates
+        run: ./scripts/k8s-gates.sh
+      - name: Integration tests against the cluster's Postgres
+        run: |
+          password="$(grep -E '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)"
+          kubectl -n tally exec tally-db-0 -- psql -U tally -d tally -c 'CREATE DATABASE tally_test'
+          kubectl -n tally port-forward pod/tally-db-0 15432:5432 >/tmp/port-forward.log 2>&1 &
+          for _ in $(seq 1 30); do (echo > /dev/tcp/127.0.0.1/15432) 2>/dev/null && break; sleep 1; done
+          export TALLY_TEST_DB_URL=jdbc:postgresql://127.0.0.1:15432/tally_test
+          export TALLY_TEST_DB_PASSWORD="$password"
+          ./mvnw -B -Pintegration verify
+      - name: Cluster state on failure
+        if: failure()
+        run: |
+          kubectl -n tally get all,pdb,hpa,pvc -o wide || true
+          kubectl -n tally describe pods || true
+          kubectl -n tally logs job/tally-migrate --tail=100 || true
+          kubectl -n tally logs -l app.kubernetes.io/name=tally-api --all-containers --tail=100 || true

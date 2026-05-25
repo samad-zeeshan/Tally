@@ -84,4 +84,4 @@ that. `docker compose up` now needs a `.env`, which is one more step for a new d
 
 ## Status
 
-Accepted.
+Accepted. Amended by ADR-0022: `GET /health` is not throttled, so a kubelet probe never sees a 429.

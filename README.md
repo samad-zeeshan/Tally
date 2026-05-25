@@ -74,6 +74,28 @@ npm run dev
 
 Copy `web/.env.example` to `web/.env.local` and set `VITE_API_TOKEN` to the backend's token. The dev server runs on http://localhost:5173 and proxies API calls to the backend on 8080.
 
+## Running it on Kubernetes
+
+The same image runs on a local [kind](https://kind.sigs.k8s.io/) cluster, with Postgres, Prometheus and Grafana beside it. You need Docker, kind and kubectl, and the same `.env` as for compose:
+
+```
+make k8s-up                     # .\scripts\k8s-up.ps1 on Windows
+make k8s-gates                  # the four deployment checks CI runs
+make k8s-down                   # deletes the cluster and the database volume
+```
+
+`k8s-up` creates a one-node cluster named `tally`, builds the image, loads it into the node, creates the Secret `tally-secrets` from `.env`, applies `deploy/k8s/overlays/local`, and waits for Postgres, the migration Job, the API, Prometheus and Grafana. Then:
+
+- http://localhost:8080 is the app, through a NodePort.
+- http://localhost:3000 is Grafana. The "Tally" dashboard opens as the home page, for an anonymous viewer.
+- http://localhost:9090 is Prometheus.
+
+What is in the cluster, all in `deploy/k8s/base`: Postgres as a StatefulSet with a volume claim, a Job that runs the migrations, the API as a Deployment of two replicas with readiness and liveness probes on `/health`, requests and limits on every container, a PodDisruptionBudget, and a HorizontalPodAutoscaler on CPU. Each API pod has an init container that waits until the Job has applied every migration, so no pod serves an old schema. The HPA needs metrics-server, which kind does not ship; run `WITH_METRICS_SERVER=1 make k8s-up` to install it. No secret is in a manifest. [ADR 0022](docs/adr/0022-kubernetes-layout.md) has the reasoning.
+
+`GET /metrics` serves Prometheus text behind the same bearer token: requests and latency per route template, transfers by outcome (`applied`, `replayed`, `rejected`), reconciliation duration, connection-pool wait, and rate-limit rejections. The metrics and the text format are written by hand, like the JSON. With `TALLY_LOG_FORMAT=json`, which the cluster sets, every log line is one JSON object, and its `requestId` is the value of the `X-Request-Id` response header. [ADR 0023](docs/adr/0023-hand-rolled-metrics-and-json-logs.md) covers both.
+
+What has run where. The machine this was written on has no Docker, so the cluster itself has not been started there. What ran locally: both overlays render with `kubectl kustomize` and pass `kubeconform -strict`, the scripts pass `bash -n` and the PowerShell parser, and a jar on the in-memory store served `/metrics` that `prometheus_client`'s parser accepts, with every log line valid JSON. The `k8s` job in `.github/workflows/ci.yml` is the proof for the rest. It runs `scripts/k8s-up.sh` on a fresh kind cluster, then `scripts/k8s-gates.sh`, which checks four things in the style of FDE-Bench: the image builds and is on the node, every workload becomes ready, a transfer and its retry return the right balances through the NodePort and show up in Prometheus, and the live objects match the overlay with probes, limits and secret references in place. Then it runs the integration suite against the Postgres inside the cluster.
+
 ## Tests
 
 ```
@@ -97,6 +119,7 @@ CI runs the same thing on every push: the backend job against a real Postgres se
 - `src/` is the Java backend: the pure ledger domain, the in-memory and Postgres stores, and the HTTP layer.
 - `web/` is the React client.
 - `db/migrations/` holds the plain SQL schema migrations.
+- `deploy/k8s/` holds the Kubernetes manifests, the kind config and the Grafana dashboard. `scripts/` holds the cluster scripts.
 - `docs/` holds the ADRs and the correctness write-up.
 
 ## License

@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongConsumer;
 
 /**
  * A fixed-size JDBC connection pool that validates on borrow and heals on give-back.
@@ -19,18 +20,25 @@ import java.util.concurrent.TimeUnit;
 public final class Pool implements AutoCloseable {
     private final DbConfig config;
     private final BlockingQueue<Connection> idle;
+    private final LongConsumer waitNanos;
 
-    private Pool(DbConfig config, BlockingQueue<Connection> idle) {
+    private Pool(DbConfig config, BlockingQueue<Connection> idle, LongConsumer waitNanos) {
         this.config = config;
         this.idle = idle;
+        this.waitNanos = waitNanos;
     }
 
     public static Pool open(DbConfig config) throws SQLException {
+        return open(config, nanos -> {});
+    }
+
+    // A plain callback, so the db package does not depend on obs. Main passes the pool-wait histogram.
+    public static Pool open(DbConfig config, LongConsumer waitNanos) throws SQLException {
         BlockingQueue<Connection> idle = new ArrayBlockingQueue<>(config.poolSize());
         for (int i = 0; i < config.poolSize(); i++) {
             idle.add(fresh(config));   // eager fill
         }
-        return new Pool(config, idle);
+        return new Pool(config, idle, waitNanos);
     }
 
     // No Class.forName: the driver self-registers through ServiceLoader.
@@ -42,7 +50,9 @@ public final class Pool implements AutoCloseable {
     // discarded and replaced with a fresh one rather than served to a borrower.
     public Connection borrow() {
         try {
+            long start = System.nanoTime();
             Connection conn = idle.poll(5, TimeUnit.SECONDS);
+            waitNanos.accept(System.nanoTime() - start);
             if (conn == null) {
                 throw new StoreException("timed out waiting for a database connection");
             }

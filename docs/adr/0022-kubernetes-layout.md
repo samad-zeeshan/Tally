@@ -63,6 +63,11 @@ does not, because no gate depends on scaling.
 The migration Job has a TTL, so it is deleted a while after it finishes. Applying the overlay again
 recreates it and it runs again, which is safe because the runner skips applied files.
 
+`GET /health` is no longer counted by the rate limiter (ADR-0021). The kubelet probes from the node
+address, and behind a NodePort the outside callers can arrive from that same address. A probe that
+gets a 429 marks a healthy pod unready. The route is a fixed string with no store behind it, so
+exempting it costs nothing.
+
 The web client is built with `TALLY_API_TOKEN` baked in, as in compose. That is still a demo
 credential (ADR-0015). The image built by the up script is local to the kind node and never pushed.
 

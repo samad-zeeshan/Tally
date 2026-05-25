@@ -8,8 +8,11 @@ import dev.tally.http.Auth;
 import dev.tally.http.Cursor;
 import dev.tally.http.HealthHandler;
 import dev.tally.http.HttpKernel;
+import dev.tally.http.MetricsHandler;
+import dev.tally.http.RateLimiter;
 import dev.tally.http.Router;
 import dev.tally.http.StaticFileHandler;
+import dev.tally.obs.Metrics;
 import dev.tally.store.Store;
 
 import java.io.IOException;
@@ -28,15 +31,21 @@ import java.util.concurrent.Executors;
 public final class ApiServer {
     private final HttpServer server;
     private final ExecutorService executor;
+    private final Metrics metrics;
 
     public ApiServer(int port, Store store, String apiToken) {
         this(port, store, apiToken, null);
     }
 
     public ApiServer(int port, Store store, String apiToken, Path staticDir) {
+        this(port, store, apiToken, staticDir, new Metrics());
+    }
+
+    public ApiServer(int port, Store store, String apiToken, Path staticDir, Metrics metrics) {
+        this.metrics = metrics;
         AccountsHandler accounts = new AccountsHandler(store, new Cursor(apiToken));
-        TransfersHandler transfers = new TransfersHandler(store);
-        ReconciliationHandler reconciliation = new ReconciliationHandler(store);
+        TransfersHandler transfers = new TransfersHandler(store, metrics);
+        ReconciliationHandler reconciliation = new ReconciliationHandler(store, metrics);
         Auth auth = new Auth(apiToken);
         Router router = new Router();
         // /health is the one open route: a liveness probe cannot carry a credential, and it answers a
@@ -49,6 +58,7 @@ public final class ApiServer {
         router.add("GET", "/accounts/{id}/statement", auth.protect(accounts::statement));
         router.add("POST", "/transfers", auth.protect(transfers::create));
         router.add("GET", "/reconciliation", auth.protect(reconciliation::report));
+        router.add("GET", "/metrics", auth.protect(new MetricsHandler(metrics)));
         try {
             server = HttpServer.create(new InetSocketAddress(port), 0);
         } catch (IOException e) {
@@ -58,11 +68,15 @@ public final class ApiServer {
         executor = Executors.newVirtualThreadPerTaskExecutor();
         server.setExecutor(executor);
         StaticFileHandler staticFiles = staticDir == null ? null : new StaticFileHandler(staticDir);
-        server.createContext("/", new HttpKernel(router, staticFiles));
+        server.createContext("/", new HttpKernel(router, staticFiles, new RateLimiter(), metrics));
     }
 
     public void start() {
         server.start();
+    }
+
+    public Metrics metrics() {
+        return metrics;
     }
 
     public int port() {

@@ -1,12 +1,13 @@
 package dev.tally.obs;
 
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Programmatic java.util.logging setup: one stderr handler with the single-line formatter, no
+ * Programmatic java.util.logging setup: one stderr handler, single-line text or JSON lines, no
  * logging.properties. Stderr, not a file, because it suits containers and dodges OneDrive's sync
  * lock on this machine. See ADR-0016.
  */
@@ -23,7 +24,7 @@ public final class Logs {
         }
         Level level = parseLevel(System.getenv("TALLY_LOG_LEVEL"));
         ConsoleHandler handler = new ConsoleHandler();   // ConsoleHandler writes to stderr
-        handler.setFormatter(new LineFormatter());
+        handler.setFormatter(formatterFor(System.getenv("TALLY_LOG_FORMAT")));
         handler.setLevel(level);
         root.setLevel(level);
         root.addHandler(handler);
@@ -31,6 +32,11 @@ public final class Logs {
 
     public static Logger get(Class<?> cls) {
         return Logger.getLogger(cls.getName());
+    }
+
+    // Line stays the default because it reads well in a terminal. The Kubernetes ConfigMap asks for json.
+    static Formatter formatterFor(String name) {
+        return "json".equalsIgnoreCase(name) ? new JsonFormatter() : new LineFormatter();
     }
 
     private static Level parseLevel(String name) {

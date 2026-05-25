@@ -1,0 +1,17 @@
+# One node is enough for a demo and for CI. The mappings bind to loopback only, the same rule compose
+# follows for Postgres, so nothing here is reachable from the network the laptop is on.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: tally
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080   # API and web client
+        hostPort: 8080
+        listenAddress: 127.0.0.1
+      - containerPort: 30300   # Grafana
+        hostPort: 3000
+        listenAddress: 127.0.0.1
+      - containerPort: 30090   # Prometheus
+        hostPort: 9090
+        listenAddress: 127.0.0.1

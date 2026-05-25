@@ -1,0 +1,18 @@
+# Settings that are safe to read in a manifest. The two secrets come from tally-secrets.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tally-config
+data:
+  TALLY_PORT: "8080"
+  TALLY_DB_URL: jdbc:postgresql://tally-db:5432/tally
+  TALLY_DB_USER: tally
+  # Two replicas of eight stay far below Postgres' default max_connections of 100, with room for the
+  # HPA's ceiling of four.
+  TALLY_DB_POOL_SIZE: "8"
+  TALLY_LOG_FORMAT: json
+  # A Job owns migrations here; the pods only wait for them.
+  TALLY_MIGRATE_ON_START: "false"
+  TALLY_MIGRATIONS_DIR: /app/db/migrations
+  # The JVM sizes its heap from the container limit, not the node's memory.
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75

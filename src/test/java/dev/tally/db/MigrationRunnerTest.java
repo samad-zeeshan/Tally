@@ -94,6 +94,24 @@ class MigrationRunnerTest {
         assertEquals(0, queryLong("SELECT count(*) FROM schema_version"));
     }
 
+    @Test
+    void pendingListsEveryFileBeforeAnyRunAndCreatesNothing() throws Exception {
+        write("001_a.sql", "CREATE TABLE a (x int);");
+        write("002_b.sql", "INSERT INTO a (x) VALUES (1);");
+        assertEquals(List.of("001_a.sql", "002_b.sql"), new MigrationRunner(conn, dir).pending());
+        // The await mode runs this in every API pod, so it must stay read-only.
+        assertFalse(regclassExists("mig_test.schema_version"));
+    }
+
+    @Test
+    void pendingNamesOnlyTheFilesNotYetRecorded() throws Exception {
+        write("001_a.sql", "CREATE TABLE a (x int);");
+        new MigrationRunner(conn, dir).run();
+        assertTrue(new MigrationRunner(conn, dir).pending().isEmpty());
+        write("002_b.sql", "INSERT INTO a (x) VALUES (1);");
+        assertEquals(List.of("002_b.sql"), new MigrationRunner(conn, dir).pending());
+    }
+
     private boolean regclassExists(String qualifiedName) throws SQLException {
         try (Statement s = conn.createStatement();
              ResultSet rs = s.executeQuery("SELECT to_regclass('" + qualifiedName + "') IS NOT NULL")) {

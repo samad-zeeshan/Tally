@@ -1,0 +1,23 @@
+# A two-core GitHub runner hosts the whole cluster, so the API asks for less CPU than on a laptop.
+# Limits stay, because the conformance gate checks that every container has them.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/kind-nodeports
+
+images:
+  - name: tally
+    newTag: ci
+
+patches:
+  - target:
+      kind: Deployment
+      name: tally-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 100m

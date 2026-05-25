@@ -5,6 +5,7 @@ import dev.tally.db.MigrationRunner;
 import dev.tally.db.Pool;
 import dev.tally.http.Auth;
 import dev.tally.obs.Logs;
+import dev.tally.obs.Metrics;
 import dev.tally.store.InMemoryStore;
 import dev.tally.store.JdbcStore;
 import dev.tally.store.Store;
@@ -12,6 +13,7 @@ import dev.tally.store.Store;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 /**
  * The composition root: pick the store from the environment, wire it behind the server, and start.
@@ -27,7 +29,8 @@ public final class Main {
         // TALLY_STATIC_DIR set (the container) serves the built client at the same origin; unset locally.
         String staticDir = System.getenv("TALLY_STATIC_DIR");
         Path staticPath = staticDir == null ? null : Path.of(staticDir);
-        ApiServer server = new ApiServer(port, openStore(), token, staticPath);
+        Metrics metrics = new Metrics();
+        ApiServer server = new ApiServer(port, openStore(metrics), token, staticPath, metrics);
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         server.start();
         System.out.println("Tally listening on port " + server.port());
@@ -54,21 +57,29 @@ public final class Main {
         System.setProperty("sun.net.httpserver.maxReqHeaderSize", "16384");   // default 384 KiB is absurd here
     }
 
+    // Under Kubernetes a Job owns migrations and the pods only wait for them (ADR-0022), because two
+    // replicas running the lock-free runner at once would race on CREATE TABLE.
+    static boolean migrateOnStart(UnaryOperator<String> getenv) {
+        return !"false".equalsIgnoreCase(getenv.apply("TALLY_MIGRATE_ON_START"));
+    }
+
     // With TALLY_DB_URL set, migrate and serve from Postgres; otherwise fall back to the in-memory store
     // so the demo runs with no database.
-    private static Store openStore() throws Exception {
+    private static Store openStore(Metrics metrics) throws Exception {
         Optional<DbConfig> config = DbConfig.fromEnv();
         if (config.isEmpty()) {
             System.out.println("TALLY_DB_URL is not set, using the in-memory store");
             return new InMemoryStore();
         }
-        Pool pool = Pool.open(config.get());
+        Pool pool = Pool.open(config.get(), metrics.poolWait::observeNanos);
         Path migrations = Path.of(System.getenv().getOrDefault("TALLY_MIGRATIONS_DIR", "db/migrations"));
-        Connection conn = pool.borrow();
-        try {
-            new MigrationRunner(conn, migrations).run();
-        } finally {
-            pool.giveBack(conn);
+        if (migrateOnStart(System::getenv)) {
+            Connection conn = pool.borrow();
+            try {
+                new MigrationRunner(conn, migrations).run();
+            } finally {
+                pool.giveBack(conn);
+            }
         }
         System.out.println("using the Postgres store at " + config.get().url());
         return new JdbcStore(pool);

@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Timeout;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,6 +33,21 @@ class PoolTest {
             assertThrows(RuntimeException.class, pool::borrow);   // the one connection is out, so this waits then fails
             pool.giveBack(held);
         }
+    }
+
+    @Test
+    @Timeout(15)
+    void everyBorrowReportsHowLongItWaited() throws SQLException {
+        List<Long> waits = new CopyOnWriteArrayList<>();
+        try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.url(), PostgresTestSupport.user(),
+                PostgresTestSupport.password(), 1), waits::add)) {
+            pool.giveBack(pool.borrow());
+            Connection held = pool.borrow();
+            assertThrows(RuntimeException.class, pool::borrow);
+            pool.giveBack(held);
+        }
+        assertEquals(3, waits.size(), "a timed-out borrow is a wait too");
+        assertTrue(waits.get(2) >= 4_000_000_000L, "the timed-out borrow waited about five seconds: " + waits);
     }
 
     @Test

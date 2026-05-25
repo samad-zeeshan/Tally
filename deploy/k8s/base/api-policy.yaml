@@ -1,0 +1,31 @@
+# A voluntary disruption, such as a node drain, may take one API pod at a time, never both.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tally-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tally-api
+---
+# Scales on CPU because the handlers are CPU bound once a transfer holds its row locks. It needs
+# metrics-server, which kind does not ship; without it the HPA holds at minReplicas. See ADR-0022.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tally-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tally-api
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
