@@ -37,4 +37,4 @@ aggregator wants JSON, or the line shapes multiply, that is the trigger to revis
 
 ## Status
 
-Accepted.
+Accepted. Amended by ADR-0023: a JSON formatter now exists behind TALLY_LOG_FORMAT=json.

@@ -8,6 +8,25 @@ Tally is a small banking service built on a double-entry ledger, with a Java bac
 
 Accounts hold balances. A transfer moves money between two accounts by writing two postings, one negative and one positive, that sum to zero. Because every movement is recorded that way, the whole book always nets to zero, and a reconciliation endpoint proves it on demand by re-deriving every balance from the postings. Each account has a paginated statement. Transfers are idempotent: the client sends a unique key with each intended transfer, and if the response is lost, retrying with the same key applies the transfer exactly once. The web client shows all of this, including a fault toggle that drops a response so you can watch the retry get deduplicated. There is also an in-app "Try it" strip that runs these flows for you.
 
+## How it works
+
+A request passes through one HTTP edge that throttles it and checks the token, then a handler, then a store that writes each transfer to Postgres in a single transaction.
+
+![Tally: system overview](docs/diagrams/overview.png)
+The main parts of the Java service, and how the Postgres or in-memory store gets picked at startup.
+
+![Tally: one transfer and its retry](docs/diagrams/main-flow.png)
+A transfer is applied once, its reply is lost, and a retry with the same idempotency key gets back the stored result.
+
+![Tally: data model](docs/diagrams/data-model.png)
+The three ledger tables from `db/migrations/001_init.sql`, plus the constraints that back the code's rules.
+
+![Tally: local deployment with docker compose](docs/diagrams/deployment.png)
+What `docker compose up --build` builds and runs, and where each secret comes from.
+
+Interactive versions with pan, zoom and theme switch (data-model.html has the theme switch only): `docs/diagrams/overview.html`, `docs/diagrams/main-flow.html`, `docs/diagrams/data-model.html`, `docs/diagrams/deployment.html`
+
+
 ## Design decisions
 
 The reasoning lives in [docs/adr/](docs/adr/), one decision per file. The ones that shape the project:

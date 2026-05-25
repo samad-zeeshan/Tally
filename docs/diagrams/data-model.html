@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tally Data Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc; --panel:#ffffff; --line:#e2e8f0; --text:#0f172a; --muted:#64748b;
+  --db:#7c3aed; --db-fill:rgba(124,58,237,.09); --db-head:rgba(124,58,237,.14);
+  --aux:#64748b; --aux-head:rgba(100,116,139,.12);
+  --pk:#b45309; --pk-fill:rgba(245,158,11,.16); --fk:#0369a1; --fk-fill:rgba(14,165,233,.14);
+  --uq:#047857; --uq-fill:rgba(16,185,129,.16); --ck:#be123c; --ck-fill:rgba(244,63,94,.12);
+  --edge:#94a3b8; --note:#ffffff; --note-line:#e2e8f0; --ndot:#059669;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#020617; --panel:#0b1220; --line:#1e293b; --text:#e2e8f0; --muted:#94a3b8;
+    --db:#a78bfa; --db-fill:rgba(76,29,149,.35); --db-head:rgba(139,92,246,.28);
+    --aux:#94a3b8; --aux-head:rgba(148,163,184,.16);
+    --pk:#fbbf24; --pk-fill:rgba(245,158,11,.18); --fk:#7dd3fc; --fk-fill:rgba(14,165,233,.18);
+    --uq:#6ee7b7; --uq-fill:rgba(16,185,129,.18); --ck:#fda4af; --ck-fill:rgba(244,63,94,.16);
+    --edge:#64748b; --note:#0f172a; --note-line:#1e293b; --ndot:#34d399;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#020617; --panel:#0b1220; --line:#1e293b; --text:#e2e8f0; --muted:#94a3b8;
+  --db:#a78bfa; --db-fill:rgba(76,29,149,.35); --db-head:rgba(139,92,246,.28);
+  --aux:#94a3b8; --aux-head:rgba(148,163,184,.16);
+  --pk:#fbbf24; --pk-fill:rgba(245,158,11,.18); --fk:#7dd3fc; --fk-fill:rgba(14,165,233,.18);
+  --uq:#6ee7b7; --uq-fill:rgba(16,185,129,.18); --ck:#fda4af; --ck-fill:rgba(244,63,94,.16);
+  --edge:#64748b; --note:#0f172a; --note-line:#1e293b; --ndot:#34d399;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+.wrap{max-width:1800px;margin:0 auto;padding:28px 16px 24px;display:flex;flex-direction:column;min-height:100%}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 20px}
+h1{font-size:24px;margin:0;display:flex;align-items:center;gap:14px;font-weight:700}
+h1::before{content:"";width:12px;height:12px;border-radius:50%;background:#0891b2}
+button{font:inherit;font-size:13px;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+svg{width:100%;height:auto;display:block}
+.foot{margin-top:12px;font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.k{display:inline-block;padding:1px 6px;border-radius:4px;font-weight:600;margin-right:6px}
+.k.pk{color:var(--pk);background:var(--pk-fill)} .k.fk{color:var(--fk);background:var(--fk-fill)}
+.k.uq{color:var(--uq);background:var(--uq-fill)} .k.ck{color:var(--ck);background:var(--ck-fill)}
+/* svg */
+.tbl .box{fill:var(--db-fill);stroke:var(--db);stroke-width:1.6}
+.tbl .head{fill:var(--db-head)}
+.tbl.aux .box{fill:none;stroke:var(--aux);stroke-dasharray:5 4}
+.tbl.aux .head{fill:var(--aux-head)}
+.tname{font-size:15px;font-weight:700;fill:var(--text)}
+.tsub{font-size:10.5px;fill:var(--muted)}
+.sep{stroke:var(--line)}
+.col{font-size:12.5px;fill:var(--text)} .col.key{font-weight:700}
+.type{font-size:11.5px;fill:var(--muted)}
+.badge.pk{fill:var(--pk-fill)} .badge.fk{fill:var(--fk-fill)} .badge.uq{fill:var(--uq-fill)} .badge.ck{fill:var(--ck-fill)}
+.btext{font-size:10.5px;font-weight:700}
+.btext.pk{fill:var(--pk)} .btext.fk{fill:var(--fk)} .btext.uq{fill:var(--uq)} .btext.ck{fill:var(--ck)}
+.edge{fill:none;stroke:var(--edge);stroke-width:1.6}
+.dot{fill:var(--edge)}
+#arr path{fill:var(--edge)}
+.elabel{font-size:11px;fill:var(--muted)}
+.note rect{fill:var(--note);stroke:var(--note-line)}
+.ndot{fill:var(--ndot)} .nnum{font-size:11px;font-weight:700;fill:#fff}
+.ntitle{font-size:13px;font-weight:700;fill:var(--text)}
+.nbody{font-size:11.5px;fill:var(--muted)}
+@media (max-width:700px){h1{font-size:18px}.panel{padding:8px;overflow-x:auto}svg{min-width:640px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Tally: data model</h1>
+  <button id="theme" type="button">Theme</button>
+</header>
+<div class="panel">
+<svg viewBox="40 50 1220 640" role="img" aria-label="Tables accounts, transfers, postings and schema_version with their keys and foreign keys">
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker></defs>
+<g class="tbl"><rect class="box" x="60" y="150" width="330" height="188" rx="10"/>
+<path class="head" d="M60 160 a10 10 0 0 1 10 -10 h310 a10 10 0 0 1 10 10 v30 h-330 z"/>
+<text class="tname" x="76" y="168">accounts</text><text class="tsub" x="76" y="182">balances, plus the world row</text>
+<text class="col key" x="76" y="208.0">id</text><text class="type" x="294" y="208.0">uuid</text>
+<rect class="badge pk" x="263.6" y="195.0" width="22.4" height="18" rx="4"/><text class="btext pk" x="274.8" y="208.0" text-anchor="middle">PK</text>
+<line class="sep" x1="70" x2="380" y1="218.0" y2="218.0"/>
+<text class="col" x="76" y="236.0">name</text><text class="type" x="294" y="236.0">text</text>
+<line class="sep" x1="70" x2="380" y1="246.0" y2="246.0"/>
+<text class="col" x="76" y="264.0">allow_negative</text><text class="type" x="294" y="264.0">boolean</text>
+<line class="sep" x1="70" x2="380" y1="274.0" y2="274.0"/>
+<text class="col" x="76" y="292.0">balance_minor</text><text class="type" x="294" y="292.0">bigint</text>
+<rect class="badge ck" x="242.0" y="279.0" width="44.0" height="18" rx="4"/><text class="btext ck" x="264.0" y="292.0" text-anchor="middle">CHECK</text>
+<line class="sep" x1="70" x2="380" y1="302.0" y2="302.0"/>
+<text class="col" x="76" y="320.0">created_at</text><text class="type" x="294" y="320.0">timestamptz</text>
+</g>
+<g class="tbl"><rect class="box" x="480" y="70" width="360" height="272" rx="10"/>
+<path class="head" d="M480 80 a10 10 0 0 1 10 -10 h340 a10 10 0 0 1 10 10 v30 h-360 z"/>
+<text class="tname" x="496" y="88">transfers</text><text class="tsub" x="496" y="102">one row per idempotency key</text>
+<text class="col key" x="496" y="128.0">id</text><text class="type" x="744" y="128.0">uuid</text>
+<rect class="badge pk" x="713.6" y="115.0" width="22.4" height="18" rx="4"/><text class="btext pk" x="724.8" y="128.0" text-anchor="middle">PK</text>
+<line class="sep" x1="490" x2="830" y1="138.0" y2="138.0"/>
+<text class="col" x="496" y="156.0">idempotency_key</text><text class="type" x="744" y="156.0">text</text>
+<rect class="badge uq" x="713.6" y="143.0" width="22.4" height="18" rx="4"/><text class="btext uq" x="724.8" y="156.0" text-anchor="middle">UQ</text>
+<line class="sep" x1="490" x2="830" y1="166.0" y2="166.0"/>
+<text class="col" x="496" y="184.0">request_fingerprint</text><text class="type" x="744" y="184.0">text</text>
+<line class="sep" x1="490" x2="830" y1="194.0" y2="194.0"/>
+<text class="col" x="496" y="212.0">from_account_id</text><text class="type" x="744" y="212.0">uuid</text>
+<rect class="badge fk" x="713.6" y="199.0" width="22.4" height="18" rx="4"/><text class="btext fk" x="724.8" y="212.0" text-anchor="middle">FK</text>
+<line class="sep" x1="490" x2="830" y1="222.0" y2="222.0"/>
+<text class="col" x="496" y="240.0">to_account_id</text><text class="type" x="744" y="240.0">uuid</text>
+<rect class="badge fk" x="713.6" y="227.0" width="22.4" height="18" rx="4"/><text class="btext fk" x="724.8" y="240.0" text-anchor="middle">FK</text>
+<line class="sep" x1="490" x2="830" y1="250.0" y2="250.0"/>
+<text class="col" x="496" y="268.0">amount_minor</text><text class="type" x="744" y="268.0">bigint</text>
+<rect class="badge ck" x="706.4" y="255.0" width="29.6" height="18" rx="4"/><text class="btext ck" x="721.2" y="268.0" text-anchor="middle">&gt; 0</text>
+<line class="sep" x1="490" x2="830" y1="278.0" y2="278.0"/>
+<text class="col" x="496" y="296.0">status</text><text class="type" x="744" y="296.0">text</text>
+<rect class="badge ck" x="692.0" y="283.0" width="44.0" height="18" rx="4"/><text class="btext ck" x="714.0" y="296.0" text-anchor="middle">CHECK</text>
+<line class="sep" x1="490" x2="830" y1="306.0" y2="306.0"/>
+<text class="col" x="496" y="324.0">created_at</text><text class="type" x="744" y="324.0">timestamptz</text>
+</g>
+<g class="tbl"><rect class="box" x="480" y="420" width="360" height="216" rx="10"/>
+<path class="head" d="M480 430 a10 10 0 0 1 10 -10 h340 a10 10 0 0 1 10 10 v30 h-360 z"/>
+<text class="tname" x="496" y="438">postings</text><text class="tsub" x="496" y="452">signed legs, two per applied transfer</text>
+<text class="col key" x="496" y="478.0">id</text><text class="type" x="744" y="478.0">bigserial</text>
+<rect class="badge pk" x="713.6" y="465.0" width="22.4" height="18" rx="4"/><text class="btext pk" x="724.8" y="478.0" text-anchor="middle">PK</text>
+<line class="sep" x1="490" x2="830" y1="488.0" y2="488.0"/>
+<text class="col" x="496" y="506.0">transfer_id</text><text class="type" x="744" y="506.0">uuid</text>
+<rect class="badge fk" x="713.6" y="493.0" width="22.4" height="18" rx="4"/><text class="btext fk" x="724.8" y="506.0" text-anchor="middle">FK</text>
+<line class="sep" x1="490" x2="830" y1="516.0" y2="516.0"/>
+<text class="col" x="496" y="534.0">account_id</text><text class="type" x="744" y="534.0">uuid</text>
+<rect class="badge fk" x="713.6" y="521.0" width="22.4" height="18" rx="4"/><text class="btext fk" x="724.8" y="534.0" text-anchor="middle">FK</text>
+<line class="sep" x1="490" x2="830" y1="544.0" y2="544.0"/>
+<text class="col" x="496" y="562.0">amount_minor</text><text class="type" x="744" y="562.0">bigint</text>
+<rect class="badge ck" x="699.2" y="549.0" width="36.8" height="18" rx="4"/><text class="btext ck" x="717.6" y="562.0" text-anchor="middle">&lt;&gt; 0</text>
+<line class="sep" x1="490" x2="830" y1="572.0" y2="572.0"/>
+<text class="col" x="496" y="590.0">balance_after_minor</text><text class="type" x="744" y="590.0">bigint</text>
+<line class="sep" x1="490" x2="830" y1="600.0" y2="600.0"/>
+<text class="col" x="496" y="618.0">created_at</text><text class="type" x="744" y="618.0">timestamptz</text>
+</g>
+<g class="tbl aux"><rect class="box" x="60" y="560" width="330" height="104" rx="10"/>
+<path class="head" d="M60 570 a10 10 0 0 1 10 -10 h310 a10 10 0 0 1 10 10 v30 h-330 z"/>
+<text class="tname" x="76" y="578">schema_version</text><text class="tsub" x="76" y="592">written by MigrationRunner.java</text>
+<text class="col key" x="76" y="618.0">version</text><text class="type" x="294" y="618.0">text</text>
+<rect class="badge pk" x="263.6" y="605.0" width="22.4" height="18" rx="4"/><text class="btext pk" x="274.8" y="618.0" text-anchor="middle">PK</text>
+<line class="sep" x1="70" x2="380" y1="628.0" y2="628.0"/>
+<text class="col" x="76" y="646.0">applied_at</text><text class="type" x="294" y="646.0">timestamptz</text>
+</g>
+<path class="edge" d="M480 208.0 H430 V204.0 H392" marker-end="url(#arr)"/>
+<path class="edge" d="M480 236.0 H430 V208.0"/>
+<circle class="dot" cx="480" cy="208.0" r="3.5"/><circle class="dot" cx="480" cy="236.0" r="3.5"/>
+<text class="elabel" x="394" y="194.0">from, to</text>
+<path class="edge" d="M480 530.0 H290 V340" marker-end="url(#arr)"/><circle class="dot" cx="480" cy="530.0" r="3.5"/>
+<text class="elabel" x="300" y="522.0">account_id</text>
+<path class="edge" d="M840 502.0 H874 V124.0 H842" marker-end="url(#arr)"/><circle class="dot" cx="840" cy="502.0" r="3.5"/>
+<text class="elabel" x="846" y="313.0">2:1</text>
+<g class="note"><rect x="910" y="70" width="330" height="114" rx="10"/><circle class="ndot" cx="930" cy="92" r="10"/><text class="nnum" x="930" y="96" text-anchor="middle">1</text><text class="ntitle" x="948" y="97">Idempotency lives here</text>
+<text class="nbody" x="926" y="120">idempotency_key is UNIQUE. A retry finds the</text>
+<text class="nbody" x="926" y="137">row and replays it. If two requests race,</text>
+<text class="nbody" x="926" y="154">INSERT ... ON CONFLICT DO NOTHING picks one</text>
+<text class="nbody" x="926" y="171">winner.</text>
+</g>
+<g class="note"><rect x="910" y="215" width="330" height="114" rx="10"/><circle class="ndot" cx="930" cy="237" r="10"/><text class="nnum" x="930" y="241" text-anchor="middle">2</text><text class="ntitle" x="948" y="242">Only world may go negative</text>
+<text class="nbody" x="926" y="265">CHECK (balance_minor &gt;= 0 OR</text>
+<text class="nbody" x="926" y="282">allow_negative). The world row (nil UUID)</text>
+<text class="nbody" x="926" y="299">funds every opening balance, so all balances</text>
+<text class="nbody" x="926" y="316">sum to zero.</text>
+</g>
+<g class="note"><rect x="910" y="360" width="330" height="114" rx="10"/><circle class="ndot" cx="930" cy="382" r="10"/><text class="nnum" x="930" y="386" text-anchor="middle">3</text><text class="ntitle" x="948" y="387">Two legs that sum to zero</text>
+<text class="nbody" x="926" y="410">An applied transfer writes a debit and a</text>
+<text class="nbody" x="926" y="427">credit posting. A transfer with status</text>
+<text class="nbody" x="926" y="444">insufficient_funds writes no postings but</text>
+<text class="nbody" x="926" y="461">keeps the key.</text>
+</g>
+<g class="note"><rect x="910" y="505" width="330" height="97" rx="10"/><circle class="ndot" cx="930" cy="527" r="10"/><text class="nnum" x="930" y="531" text-anchor="middle">4</text><text class="ntitle" x="948" y="532">Statements and audits</text>
+<text class="nbody" x="926" y="555">Index (account_id, id) serves keyset paging.</text>
+<text class="nbody" x="926" y="572">Reconciliation sums postings per account and</text>
+<text class="nbody" x="926" y="589">compares with balance_minor.</text>
+</g>
+</svg>
+<div class="foot">
+  <span><span class="k pk">PK</span>primary key</span>
+  <span><span class="k fk">FK</span>foreign key (dot marks the referencing side)</span>
+  <span><span class="k uq">UQ</span>unique</span>
+  <span><span class="k ck">CHECK</span>database constraint</span>
+  <span>Source: db/migrations/001_init.sql</span>
+</div>
+</div>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='tally-er-theme';
+  try{var saved=localStorage.getItem(key); if(saved) root.setAttribute('data-theme',saved);}catch(e){}
+  var q=new URLSearchParams(location.search).get('theme'); if(q) root.setAttribute('data-theme',q);
+  document.getElementById('theme').addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem(key,next);}catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

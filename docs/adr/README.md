@@ -27,3 +27,5 @@ commit that changed the code.
 | 0019 | One idempotency key per intended transfer | web |
 | 0020 | CI on real Postgres, one shaded jar, the app serves the client | ops |
 | 0021 | Rate limits, security headers, and signed cursors | http |
+| 0022 | Kubernetes layout: plain manifests, kind, and a migration job | ops |
+| 0023 | Hand-rolled Prometheus metrics and JSON log lines | obs |
