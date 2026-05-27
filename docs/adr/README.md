@@ -29,3 +29,4 @@ commit that changed the code.
 | 0021 | Rate limits, security headers, and signed cursors | http |
 | 0022 | Kubernetes layout: plain manifests, kind, and a migration job | ops |
 | 0023 | Hand-rolled Prometheus metrics and JSON log lines | obs |
+| 0024 | Asynchronous fraud scoring in the same service | fraud |

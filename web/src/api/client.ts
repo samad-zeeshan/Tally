@@ -2,7 +2,15 @@
 // safe-integer guard; the bundled token is a demo-only credential (noted where it is read); and replayed
 // is read from the Idempotency-Replayed header, never the status, because a replay repeats the 201.
 import { classify, messageFor, type FailureKind } from "./errors";
-import type { Account, ApiErrorBody, ReconciliationReport, StatementPage, Transfer, TransferRequest } from "./types";
+import type {
+  Account,
+  ApiErrorBody,
+  ReconciliationReport,
+  RiskReport,
+  StatementPage,
+  Transfer,
+  TransferRequest,
+} from "./types";
 
 export class ApiError extends Error {
   readonly kind: FailureKind;
@@ -153,6 +161,29 @@ export async function getReconciliation(): Promise<ReconciliationReport> {
       storedBalanceMinor: safeAmount(drift.storedBalanceMinor, response.status),
       derivedBalanceMinor: safeAmount(drift.derivedBalanceMinor, response.status),
       driftMinor: safeAmount(drift.driftMinor, response.status),
+    })),
+  };
+}
+
+export async function getRisk(accountId: string): Promise<RiskReport> {
+  const response = await send(`${BASE}/accounts/${accountId}/risk`, { headers: authHeaders() });
+  if (!response.ok) {
+    await fail(response);
+  }
+  const raw = (await response.json()) as any;
+  return {
+    accountId: raw.accountId,
+    flagThreshold: raw.flagThreshold,
+    scores: (raw.scores as any[]).map((score) => ({
+      postingId: score.postingId,
+      transferId: score.transferId,
+      counterpartyAccountId: score.counterpartyAccountId,
+      amountMinor: safeAmount(score.amountMinor, response.status),
+      score: score.score,
+      flagged: score.flagged,
+      rules: score.rules,
+      eventAt: score.eventAt,
+      scoredAt: score.scoredAt,
     })),
   };
 }

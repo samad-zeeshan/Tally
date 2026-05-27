@@ -109,7 +109,7 @@ public final class UnorderedLockStore implements Store {
         long newTo = Math.addExact(to.balanceMinor(), amount);
         accounts.put(from.id(), new Account(from.id(), from.name(), newFrom, from.allowNegative(), from.createdAt()));
         accounts.put(to.id(), new Account(to.id(), to.name(), newTo, to.allowNegative(), to.createdAt()));
-        return new TransferOutcome.Applied(TransferId.newId(), newFrom, newTo, Instant.now());
+        return new TransferOutcome.Applied(TransferId.newId(), newFrom, newTo, Instant.now(), 0, 0);
     }
 
     private ReentrantLock lockFor(AccountId id) {

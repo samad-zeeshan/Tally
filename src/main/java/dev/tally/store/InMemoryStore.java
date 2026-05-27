@@ -239,8 +239,9 @@ public final class InMemoryStore implements Store {
                 long newFrom = balanceOf(updated, request.from());
                 long newTo = balanceOf(updated, request.to());
                 Instant at = Instant.now();
-                recordPostings(transfer.id(), request.from(), request.to(), request.amountMinor(), newFrom, newTo, at);
-                yield new TransferOutcome.Applied(transfer.id(), newFrom, newTo, at);
+                long[] postingIds = recordPostings(transfer.id(), request.from(), request.to(),
+                        request.amountMinor(), newFrom, newTo, at);
+                yield new TransferOutcome.Applied(transfer.id(), newFrom, newTo, at, postingIds[0], postingIds[1]);
             }
             case Ledger.Result.InsufficientFunds(var account, var balance, var requested) ->
                     new TransferOutcome.InsufficientFunds(account, balance, requested);
@@ -250,13 +251,15 @@ public final class InMemoryStore implements Store {
         };
     }
 
-    // Two postings per transfer, appended under the account locks so per-account postingIds ascend.
-    private void recordPostings(TransferId transferId, AccountId from, AccountId to, long amount,
-                                long newFrom, long newTo, Instant at) {
+    // Two postings per transfer, appended under the account locks so per-account postingIds ascend. The
+    // ids come back as debit then credit; they need not be consecutive, another transfer can take one between.
+    private long[] recordPostings(TransferId transferId, AccountId from, AccountId to, long amount,
+                                  long newFrom, long newTo, Instant at) {
         long fromPostingId = postingSeq.getAndIncrement();
         long toPostingId = postingSeq.getAndIncrement();
         journalFor(from).add(new StatementLine(fromPostingId, transferId, to, -amount, newFrom, at));
         journalFor(to).add(new StatementLine(toPostingId, transferId, from, amount, newTo, at));
+        return new long[] {fromPostingId, toPostingId};
     }
 
     private List<StatementLine> journalFor(AccountId id) {

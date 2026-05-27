@@ -118,7 +118,7 @@ public final class NaiveInMemoryStore implements Store {
         long newTo = Math.addExact(to.balanceMinor(), amount);
         accounts.put(from.id(), new Account(from.id(), from.name(), newFrom, from.allowNegative(), from.createdAt()));
         accounts.put(to.id(), new Account(to.id(), to.name(), newTo, to.allowNegative(), to.createdAt()));
-        TransferOutcome applied = new TransferOutcome.Applied(TransferId.newId(), newFrom, newTo, Instant.now());
+        TransferOutcome applied = new TransferOutcome.Applied(TransferId.newId(), newFrom, newTo, Instant.now(), 0, 0);
         idempotency.put(request.idempotencyKey(), applied);
         return applied;
     }

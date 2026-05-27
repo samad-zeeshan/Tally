@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -146,5 +148,27 @@ class RateLimiterTest {
         pool.shutdownNow();
         assertEquals(RateLimiter.MAX_REQUESTS_PER_WINDOW, allowed.get(),
                 "exactly the budget, no more from a race and no fewer");
+    }
+
+    // The offline fraud evaluation replays thousands of transfers from one address, so the budget can be
+    // raised from the environment. Unset keeps the default, and a nonsense value stops startup.
+    @Test
+    void theRequestBudgetCanBeSetFromTheEnvironment() {
+        assertEquals(RateLimiter.MAX_REQUESTS_PER_WINDOW, RateLimiter.fromEnv(Map.<String, String>of()::get).maxRequestsPerWindow());
+        assertEquals(5_000, RateLimiter.fromEnv(Map.of("TALLY_RATE_LIMIT_PER_MINUTE", "5000")::get).maxRequestsPerWindow());
+        assertThrows(IllegalStateException.class, () -> RateLimiter.fromEnv(Map.of("TALLY_RATE_LIMIT_PER_MINUTE", "0")::get));
+        assertThrows(IllegalStateException.class, () -> RateLimiter.fromEnv(Map.of("TALLY_RATE_LIMIT_PER_MINUTE", "lots")::get));
+    }
+
+    @Test
+    void aConfiguredBudgetReplacesTheDefault() {
+        RateLimiter generous = new RateLimiter(now::get, 1_000);
+        int allowed = 0;
+        for (int i = 0; i < 1_001; i++) {
+            if (generous.check("10.0.0.9").allowed()) {
+                allowed++;
+            }
+        }
+        assertEquals(1_000, allowed);
     }
 }

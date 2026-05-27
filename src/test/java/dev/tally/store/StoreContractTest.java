@@ -123,6 +123,29 @@ abstract class StoreContractTest {
         assertEquals(0, balance(store, b.id()));
     }
 
+    // The fraud scorer keys its scores on the debit posting id (ADR-0024), so an Applied outcome has to
+    // name its two postings, and a replay has to name the same two.
+    @Test
+    void appliedNamesItsDebitAndCreditPostings() {
+        Store store = newStore();
+        Account a = store.createAccount("a", 1000);
+        Account b = store.createAccount("b", 0);
+        TransferRequest request = new TransferRequest(key(), a.id(), b.id(), 300);
+        TransferOutcome.Applied applied = assertInstanceOf(TransferOutcome.Applied.class, store.apply(request));
+
+        StatementLine debit = store.statement(a.id(), Long.MAX_VALUE, 1).entries().getFirst();
+        StatementLine credit = store.statement(b.id(), Long.MAX_VALUE, 1).entries().getFirst();
+        assertEquals(debit.postingId(), applied.debitPostingId());
+        assertEquals(-300, debit.amountMinor());
+        assertEquals(credit.postingId(), applied.creditPostingId());
+        assertEquals(300, credit.amountMinor());
+
+        TransferOutcome.Replayed replayed = assertInstanceOf(TransferOutcome.Replayed.class, store.apply(request));
+        TransferOutcome.Applied first = assertInstanceOf(TransferOutcome.Applied.class, replayed.first());
+        assertEquals(applied.debitPostingId(), first.debitPostingId());
+        assertEquals(applied.creditPostingId(), first.creditPostingId());
+    }
+
     @Test
     void replaySameKeyReturnsFirstOutcomeAndMovesNothing() {
         Store store = newStore();

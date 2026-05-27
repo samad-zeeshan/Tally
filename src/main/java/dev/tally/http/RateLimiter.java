@@ -3,6 +3,7 @@ package dev.tally.http;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongSupplier;
+import java.util.function.UnaryOperator;
 
 /**
  * A per-address throttle the kernel consults before it dispatches. Two budgets share one window: a
@@ -41,15 +42,48 @@ public final class RateLimiter {
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
     private final LongSupplier clock;
     private final AtomicLong lastSweepMillis;
+    private final int maxRequestsPerWindow;
 
     public RateLimiter() {
         this(System::currentTimeMillis);
     }
 
+    public RateLimiter(int maxRequestsPerWindow) {
+        this(System::currentTimeMillis, maxRequestsPerWindow);
+    }
+
     // The clock is injected so a test can roll a window without sleeping through it.
     RateLimiter(LongSupplier clock) {
+        this(clock, MAX_REQUESTS_PER_WINDOW);
+    }
+
+    RateLimiter(LongSupplier clock, int maxRequestsPerWindow) {
         this.clock = clock;
         this.lastSweepMillis = new AtomicLong(clock.getAsLong());
+        this.maxRequestsPerWindow = maxRequestsPerWindow;
+    }
+
+    // Only the request budget is configurable. The offline fraud evaluation replays thousands of transfers
+    // from one address and needs it raised; the failed-auth budget has no such reason and stays fixed.
+    public static RateLimiter fromEnv(UnaryOperator<String> getenv) {
+        String raw = getenv.apply("TALLY_RATE_LIMIT_PER_MINUTE");
+        if (raw == null) {
+            return new RateLimiter();
+        }
+        int max;
+        try {
+            max = Integer.parseInt(raw.strip());
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("TALLY_RATE_LIMIT_PER_MINUTE must be a whole number, got " + raw);
+        }
+        if (max < 1) {
+            throw new IllegalStateException("TALLY_RATE_LIMIT_PER_MINUTE must be at least 1, got " + raw);
+        }
+        return new RateLimiter(max);
+    }
+
+    public int maxRequestsPerWindow() {
+        return maxRequestsPerWindow;
     }
 
     /** Count one request from this address and say whether to serve it. */
@@ -69,7 +103,7 @@ public final class RateLimiter {
         synchronized (window) {
             rollIfExpired(window, now);
             window.requests++;
-            if (window.requests > MAX_REQUESTS_PER_WINDOW || window.authFailures >= MAX_AUTH_FAILURES_PER_WINDOW) {
+            if (window.requests > maxRequestsPerWindow || window.authFailures >= MAX_AUTH_FAILURES_PER_WINDOW) {
                 return new Decision(false, retryAfterSeconds(now, window.startMillis));
             }
             return ALLOWED;

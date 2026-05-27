@@ -319,9 +319,10 @@ public final class JdbcStore implements Store {
         updateBalance(conn, from, fromAfter);
         midTransferFault.run();   // the widest half-applied window, between the two balance updates
         updateBalance(conn, to, toAfter);
-        insertPostings(conn, transferId, from, -amount, fromAfter, to, amount, toAfter);
+        long[] postingIds = insertPostings(conn, transferId, from, -amount, fromAfter, to, amount, toAfter);
         conn.commit();
-        return new TransferOutcome.Applied(new TransferId(transferId), fromAfter, toAfter, createdAt);
+        return new TransferOutcome.Applied(new TransferId(transferId), fromAfter, toAfter, createdAt,
+                postingIds[0], postingIds[1]);
     }
 
     private TransferOutcome replayFromCommitted(Connection conn, TransferRequest request, String fingerprint) throws SQLException {
@@ -353,9 +354,11 @@ public final class JdbcStore implements Store {
         UUID transferId = transferRow.getObject("id", UUID.class);
         long fromAfter = 0;
         long toAfter = 0;
+        long debitPostingId = 0;
+        long creditPostingId = 0;
         Instant at = null;
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT p.account_id, p.balance_after_minor, t.created_at "
+                "SELECT p.id, p.account_id, p.balance_after_minor, t.created_at "
                         + "FROM postings p JOIN transfers t ON t.id = p.transfer_id WHERE p.transfer_id = ?")) {
             ps.setObject(1, transferId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -364,13 +367,16 @@ public final class JdbcStore implements Store {
                     at = rs.getObject("created_at", OffsetDateTime.class).toInstant();
                     if (account.equals(request.from().value())) {
                         fromAfter = rs.getLong("balance_after_minor");
+                        debitPostingId = rs.getLong("id");
                     } else if (account.equals(request.to().value())) {
                         toAfter = rs.getLong("balance_after_minor");
+                        creditPostingId = rs.getLong("id");
                     }
                 }
             }
         }
-        return new TransferOutcome.Replayed(new TransferOutcome.Applied(new TransferId(transferId), fromAfter, toAfter, at));
+        return new TransferOutcome.Replayed(new TransferOutcome.Applied(new TransferId(transferId), fromAfter, toAfter, at,
+                debitPostingId, creditPostingId));
     }
 
     private Long lockBalance(Connection conn, UUID id) throws SQLException {
@@ -400,11 +406,13 @@ public final class JdbcStore implements Store {
         }
     }
 
-    private void insertPostings(Connection conn, UUID transferId, UUID fromId, long fromAmount, long fromAfter,
-                                UUID toId, long toAmount, long toAfter) throws SQLException {
+    // Returns the debit and credit posting ids. RETURNING rows are matched by account, not by position,
+    // because Postgres does not promise that a multi-row VALUES returns its rows in the order written.
+    private long[] insertPostings(Connection conn, UUID transferId, UUID fromId, long fromAmount, long fromAfter,
+                                  UUID toId, long toAmount, long toAfter) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO postings (transfer_id, account_id, amount_minor, balance_after_minor) "
-                        + "VALUES (?, ?, ?, ?), (?, ?, ?, ?)")) {
+                        + "VALUES (?, ?, ?, ?), (?, ?, ?, ?) RETURNING id, account_id")) {
             ps.setObject(1, transferId);
             ps.setObject(2, fromId);
             ps.setLong(3, fromAmount);
@@ -413,7 +421,13 @@ public final class JdbcStore implements Store {
             ps.setObject(6, toId);
             ps.setLong(7, toAmount);
             ps.setLong(8, toAfter);
-            ps.executeUpdate();
+            long[] ids = new long[2];
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids[rs.getObject("account_id", UUID.class).equals(fromId) ? 0 : 1] = rs.getLong("id");
+                }
+            }
+            return ids;
         }
     }
 

@@ -40,6 +40,14 @@ abstract class ApiTestHarness {
         server.stop();
     }
 
+    // For tests that need a server wired differently, a stuck fraud scorer for one. Replaces the default.
+    protected void useServer(ApiServer replacement) {
+        server.stop();
+        server = replacement;
+        server.start();
+        base = URI.create("http://127.0.0.1:" + server.port());
+    }
+
     protected HttpResponse<String> get(String path) {
         return send(HttpRequest.newBuilder(base.resolve(path)).header("Authorization", "Bearer " + TOKEN).GET().build());
     }

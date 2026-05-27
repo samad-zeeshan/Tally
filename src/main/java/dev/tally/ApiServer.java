@@ -3,7 +3,9 @@ package dev.tally;
 import com.sun.net.httpserver.HttpServer;
 import dev.tally.api.AccountsHandler;
 import dev.tally.api.ReconciliationHandler;
+import dev.tally.api.RiskHandler;
 import dev.tally.api.TransfersHandler;
+import dev.tally.fraud.FraudScoring;
 import dev.tally.http.Auth;
 import dev.tally.http.Cursor;
 import dev.tally.http.HealthHandler;
@@ -32,6 +34,7 @@ public final class ApiServer {
     private final HttpServer server;
     private final ExecutorService executor;
     private final Metrics metrics;
+    private final FraudScoring fraud;
 
     public ApiServer(int port, Store store, String apiToken) {
         this(port, store, apiToken, null);
@@ -42,9 +45,17 @@ public final class ApiServer {
     }
 
     public ApiServer(int port, Store store, String apiToken, Path staticDir, Metrics metrics) {
+        this(port, store, apiToken, staticDir, metrics, FraudScoring.inMemory(metrics), new RateLimiter());
+    }
+
+    // The server owns the fraud scoring from here on and closes it in stop.
+    public ApiServer(int port, Store store, String apiToken, Path staticDir, Metrics metrics,
+                     FraudScoring fraud, RateLimiter rateLimiter) {
         this.metrics = metrics;
+        this.fraud = fraud;
         AccountsHandler accounts = new AccountsHandler(store, new Cursor(apiToken));
-        TransfersHandler transfers = new TransfersHandler(store, metrics);
+        TransfersHandler transfers = new TransfersHandler(store, metrics, fraud, fraud.replayClock());
+        RiskHandler risk = new RiskHandler(store, fraud);
         ReconciliationHandler reconciliation = new ReconciliationHandler(store, metrics);
         Auth auth = new Auth(apiToken);
         Router router = new Router();
@@ -56,6 +67,7 @@ public final class ApiServer {
         router.add("GET", "/accounts", auth.protect(accounts::list));
         router.add("GET", "/accounts/{id}", auth.protect(accounts::get));
         router.add("GET", "/accounts/{id}/statement", auth.protect(accounts::statement));
+        router.add("GET", "/accounts/{id}/risk", auth.protect(risk::latest));
         router.add("POST", "/transfers", auth.protect(transfers::create));
         router.add("GET", "/reconciliation", auth.protect(reconciliation::report));
         router.add("GET", "/metrics", auth.protect(new MetricsHandler(metrics)));
@@ -68,7 +80,7 @@ public final class ApiServer {
         executor = Executors.newVirtualThreadPerTaskExecutor();
         server.setExecutor(executor);
         StaticFileHandler staticFiles = staticDir == null ? null : new StaticFileHandler(staticDir);
-        server.createContext("/", new HttpKernel(router, staticFiles, new RateLimiter(), metrics));
+        server.createContext("/", new HttpKernel(router, staticFiles, rateLimiter, metrics));
     }
 
     public void start() {
@@ -79,6 +91,10 @@ public final class ApiServer {
         return metrics;
     }
 
+    public FraudScoring fraud() {
+        return fraud;
+    }
+
     public int port() {
         return server.getAddress().getPort();
     }
@@ -87,5 +103,6 @@ public final class ApiServer {
     public void stop() {
         server.stop(0);
         executor.close();
+        fraud.close();
     }
 }

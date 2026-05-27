@@ -37,6 +37,12 @@ public final class Metrics {
             "Time a request waited for a database connection.", POOL_WAIT_BUCKETS));
     public final Counter rateLimited = add(new Counter("tally_rate_limited_total",
             "Requests refused with 429 by the per-address throttle."));
+    public final Counter fraudPostings = add(new Counter("tally_fraud_postings_total",
+            "Applied postings seen by the fraud scorer, by result: scored, duplicate, failed or dropped.", "result"));
+    public final Counter fraudRulesFired = add(new Counter("tally_fraud_rules_fired_total",
+            "Fraud rules that added points to a score, by rule.", "rule"));
+    public final Counter fraudFlagged = add(new Counter("tally_fraud_flagged_total",
+            "Scored postings at or above the flag threshold."));
 
     public void gauge(String name, String help, LongSupplier value) {
         add(new Gauge(name, help, value));

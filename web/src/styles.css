@@ -774,6 +774,96 @@ select[aria-invalid="true"] {
   font-family: inherit;
 }
 
+/* Fraud scores under the statement. The score badge carries the level in colour and the number in text,
+   so the level never depends on colour alone. */
+.risk {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.risk-title {
+  margin: 0;
+  font-size: var(--font-s);
+  font-weight: 600;
+}
+
+.risk-caption,
+.risk-empty {
+  margin: var(--space-1) 0 var(--space-3);
+  color: var(--muted);
+  font-size: var(--font-xs);
+}
+
+.risk-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.risk-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+}
+
+.risk-score {
+  grid-row: span 2;
+  min-width: 2.4rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-s);
+  text-align: center;
+  font-weight: 700;
+  font-size: var(--font-s);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.risk-score.watch {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.risk-score.flagged {
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+
+.risk-what {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-size: var(--font-s);
+}
+
+.risk-what time {
+  color: var(--muted);
+  font-size: var(--font-xs);
+}
+
+.risk-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.risk-rule {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: var(--font-2xs);
+  color: var(--text);
+}
+
+.risk-rule.none {
+  color: var(--muted);
+}
+
 .load-more-row {
   display: flex;
   justify-content: center;

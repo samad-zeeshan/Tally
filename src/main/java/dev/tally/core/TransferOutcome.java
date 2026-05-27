@@ -10,8 +10,9 @@ import java.time.Instant;
  * InsufficientFunds are ever recorded; the other four are never stored.
  */
 public sealed interface TransferOutcome {
-    record Applied(TransferId id, long fromBalanceAfter, long toBalanceAfter, Instant at)
-            implements TransferOutcome {}
+    // The two posting ids let a later reader, the fraud scorer, key on the exact rows this wrote.
+    record Applied(TransferId id, long fromBalanceAfter, long toBalanceAfter, Instant at,
+                   long debitPostingId, long creditPostingId) implements TransferOutcome {}
 
     record InsufficientFunds(AccountId account, long balanceMinor, long requestedMinor)
             implements TransferOutcome {}

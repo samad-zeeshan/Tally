@@ -54,6 +54,24 @@ export interface ReconciliationReport {
   drifts: Drift[];
 }
 
+export interface RiskScore {
+  postingId: number;
+  transferId: string;
+  counterpartyAccountId: string;
+  amountMinor: MinorUnits; // the payment out, always positive
+  score: number; // 0 to 100, points not money
+  flagged: boolean;
+  rules: string[];
+  eventAt: string;
+  scoredAt: string;
+}
+
+export interface RiskReport {
+  accountId: string;
+  flagThreshold: number;
+  scores: RiskScore[];
+}
+
 // The wire envelope is {"error": {...}}; this is the INNER object only. client.ts reads response.error into it.
 export interface ApiErrorBody {
   code: string;

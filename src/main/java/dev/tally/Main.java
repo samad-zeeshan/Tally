@@ -3,7 +3,13 @@ package dev.tally;
 import dev.tally.db.DbConfig;
 import dev.tally.db.MigrationRunner;
 import dev.tally.db.Pool;
+import dev.tally.fraud.FraudScoring;
+import dev.tally.fraud.InMemoryScoreStore;
+import dev.tally.fraud.JdbcScoreStore;
+import dev.tally.fraud.Rules;
+import dev.tally.fraud.ScoreStore;
 import dev.tally.http.Auth;
+import dev.tally.http.RateLimiter;
 import dev.tally.obs.Logs;
 import dev.tally.obs.Metrics;
 import dev.tally.store.InMemoryStore;
@@ -30,7 +36,15 @@ public final class Main {
         String staticDir = System.getenv("TALLY_STATIC_DIR");
         Path staticPath = staticDir == null ? null : Path.of(staticDir);
         Metrics metrics = new Metrics();
-        ApiServer server = new ApiServer(port, openStore(metrics), token, staticPath, metrics);
+        Storage storage = openStorage(metrics);
+        boolean replayClock = "true".equalsIgnoreCase(System.getenv("TALLY_FRAUD_REPLAY_CLOCK"));
+        if (replayClock) {
+            System.out.println("TALLY_FRAUD_REPLAY_CLOCK is on: the scorer trusts X-Tally-Event-Time. Evaluation only.");
+        }
+        FraudScoring fraud = new FraudScoring(storage.scores(), Rules.DEFAULT, FraudScoring.DEFAULT_CAPACITY,
+                replayClock, metrics);
+        ApiServer server = new ApiServer(port, storage.ledger(), token, staticPath, metrics, fraud,
+                RateLimiter.fromEnv(System::getenv));
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
         server.start();
         System.out.println("Tally listening on port " + server.port());
@@ -63,13 +77,15 @@ public final class Main {
         return !"false".equalsIgnoreCase(getenv.apply("TALLY_MIGRATE_ON_START"));
     }
 
+    private record Storage(Store ledger, ScoreStore scores) {}
+
     // With TALLY_DB_URL set, migrate and serve from Postgres; otherwise fall back to the in-memory store
-    // so the demo runs with no database.
-    private static Store openStore(Metrics metrics) throws Exception {
+    // so the demo runs with no database. The fraud scores live wherever the ledger does.
+    private static Storage openStorage(Metrics metrics) throws Exception {
         Optional<DbConfig> config = DbConfig.fromEnv();
         if (config.isEmpty()) {
             System.out.println("TALLY_DB_URL is not set, using the in-memory store");
-            return new InMemoryStore();
+            return new Storage(new InMemoryStore(), new InMemoryScoreStore());
         }
         Pool pool = Pool.open(config.get(), metrics.poolWait::observeNanos);
         Path migrations = Path.of(System.getenv().getOrDefault("TALLY_MIGRATIONS_DIR", "db/migrations"));
@@ -82,6 +98,6 @@ public final class Main {
             }
         }
         System.out.println("using the Postgres store at " + config.get().url());
-        return new JdbcStore(pool);
+        return new Storage(new JdbcStore(pool), new JdbcScoreStore(pool));
     }
 }

@@ -2,6 +2,9 @@ package dev.tally.api;
 
 import dev.tally.core.TransferOutcome;
 import dev.tally.core.TransferRequest;
+import dev.tally.fraud.PostingEvent;
+import dev.tally.fraud.PostingSink;
+import dev.tally.http.ApiException;
 import dev.tally.http.ErrorCode;
 import dev.tally.http.Request;
 import dev.tally.http.Response;
@@ -13,8 +16,11 @@ import dev.tally.obs.Metrics;
 import dev.tally.obs.Redact;
 import dev.tally.store.Store;
 
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static dev.tally.api.Fields.num;
@@ -28,14 +34,18 @@ public final class TransfersHandler {
 
     private final Store store;
     private final Metrics metrics;
+    private final PostingSink postings;
+    private final boolean replayClock;
 
     public TransfersHandler(Store store) {
-        this(store, new Metrics());
+        this(store, new Metrics(), PostingSink.NONE, false);
     }
 
-    public TransfersHandler(Store store, Metrics metrics) {
+    public TransfersHandler(Store store, Metrics metrics, PostingSink postings, boolean replayClock) {
         this.store = store;
         this.metrics = metrics;
+        this.postings = postings;
+        this.replayClock = replayClock;
     }
 
     // The key is read before the body so a missing or malformed key is caught without a parse; then
@@ -44,9 +54,38 @@ public final class TransfersHandler {
         String key = Validation.idempotencyKey(request.headers().getFirst("Idempotency-Key"));
         Validation.TransferFields fields = Validation.transfer(Json.parse(request.body()));
         TransferRequest transferRequest = new TransferRequest(key, fields.from(), fields.to(), fields.amountMinor());
+        // Parsed before the store call, so a bad header is a 400 with no money moved rather than a
+        // committed transfer answered with an error.
+        Instant eventTime = replayClock ? eventTime(request.headers().getFirst("X-Tally-Event-Time")) : null;
         TransferOutcome outcome = store.apply(transferRequest);
         metrics.transfers.inc(outcomeLabel(outcome));
+        // Only a first apply publishes. A replay's posting was published the first time it applied.
+        if (outcome instanceof TransferOutcome.Applied applied) {
+            publish(applied, transferRequest, eventTime);
+        }
         return render(outcome, transferRequest);
+    }
+
+    // The money is committed by now, so nothing the sink does may turn this into an error response.
+    private void publish(TransferOutcome.Applied applied, TransferRequest req, Instant eventTime) {
+        try {
+            postings.publish(new PostingEvent(applied.debitPostingId(), applied.creditPostingId(), applied.id(),
+                    req.from(), req.to(), req.amountMinor(), eventTime == null ? applied.at() : eventTime));
+        } catch (RuntimeException e) {
+            LOG.log(Level.WARNING, "posting not published for scoring", e);
+        }
+    }
+
+    private static Instant eventTime(String header) {
+        if (header == null) {
+            return null;
+        }
+        try {
+            return Instant.parse(header);
+        } catch (DateTimeParseException e) {
+            throw new ApiException(ErrorCode.EVENT_TIME_INVALID, "X-Tally-Event-Time",
+                    "X-Tally-Event-Time must be an ISO-8601 instant such as 2026-01-05T03:00:00Z");
+        }
     }
 
     // Three labels, not one per outcome record: the dashboard question is whether money moved, moved
