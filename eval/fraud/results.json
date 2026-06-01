@@ -1,0 +1,108 @@
+{
+  "dataset": {
+    "seed": 20260925,
+    "transfers": 9290,
+    "accounts": 356
+  },
+  "threshold": 40,
+  "rules": [
+    "velocity",
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "time_of_day"
+  ],
+  "store": "in-memory (TALLY_DB_URL unset), replay clock on",
+  "code_version": "a91911f",
+  "normal": {
+    "postings": 8991,
+    "flagged": 240,
+    "false_positive_rate": 0.0267
+  },
+  "patterns": {
+    "burst": {
+      "postings": 127,
+      "episodes": 15,
+      "flagged": 5,
+      "precision": 0.0204,
+      "recall": 0.0394,
+      "auroc": 0.8722,
+      "episodes_detected": 5,
+      "latency_postings_mean": 5.6,
+      "latency_postings_median": 4
+    },
+    "structuring": {
+      "postings": 78,
+      "episodes": 15,
+      "flagged": 78,
+      "precision": 0.2453,
+      "recall": 1.0,
+      "auroc": 0.9933,
+      "episodes_detected": 15,
+      "latency_postings_mean": 0,
+      "latency_postings_median": 0
+    },
+    "account_takeover": {
+      "postings": 25,
+      "episodes": 15,
+      "flagged": 18,
+      "precision": 0.0698,
+      "recall": 0.72,
+      "auroc": 0.9906,
+      "episodes_detected": 15,
+      "latency_postings_mean": 0,
+      "latency_postings_median": 0
+    },
+    "mule_chain": {
+      "postings": 69,
+      "episodes": 15,
+      "flagged": 28,
+      "precision": 0.1045,
+      "recall": 0.4058,
+      "auroc": 0.837,
+      "episodes_detected": 15,
+      "latency_postings_mean": 0,
+      "latency_postings_median": 0
+    }
+  },
+  "all_fraud": {
+    "postings": 299,
+    "episodes": 60,
+    "flagged": 129,
+    "precision": 0.3496,
+    "recall": 0.4314,
+    "auroc": 0.9055,
+    "episodes_detected": 50,
+    "latency_postings_mean": 0.56,
+    "latency_postings_median": 0.0
+  },
+  "replay": {
+    "transfers": 9290,
+    "applied": 9290,
+    "refused": 0,
+    "refused_fraud": 0,
+    "seconds": 2.4
+  },
+  "rules_fired": {
+    "amount_deviation": {
+      "normal": 227,
+      "fraud": 134
+    },
+    "new_counterparty": {
+      "normal": 1284,
+      "fraud": 122
+    },
+    "round_amount": {
+      "normal": 245,
+      "fraud": 90
+    },
+    "time_of_day": {
+      "normal": 114,
+      "fraud": 15
+    },
+    "velocity": {
+      "normal": 96,
+      "fraud": 85
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "seed": 20260925,
+  "start": "2026-08-01T00:00:00Z",
+  "days": 30,
+  "fraud_from_day": 20,
+  "accounts": 356,
+  "transfers": 9290,
+  "transfers_by_pattern": {
+    "account_takeover": 25,
+    "burst": 127,
+    "mule_chain": 69,
+    "normal": 8991,
+    "structuring": 78
+  }
+}

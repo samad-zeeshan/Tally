@@ -4,7 +4,9 @@ import dev.tally.core.AccountId;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * An account's recent scored postings, read back from the score store just before a new one is scored.
@@ -42,6 +44,16 @@ public final class Window {
         }
         long[] amounts = outgoing.stream().mapToLong(Score::amountMinor).sorted().toArray();
         return amounts[(amounts.length - 1) / 2];
+    }
+
+    public int distinctPayeesBetween(Instant fromInclusive, Instant toInclusive) {
+        Set<AccountId> payees = new HashSet<>();
+        for (Score s : outgoing) {
+            if (!s.eventAt().isBefore(fromInclusive) && !s.eventAt().isAfter(toInclusive)) {
+                payees.add(s.counterparty());
+            }
+        }
+        return payees.size();
     }
 
     public boolean hasPaid(AccountId counterparty) {

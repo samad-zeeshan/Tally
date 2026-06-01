@@ -3,9 +3,11 @@ package dev.tally;
 import dev.tally.db.DbConfig;
 import dev.tally.db.MigrationRunner;
 import dev.tally.db.Pool;
+import dev.tally.fraud.FeatureRule;
 import dev.tally.fraud.FraudScoring;
 import dev.tally.fraud.InMemoryScoreStore;
 import dev.tally.fraud.JdbcScoreStore;
+import dev.tally.fraud.Rule;
 import dev.tally.fraud.Rules;
 import dev.tally.fraud.ScoreStore;
 import dev.tally.http.Auth;
@@ -18,6 +20,8 @@ import dev.tally.store.Store;
 
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -41,7 +45,7 @@ public final class Main {
         if (replayClock) {
             System.out.println("TALLY_FRAUD_REPLAY_CLOCK is on: the scorer trusts X-Tally-Event-Time. Evaluation only.");
         }
-        FraudScoring fraud = new FraudScoring(storage.scores(), Rules.DEFAULT, FraudScoring.DEFAULT_CAPACITY,
+        FraudScoring fraud = new FraudScoring(storage.scores(), fraudRules(), FraudScoring.DEFAULT_CAPACITY,
                 replayClock, metrics);
         ApiServer server = new ApiServer(port, storage.ledger(), token, staticPath, metrics, fraud,
                 RateLimiter.fromEnv(System::getenv));
@@ -75,6 +79,19 @@ public final class Main {
     // replicas running the lock-free runner at once would race on CREATE TABLE.
     static boolean migrateOnStart(UnaryOperator<String> getenv) {
         return !"false".equalsIgnoreCase(getenv.apply("TALLY_MIGRATE_ON_START"));
+    }
+
+    // Rules accepted by the offline reflection gate are data, loaded only when an operator names the
+    // file (ADR-0025). A malformed file stops startup rather than scoring with half the rules.
+    private static List<Rule> fraudRules() {
+        List<Rule> rules = new ArrayList<>(Rules.DEFAULT);
+        String extra = System.getenv("TALLY_FRAUD_EXTRA_RULES");
+        if (extra != null && !extra.isBlank()) {
+            List<Rule> loaded = FeatureRule.load(Path.of(extra));
+            rules.addAll(loaded);
+            System.out.println("fraud rules added from " + extra + ": " + loaded.stream().map(Rule::name).toList());
+        }
+        return rules;
     }
 
     private record Storage(Store ledger, ScoreStore scores) {}

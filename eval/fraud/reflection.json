@@ -1,0 +1,144 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "threshold": 40,
+  "dataset_seed": 20260925,
+  "evidence_parity_postings": 9290,
+  "baseline": {
+    "recall": 0.4314,
+    "auroc": 0.9055,
+    "flagged_fraud": 129,
+    "flagged_normal": 240,
+    "by_pattern_recall": {
+      "burst": 0.0394,
+      "structuring": 1.0,
+      "account_takeover": 0.72,
+      "mule_chain": 0.4058
+    }
+  },
+  "proposals": [
+    {
+      "round": 1,
+      "rules_in_force": [],
+      "raw_answer": "{\n\"name\": \"mule_incoming_rule\",\n\"feature\": \"incoming_60m_minor\",\n\"op\": \">=\",\n\"threshold\": 1000,\n\"points\": 40,\n\"reason\": \"Detects high incoming money flow characteristic of mule accounts without triggering on normal low-incoming transactions.\"\n}",
+      "reason": "Detects high incoming money flow characteristic of mule accounts without triggering on normal low-incoming transactions.",
+      "rule": {
+        "name": "mule_incoming_rule",
+        "feature": "incoming_60m_minor",
+        "op": ">=",
+        "threshold": 1000,
+        "points": 40
+      },
+      "before": {
+        "recall": 0.4314,
+        "auroc": 0.9055,
+        "flagged_fraud": 129,
+        "flagged_normal": 240,
+        "by_pattern_recall": {
+          "burst": 0.0394,
+          "structuring": 1.0,
+          "account_takeover": 0.72,
+          "mule_chain": 0.4058
+        }
+      },
+      "after": {
+        "recall": 0.5686,
+        "auroc": 0.9307,
+        "flagged_fraud": 170,
+        "flagged_normal": 443,
+        "by_pattern_recall": {
+          "burst": 0.0394,
+          "structuring": 1.0,
+          "account_takeover": 0.72,
+          "mule_chain": 1.0
+        }
+      },
+      "verdict": "rejected",
+      "why": [
+        "flagged normal postings rose from 240 to 443"
+      ]
+    },
+    {
+      "round": 2,
+      "rules_in_force": [],
+      "raw_answer": "{\"name\": \"mule_passthrough_rule\", \"feature\": \"passthrough_pct\", \"op\": \">=\", \"threshold\": 80, \"points\": 20, \"reason\": \"High passthrough percentage effectively identifies mule accounts with minimal false positives on normal transactions.\"}",
+      "reason": "High passthrough percentage effectively identifies mule accounts with minimal false positives on normal transactions.",
+      "rule": {
+        "name": "mule_passthrough_rule",
+        "feature": "passthrough_pct",
+        "op": ">=",
+        "threshold": 80,
+        "points": 20
+      },
+      "before": {
+        "recall": 0.4314,
+        "auroc": 0.9055,
+        "flagged_fraud": 129,
+        "flagged_normal": 240,
+        "by_pattern_recall": {
+          "burst": 0.0394,
+          "structuring": 1.0,
+          "account_takeover": 0.72,
+          "mule_chain": 0.4058
+        }
+      },
+      "after": {
+        "recall": 0.5217,
+        "auroc": 0.9334,
+        "flagged_fraud": 156,
+        "flagged_normal": 262,
+        "by_pattern_recall": {
+          "burst": 0.0394,
+          "structuring": 1.0,
+          "account_takeover": 0.72,
+          "mule_chain": 0.7971
+        }
+      },
+      "verdict": "rejected",
+      "why": [
+        "flagged normal postings rose from 240 to 262"
+      ]
+    },
+    {
+      "round": 3,
+      "rules_in_force": [],
+      "raw_answer": "{\"name\": \"burst_distinct_payees_rule\", \"feature\": \"distinct_payees_60m\", \"op\": \">=\", \"threshold\": 3, \"points\": 20, \"reason\": \"High distinct payees in 60 minutes indicate burst activity without triggering on normal accounts that typically use fewer payees.\"}",
+      "reason": "High distinct payees in 60 minutes indicate burst activity without triggering on normal accounts that typically use fewer payees.",
+      "rule": {
+        "name": "burst_distinct_payees_rule",
+        "feature": "distinct_payees_60m",
+        "op": ">=",
+        "threshold": 3,
+        "points": 20
+      },
+      "before": {
+        "recall": 0.4314,
+        "auroc": 0.9055,
+        "flagged_fraud": 129,
+        "flagged_normal": 240,
+        "by_pattern_recall": {
+          "burst": 0.0394,
+          "structuring": 1.0,
+          "account_takeover": 0.72,
+          "mule_chain": 0.4058
+        }
+      },
+      "after": {
+        "recall": 0.5485,
+        "auroc": 0.9107,
+        "flagged_fraud": 164,
+        "flagged_normal": 278,
+        "by_pattern_recall": {
+          "burst": 0.315,
+          "structuring": 1.0,
+          "account_takeover": 0.72,
+          "mule_chain": 0.4058
+        }
+      },
+      "verdict": "rejected",
+      "why": [
+        "flagged normal postings rose from 240 to 278"
+      ]
+    }
+  ],
+  "accepted_rules": []
+}

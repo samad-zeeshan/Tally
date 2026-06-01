@@ -13,3 +13,6 @@ target/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Python bytecode from the evaluation scripts
+__pycache__/
