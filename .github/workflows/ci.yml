@@ -105,9 +105,14 @@ jobs:
         run: |
           password="$(grep -E '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)"
           kubectl -n tally exec tally-db-0 -- psql -U tally -d tally -c 'CREATE DATABASE tally_test'
-          kubectl -n tally port-forward pod/tally-db-0 15432:5432 >/tmp/port-forward.log 2>&1 &
-          for _ in $(seq 1 30); do (echo > /dev/tcp/127.0.0.1/15432) 2>/dev/null && break; sleep 1; done
-          export TALLY_TEST_DB_URL=jdbc:postgresql://127.0.0.1:15432/tally_test
+          # Not kubectl port-forward: PoolTest kills backends with pg_terminate_backend, the reset stream
+          # makes port-forward exit, and every later database test then gets connection refused. A
+          # test-only NodePort on the kind node's own address has no process in between to lose.
+          kubectl -n tally expose pod tally-db-0 --name=tally-db-tests --type=NodePort --port=5432 --target-port=5432
+          node_port="$(kubectl -n tally get service tally-db-tests -o jsonpath='{.spec.ports[0].nodePort}')"
+          node_ip="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tally-control-plane)"
+          for _ in $(seq 1 30); do (echo > "/dev/tcp/$node_ip/$node_port") 2>/dev/null && break; sleep 1; done
+          export TALLY_TEST_DB_URL="jdbc:postgresql://$node_ip:$node_port/tally_test"
           export TALLY_TEST_DB_PASSWORD="$password"
           ./mvnw -B -Pintegration verify
       - name: Cluster state on failure

@@ -62,17 +62,22 @@ for _ in $(seq 1 10); do
 done
 check "the same request id is in a JSON log line" test -n "$found"
 
-# Prometheus scrapes every 15 seconds, so give it a few rounds to see the transfer.
-applied=0
-for _ in $(seq 1 12); do
-  applied="$(curl -fsS "$PROM/api/v1/query" --data-urlencode 'query=sum(tally_transfers_total{outcome="applied"})' \
-    | jq -r '.data.result[0].value[1] // "0"')"
-  [ "${applied%.*}" -ge 1 ] && break
-  sleep 5
-done
-check "prometheus sees the applied transfer" test "${applied%.*}" -ge 1
-check "prometheus scrapes every api pod" test "$(curl -fsS "$PROM/api/v1/query" \
-  --data-urlencode 'query=count(up{job="tally-api"} == 1)' | jq -r '.data.result[0].value[1]')" -ge 2
+# Anything read from Prometheus depends on a scrape having happened. The scrape interval is 15 seconds,
+# and a pod that just became ready also waits for the next discovery refresh, so each such check polls
+# for up to 90 seconds before it fails. A single read right after the rollout failed on timing alone.
+prom_at_least() {
+  local query="$1" want="$2" got=0
+  for _ in $(seq 1 18); do
+    got="$(curl -fsS "$PROM/api/v1/query" --data-urlencode "query=$query" 2>/dev/null \
+      | jq -r '.data.result[0].value[1] // "0"' 2>/dev/null || echo 0)"
+    [ "${got%.*}" -ge "$want" ] 2>/dev/null && return 0
+    sleep 5
+  done
+  echo "      $query was ${got:-nothing} after 90 seconds, wanted at least $want" >&2
+  return 1
+}
+check "prometheus sees the applied transfer" prom_at_least 'sum(tally_transfers_total{outcome="applied"})' 1
+check "prometheus scrapes every api pod" prom_at_least 'count(up{job="tally-api"} == 1)' 2
 
 echo "== gate 4: the deployed config conforms to the manifests"
 # kubectl diff exits 1 when the live objects differ from what the overlay renders.
