@@ -1,0 +1,21 @@
+TLC2 Version 2026.09.25.163503 (rev: 8f4bc8b)
+Running breadth-first search Model-Checking with fp 81 and seed -1480165185270091873 with 12 workers on 12 cores with 7092MB heap and 64MB offheap memory [pid: 52344] (Windows 11 10.0 amd64, Eclipse Adoptium 25.0.2 64bit, MSBDiskFPSet, DiskStateQueue).
+Starting... (2026-09-25 21:32:05)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-25 21:32:05.
+Checking temporal properties for the current state space with 62793 total distinct states at (2026-09-25 21:32:08)
+Finished checking temporal properties in 01s at 2026-09-25 21:32:09
+Progress(21) at 2026-09-25 21:32:09: 389,965 states generated (389,965 s/min), 77,424 distinct states found (77,424 ds/min), 14,630 states left on queue.
+Progress(39) at 2026-09-25 21:32:22: 2,195,299 states generated, 394,177 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 394177 total distinct states at (2026-09-25 21:32:22)
+Finished checking temporal properties in 10s at 2026-09-25 21:32:33
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.8E-8
+  based on the actual fingerprints:  val = 6.1E-9
+2195299 states generated, 394177 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 39.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 11 and the 95th percentile is 3).
+Finished in 28s at (2026-09-25 21:32:33)

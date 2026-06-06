@@ -1,0 +1,294 @@
+TLC2 Version 2026.09.25.163503 (rev: 8f4bc8b)
+Running breadth-first search Model-Checking with fp 19 and seed 3174920563521388387 with 12 workers on 12 cores with 7092MB heap and 64MB offheap memory [pid: 22560] (Windows 11 10.0 amd64, Eclipse Adoptium 25.0.2 64bit, MSBDiskFPSet, DiskStateQueue).
+Starting... (2026-09-25 21:32:33)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-25 21:32:34.
+Error: Invariant ExactlyOnce is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "idle", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 0
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 2: <Send("c1") line 69, col 5 to line 72, col 82 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 0
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 3: <Take("w1") line 103, col 5 to line 107, col 82 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 0
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "fast", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 4: <EagerRetry("c1") line 83, col 5 to line 88, col 79 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 1
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "fast", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 5: <FastPath("w1") line 111, col 5 to line 117, col 81 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 1
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "lock1", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 6: <Lock line 126, col 13 to line 126, col 53 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 1
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "w1", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "lock2", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 7: <Lock line 127, col 13 to line 127, col 55 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 1
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "w1", b |-> "w1"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "insert", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 8: <Insert("w1") line 135, col 5 to line 146, col 68 of module Ledger>
+/\ bal = [w |-> -3, a |-> 2, b |-> 1]
+/\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {}
+/\ eager = 1
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "w1", b |-> "w1"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"] >>
+/\ held = [c1 |-> "w1", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "commit", st |-> "applied"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 9: <Commit("w1") line 153, col 5 to line 163, col 48 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {"c1"}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 10: <Take("w1") line 103, col 5 to line 107, col 82 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "fast", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 11: <FastPath("w1") line 111, col 5 to line 117, col 81 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "lock1", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 12: <Lock line 126, col 13 to line 126, col 53 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "w1", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "lock2", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 13: <Lock line 127, col 13 to line 127, col 55 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "w1", b |-> "w1"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "insert", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 14: <Insert("w1") line 135, col 5 to line 146, col 68 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "w1", b |-> "w1"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "w1", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "c1", pc |-> "commit", st |-> "insufficient"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+State 15: <Commit("w1") line 153, col 5 to line 163, col 48 of module Ledger>
+/\ bal = [w |-> -3, a |-> 0, b |-> 3]
+/\ txn = [c1 |-> "insufficient", c2 |-> "none", c3 |-> "none"]
+/\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
+/\ resp = {[c |-> "c1", o |-> "applied"], [c |-> "c1", o |-> "insufficient"]}
+/\ eager = 1
+/\ faults = 0
+/\ net = {}
+/\ got = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ locks = [a |-> "none", b |-> "none"]
+/\ postings = << [amt |-> -1, acct |-> "w", key |-> "open"],
+   [amt |-> 1, acct |-> "b", key |-> "open"],
+   [amt |-> -2, acct |-> "w", key |-> "open"],
+   [amt |-> 2, acct |-> "a", key |-> "open"],
+   [amt |-> -2, acct |-> "a", key |-> "c1"],
+   [amt |-> 2, acct |-> "b", key |-> "c1"] >>
+/\ held = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
+/\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
+  w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
+
+124010 states generated, 25102 distinct states found, 6861 states left on queue.
+The depth of the complete state graph search is 16.
+Finished in 00s at (2026-09-25 21:32:34)

@@ -16,3 +16,8 @@ desktop.ini
 
 # Python bytecode from the evaluation scripts
 __pycache__/
+
+# TLC's jar download and its scratch state
+spec/.tools/
+spec/states/
+spec/*_TTrace_*
