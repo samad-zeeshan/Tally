@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.LongConsumer;
 
 /**
@@ -21,6 +22,9 @@ public final class Pool implements AutoCloseable {
     private final DbConfig config;
     private final BlockingQueue<Connection> idle;
     private final LongConsumer waitNanos;
+    // Connections the pool owes itself: ones that broke while the database was down and could not be
+    // replaced then. Borrow opens them again, so an outage shrinks the pool only while it lasts.
+    private final AtomicInteger missing = new AtomicInteger();
 
     private Pool(DbConfig config, BlockingQueue<Connection> idle, LongConsumer waitNanos) {
         this.config = config;
@@ -51,7 +55,14 @@ public final class Pool implements AutoCloseable {
     public Connection borrow() {
         try {
             long start = System.nanoTime();
-            Connection conn = idle.poll(5, TimeUnit.SECONDS);
+            Connection conn = idle.poll();
+            if (conn == null && missing.getAndUpdate(n -> Math.max(0, n - 1)) > 0) {
+                waitNanos.accept(System.nanoTime() - start);
+                return refill();
+            }
+            if (conn == null) {
+                conn = idle.poll(5, TimeUnit.SECONDS);
+            }
             waitNanos.accept(System.nanoTime() - start);
             if (conn == null) {
                 throw new StoreException("timed out waiting for a database connection");
@@ -76,7 +87,7 @@ public final class Pool implements AutoCloseable {
         try {
             if (isDead(conn)) {
                 closeQuietly(conn);
-                idle.offer(fresh(config));
+                offerFresh();
                 return;
             }
             if (!conn.getAutoCommit()) {
@@ -94,11 +105,26 @@ public final class Pool implements AutoCloseable {
             idle.offer(conn);
         } catch (SQLException broken) {
             closeQuietly(conn);
-            try {
-                idle.offer(fresh(config));
-            } catch (SQLException databaseDown) {
-                // The database is down; the pool shrinks by one and borrow will replace it when it returns.
-            }
+            offerFresh();
+        }
+    }
+
+    private void offerFresh() {
+        try {
+            idle.offer(fresh(config));
+        } catch (SQLException databaseDown) {
+            missing.incrementAndGet();
+        }
+    }
+
+    // The slot stays owed if the database is still down, and this borrow fails at once instead of
+    // waiting five seconds for a connection that no one will give back.
+    private Connection refill() {
+        try {
+            return fresh(config);
+        } catch (SQLException e) {
+            missing.incrementAndGet();
+            throw new StoreException("could not open a connection, the database looks down", e);
         }
     }
 

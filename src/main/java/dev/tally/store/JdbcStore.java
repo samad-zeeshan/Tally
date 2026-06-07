@@ -379,8 +379,10 @@ public final class JdbcStore implements Store {
                 debitPostingId, creditPostingId));
     }
 
+    // NO KEY UPDATE, not UPDATE: two transfers still exclude each other, but a foreign key check from a
+    // score row, which takes KEY SHARE on the same account, no longer waits and cannot close a deadlock.
     private Long lockBalance(Connection conn, UUID id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement("SELECT balance_minor FROM accounts WHERE id = ? FOR UPDATE")) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT balance_minor FROM accounts WHERE id = ? FOR NO KEY UPDATE")) {
             ps.setObject(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getLong(1) : null;

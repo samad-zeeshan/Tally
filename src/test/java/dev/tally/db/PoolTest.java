@@ -91,6 +91,37 @@ class PoolTest {
         }
     }
 
+    // Found by the fault harness: while Postgres restarts, every connection given back is dead and cannot
+    // be replaced, so the pool drained to nothing and the API stayed down after the database came back.
+    @Test
+    @Timeout(60)
+    void poolRefillsAfterAnOutageThatDrainedIt() throws Exception {
+        try (Connection admin = PostgresTestSupport.connect(); Statement s = admin.createStatement()) {
+            s.execute("DROP ROLE IF EXISTS tally_pool_outage");
+            s.execute("CREATE ROLE tally_pool_outage LOGIN PASSWORD 'outage-only-in-tests'");
+            try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.url(), "tally_pool_outage", "outage-only-in-tests", 2))) {
+                Connection a = pool.borrow();
+                Connection b = pool.borrow();
+                // The outage: no new logins, and every open session cut.
+                s.execute("ALTER ROLE tally_pool_outage NOLOGIN");
+                s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'tally_pool_outage'");
+                pool.giveBack(a);
+                pool.giveBack(b);
+                s.execute("ALTER ROLE tally_pool_outage LOGIN");
+
+                Connection back = pool.borrow();
+                assertTrue(back.isValid(1), "the pool serves again once the database is back");
+                Connection second = pool.borrow();
+                assertTrue(second.isValid(1), "and at its full size");
+                pool.giveBack(back);
+                pool.giveBack(second);
+            } finally {
+                s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'tally_pool_outage'");
+                s.execute("DROP ROLE IF EXISTS tally_pool_outage");
+            }
+        }
+    }
+
     private void terminateOtherBackends() throws SQLException {
         try (Connection c = PostgresTestSupport.connect(); Statement s = c.createStatement()) {
             s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
