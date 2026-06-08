@@ -69,6 +69,19 @@ abstract class ScoreStoreContractTest {
     }
 
     @Test
+    void anExplanationReadsBackFieldForField() {
+        Score bare = pay(alice, bob, 70_000, T0, 45, List.of("round_amount", "fresh_payee_burst"));
+        Explanation why = new Explanation(
+                new java.util.LinkedHashMap<>(java.util.Map.of("round_amount", 15, "fresh_payee_burst", 30)),
+                new java.util.LinkedHashMap<>(java.util.Map.of("amount_minor", 70_000L, "payee_payers", 0L)),
+                List.of(3L, 1L), 812);
+        Score score = new Score(bare.postingId(), bare.transferId(), bare.account(), bare.counterparty(),
+                bare.amountMinor(), bare.score(), bare.rules(), bare.eventAt(), bare.scoredAt(), why);
+        store.insertIfAbsent(score);
+        assertEquals(score, store.outgoingBefore(alice.id(), Long.MAX_VALUE, 1).getFirst());
+    }
+
+    @Test
     void outgoingIsNewestFirstBelowThePostingAndLimited() {
         Score first = pay(alice, bob, 100, T0, 0, List.of());
         Score second = pay(alice, carol, 200, T0.plusSeconds(60), 0, List.of());

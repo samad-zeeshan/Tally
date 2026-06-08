@@ -22,7 +22,7 @@ if [ -z "$token" ] || [ -z "$password" ]; then
 fi
 
 if ! kind get clusters | grep -qx "$CLUSTER"; then
-  kind create cluster --name "$CLUSTER" --config deploy/k8s/kind/cluster.yaml
+  kind create cluster --name "$CLUSTER" --config "${KIND_CONFIG:-deploy/k8s/kind/cluster.yaml}"
 fi
 kubectl config use-context "kind-$CLUSTER" >/dev/null
 

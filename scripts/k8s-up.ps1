@@ -5,6 +5,7 @@ Set-Location (Join-Path $PSScriptRoot '..')
 $cluster = if ($env:CLUSTER) { $env:CLUSTER } else { 'tally' }
 $overlay = if ($env:OVERLAY) { $env:OVERLAY } else { 'local' }
 $tag = if ($env:TAG) { $env:TAG } else { $overlay }
+$kindConfig = if ($env:KIND_CONFIG) { $env:KIND_CONFIG } else { 'deploy/k8s/kind/cluster.yaml' }
 
 # Native tools do not throw on a non-zero exit in Windows PowerShell 5.1, so every call is checked.
 function Invoke-Checked {
@@ -25,7 +26,7 @@ if (-not $token -or -not $password) { throw 'k8s-up: set both TALLY_API_TOKEN an
 
 $clusters = & kind get clusters
 if ($clusters -notcontains $cluster) {
-    Invoke-Checked kind @('create', 'cluster', '--name', $cluster, '--config', 'deploy/k8s/kind/cluster.yaml')
+    Invoke-Checked kind @('create', 'cluster', '--name', $cluster, '--config', $kindConfig)
 }
 Invoke-Checked kubectl @('config', 'use-context', "kind-$cluster")
 

@@ -1,0 +1,24 @@
+# The cluster the fault harness and the load driver run against. scripts/k8s-faults.sh retags whichever
+# image k8s-up built as tally:faults, so this overlay works after either the local or the ci overlay.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/kind-nodeports
+  - ../../components/faults
+
+images:
+  - name: tally
+    newTag: faults
+
+patches:
+  - target:
+      kind: Deployment
+      name: tally-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 100m

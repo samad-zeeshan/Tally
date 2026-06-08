@@ -60,11 +60,11 @@ jobs:
       - run: npm run test --if-present
       - run: npm run build
 
-  # The Kubernetes proof: a kind cluster built from the same script a developer runs, then the four
-  # deployment gates, then the existing integration suite against the Postgres inside the cluster.
+  # The Kubernetes proof: a kind cluster built from the same script a developer runs, the four deployment
+  # gates, the fault gate, then the existing integration suite against the Postgres inside the cluster.
   k8s:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       OVERLAY: ci
     steps:
@@ -101,6 +101,17 @@ jobs:
         run: ./scripts/k8s-up.sh
       - name: Four deployment gates
         run: ./scripts/k8s-gates.sh
+      # The fifth gate: pod kills, a Postgres restart, a partition, clock skew and dropped responses under
+      # concurrent transfers, then the books are checked. Its results are uploaded, not committed from CI.
+      - name: Fault gate
+        run: ./scripts/k8s-faults.sh --where "kind on a GitHub ubuntu-latest runner" --out "$RUNNER_TEMP/faults"
+      - name: Fault results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fault-results
+          path: ${{ runner.temp }}/faults
+          if-no-files-found: ignore
       - name: Integration tests against the cluster's Postgres
         run: |
           password="$(grep -E '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)"

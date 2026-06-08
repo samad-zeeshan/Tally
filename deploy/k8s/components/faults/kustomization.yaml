@@ -1,0 +1,16 @@
+# Settings for the fault and load runs only. Every request comes from one address through the NodePort,
+# so the per-client throttle is lifted, and the replay clock is on so the harness can skew event time.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: tally-config
+    patch: |-
+      - op: add
+        path: /data/TALLY_RATE_LIMIT_PER_MINUTE
+        value: "100000000"
+      - op: add
+        path: /data/TALLY_FRAUD_REPLAY_CLOCK
+        value: "true"

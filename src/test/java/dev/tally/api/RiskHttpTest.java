@@ -69,6 +69,20 @@ class RiskHttpTest extends ApiTestHarness {
     }
 
     @Test
+    void eachScoreCarriesItsExplanation() {
+        String a = createAccount("A", 1_000_000);
+        String b = createAccount("B", 0);
+        assertEquals(201, transfer(a, b, 50_000, freshKey()).statusCode());
+        JsonValue.JsonObject explanation = (JsonValue.JsonObject) scores(a).getFirst().members().get("explanation");
+        JsonValue.JsonObject points = (JsonValue.JsonObject) explanation.members().get("points");
+        JsonValue.JsonObject features = (JsonValue.JsonObject) explanation.members().get("features");
+        assertEquals(15, num(points, "round_amount"));
+        assertEquals(50_000, num(features, "amount_minor"));
+        assertTrue(explanation.members().get("evidence") instanceof JsonValue.JsonArray);
+        assertTrue(num(explanation, "micros") >= 0);
+    }
+
+    @Test
     void aReplayedTransferIsNotScoredAgain() {
         String a = createAccount("A", 10_000);
         String b = createAccount("B", 0);
