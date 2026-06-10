@@ -21,3 +21,6 @@ __pycache__/
 spec/.tools/
 spec/states/
 spec/*_TTrace_*
+
+# Every v2 score with its explanation, 5 MB, rebuilt by eval/fraud/run.py
+eval/fraud/scores-v2.jsonl

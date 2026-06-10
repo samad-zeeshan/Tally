@@ -90,6 +90,7 @@ public final class RiskHandler {
         m.put("rules", new JsonValue.JsonArray(rules));
         m.put("eventAt", str(score.eventAt().toString()));
         m.put("scoredAt", str(score.scoredAt().toString()));
+        m.put("explanation", score.explanation().toJson());
         return new JsonValue.JsonObject(m);
     }
 }

@@ -1,8 +1,8 @@
 """
 Replay the synthetic dataset through a running Tally, pull every score back, and measure the scorer.
 
-Reports precision, recall and AUROC per fraud pattern, plus detection latency counted in postings.
-Writes eval/fraud/results.json and eval/fraud/results.md. Standard library only.
+Measures the v1 rules and the v2 graph rules from the same jar, draws precision-recall curves, and runs
+the point-in-time verifier over every v2 score. Writes eval/fraud/results.json.
 """
 
 import argparse
@@ -15,10 +15,12 @@ import socket
 import statistics
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 PATTERNS = ["burst", "structuring", "account_takeover", "mule_chain"]
 
 
@@ -207,7 +209,9 @@ def evaluate(jar, data, threshold, extra_env=None):
             s = scores[applied[t["seq"]]]
             lab = labels[t["seq"]]
             rows.append({"seq": int(t["seq"]), "pattern": lab["pattern"], "episode": lab["episode"],
-                         "score": s["score"], "rules": s["rules"]})
+                         "score": s["score"], "rules": s["rules"], "posting_id": s["postingId"],
+                         "from": t["from"], "to": t["to"], "amount": int(t["amount_minor"]), "at": s["eventAt"],
+                         "explanation": s.get("explanation", {})})
     result = measure(rows, threshold)
     result["replay"] = {"transfers": len(transfers), "applied": len(applied), "refused": len(refused),
                         "refused_fraud": sum(1 for q in refused if labels[q]["pattern"] != "normal"),
@@ -224,53 +228,134 @@ def rule_counts(rows):
     return dict(sorted(counts.items()))
 
 
-def markdown(result):
-    def cell(v):
-        return "n/a" if v is None else (f"{v:.4f}" if isinstance(v, float) else str(v))
+def pr_curve(rows, pattern=None):
+    """Precision and recall at every whole-number flag line from 0 to 100."""
+    normal = [r["score"] for r in rows if r["pattern"] == "normal"]
+    fraud = [r["score"] for r in rows if r["pattern"] != "normal" and (pattern is None or r["pattern"] == pattern)]
+    curve = []
+    for t in range(0, 101):
+        tp = sum(1 for s in fraud if s >= t)
+        fp = sum(1 for s in normal if s >= t)
+        curve.append({"threshold": t, "precision": round(tp / (tp + fp), 4) if tp + fp else None,
+                      "recall": round(tp / len(fraud), 4) if fraud else None, "flagged": tp + fp})
+    return curve
 
-    def lat(v):
-        return "n/a" if v is None else f"{v:g}"
 
-    lines = [
-        f"Threshold {result['threshold']}. Normal postings: {result['normal']['postings']}, "
-        f"flagged {result['normal']['flagged']} (false positive rate {cell(result['normal']['false_positive_rate'])}).",
-        "",
-        "| Pattern | Postings | Episodes | Precision | Recall | AUROC | Episodes detected | Latency mean | Latency median |",
-        "|---|---|---|---|---|---|---|---|---|",
-    ]
-    for name, m in list(result["patterns"].items()) + [("all fraud", result["all_fraud"])]:
-        lines.append(f"| {name} | {m['postings']} | {m['episodes']} | {cell(m['precision'])} | {cell(m['recall'])} | "
-                     f"{cell(m['auroc'])} | {m['episodes_detected']} of {m['episodes']} | "
-                     f"{lat(m['latency_postings_mean'])} | {lat(m['latency_postings_median'])} |")
-    lines += ["", "Precision for a pattern counts that pattern's flagged postings against every flagged normal posting.",
-              "Latency is the number of fraud postings in an episode before the first flagged one, over detected episodes."]
-    return "\n".join(lines) + "\n"
+def precision_at_recall(curve, recall):
+    """The best precision among flag lines that still reach the given recall, and the line that gives it."""
+    ok = [c for c in curve if c["recall"] is not None and c["recall"] >= recall and c["precision"] is not None]
+    if not ok:
+        return {"precision": None, "threshold": None, "recall": None}
+    best = max(ok, key=lambda c: (c["precision"], c["threshold"]))
+    return {"precision": best["precision"], "threshold": best["threshold"], "recall": best["recall"]}
+
+
+def alerts_per_thousand(rows, threshold):
+    return round(1000 * sum(1 for r in rows if r["score"] >= threshold) / len(rows), 2)
+
+
+def summarize(result, rows, threshold):
+    return {
+        **{k: result[k] for k in ("normal", "patterns", "all_fraud", "replay")},
+        "alerts_per_1000_postings": alerts_per_thousand(rows, threshold),
+        "rules_fired": rule_counts(rows),
+    }
+
+
+def stream_of(rows):
+    import features as F
+    ordered = sorted(rows, key=lambda r: r["posting_id"])
+    return [F.Posting(r["posting_id"], r["from"], r["to"], r["amount"], F.parse_time(r["at"]), r["score"]) for r in ordered]
+
+
+def explanations(rows, threshold, budget=50_000):
+    micros = sorted(r["explanation"].get("micros", 0) for r in rows)
+    pick = lambda q: micros[min(len(micros) - 1, int(q * (len(micros) - 1)))]
+    flagged = [r for r in rows if r["score"] >= threshold]
+    return {
+        "budget_micros": budget,
+        "p50_micros": pick(0.5), "p99_micros": pick(0.99), "max_micros": micros[-1],
+        "over_budget": sum(1 for m in micros if m > budget),
+        "flagged": len(flagged),
+        "flagged_with_evidence": sum(1 for r in flagged if r["explanation"].get("evidence")),
+    }
+
+
+def run_both(jar, data, threshold):
+    v1, v1_rows = evaluate(jar, data, threshold, {"TALLY_FRAUD_RULESET": "v1"})
+    v2, v2_rows = evaluate(jar, data, threshold, {"TALLY_FRAUD_RULESET": "v2"})
+    return v1, v1_rows, v2, v2_rows
+
+
+def brief(result, rows, threshold):
+    return {"all_fraud": result["all_fraud"], "normal": result["normal"],
+            "alerts_per_1000_postings": alerts_per_thousand(rows, threshold),
+            "patterns": {p: {k: result["patterns"][p][k] for k in ("precision", "recall", "auroc")} for p in PATTERNS}}
 
 
 def main():
+    import verify_pit
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--jar", type=Path, default=ROOT / "target" / "tally.jar")
     parser.add_argument("--data", type=Path, default=ROOT / "data" / "fraud")
     parser.add_argument("--out", type=Path, default=Path(__file__).resolve().parent)
     parser.add_argument("--threshold", type=int, default=40)
+    parser.add_argument("--holdout-seed", type=int, default=20260926)
     args = parser.parse_args()
 
-    result, rows = evaluate(args.jar, args.data, args.threshold)
+    v1, v1_rows, v2, v2_rows = run_both(args.jar, args.data, args.threshold)
+    curves = {"v1": {"all_fraud": pr_curve(v1_rows)}, "v2": {"all_fraud": pr_curve(v2_rows)}}
+    for p in PATTERNS:
+        curves["v1"][p] = pr_curve(v1_rows, p)
+        curves["v2"][p] = pr_curve(v2_rows, p)
+    # v1 precision was computed per pattern against every false positive, and so is this, so the two
+    # numbers side by side are the same measurement.
+    at_v1_recall = {}
+    for p in PATTERNS + ["all_fraud"]:
+        v1m = v1["patterns"][p] if p in PATTERNS else v1["all_fraud"]
+        at_v1_recall[p] = {"v1_recall": v1m["recall"], "v1_precision": v1m["precision"],
+                           "v2": precision_at_recall(curves["v2"][p], v1m["recall"])}
+
+    pit = verify_pit.verify(stream_of(v2_rows),
+                            recorded={r["posting_id"]: r["explanation"].get("features", {}) for r in v2_rows},
+                            evidence={r["posting_id"]: r["explanation"].get("evidence", []) for r in v2_rows})
+
+    # A second dataset from another seed. The v2 rules were chosen looking at the first one, so this is
+    # the number that says whether they only fit it.
+    with tempfile.TemporaryDirectory() as tmp:
+        subprocess.run([sys.executable, str(ROOT / "data" / "fraud" / "generate.py"), "--seed", str(args.holdout_seed),
+                        "--out", tmp], check=True, capture_output=True)
+        h1, h1_rows, h2, h2_rows = run_both(args.jar, Path(tmp), args.threshold)
+    holdout = {"seed": args.holdout_seed, "v1": brief(h1, h1_rows, args.threshold), "v2": brief(h2, h2_rows, args.threshold)}
+
     meta = json.loads((args.data / "meta.json").read_text(encoding="utf-8"))
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    ordered = {
+    out = {
         "dataset": {"seed": meta["seed"], "transfers": meta["transfers"], "accounts": meta["accounts"]},
         "threshold": args.threshold,
-        "rules": ["velocity", "amount_deviation", "new_counterparty", "round_amount", "time_of_day"],
         "store": "in-memory (TALLY_DB_URL unset), replay clock on",
         "code_version": commit,
-        **result,
-        "rules_fired": rule_counts(rows),
+        "v1": summarize(v1, v1_rows, args.threshold),
+        "v2": summarize(v2, v2_rows, args.threshold),
+        "precision_at_v1_recall": at_v1_recall,
+        "explanations": explanations(v2_rows, args.threshold),
+        "point_in_time": pit,
+        "holdout": holdout,
     }
     args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "results.json").write_text(json.dumps(ordered, indent=2) + "\n", encoding="utf-8", newline="\n")
-    (args.out / "results.md").write_text(markdown(ordered), encoding="utf-8", newline="\n")
-    sys.stdout.write(markdown(ordered))
+    (args.out / "results.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (args.out / "pr-curves.json").write_text(json.dumps(curves) + "\n", encoding="utf-8", newline="\n")
+    # Kept for the reflection step and the demo: every v2 score with its explanation, one per line.
+    with open(args.out / "scores-v2.jsonl", "w", encoding="utf-8", newline="\n") as f:
+        for r in v2_rows:
+            f.write(json.dumps(r, separators=(",", ":")) + "\n")
+    for name in ("v1", "v2"):
+        a = out[name]["all_fraud"]
+        print(f"{name}: precision {a['precision']} recall {a['recall']} auroc {a['auroc']}, "
+              f"false positives {out[name]['normal']['flagged']}, alerts per 1000 {out[name]['alerts_per_1000_postings']}")
+    print("point in time:", {k: pit[k] for k in ("postings_checked", "java_python_mismatches", "future_perturbation_leaks", "passed")})
+    print("holdout:", json.dumps({k: holdout[k]["all_fraud"] for k in ("v1", "v2")}))
+    sys.exit(0 if pit["passed"] else 1)
 
 
 if __name__ == "__main__":

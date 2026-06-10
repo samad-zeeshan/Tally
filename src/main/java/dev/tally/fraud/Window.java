@@ -4,6 +4,7 @@ import dev.tally.core.AccountId;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,10 +17,53 @@ import java.util.Set;
 public final class Window {
     private final List<Score> outgoing;   // newest first, all earlier than the posting being scored
     private final List<Score> incoming;
+    private final Graph graph;
+
+    /**
+     * What the scorer read about the neighbours: the payee's history, flagged money one hop further
+     * back, and a path from the payee back to the payer if one exists.
+     */
+    public record Graph(int payeePayers, int payeeOutgoing, List<Long> secondHopSeeds, List<Long> cyclePath) {
+        public static final Graph NONE = new Graph(0, 0, List.of(), List.of());
+
+        public Graph {
+            secondHopSeeds = List.copyOf(secondHopSeeds);
+            cyclePath = List.copyOf(cyclePath);
+        }
+    }
 
     public Window(List<Score> outgoing, List<Score> incoming) {
+        this(outgoing, incoming, Graph.NONE);
+    }
+
+    public Window(List<Score> outgoing, List<Score> incoming, Graph graph) {
         this.outgoing = List.copyOf(outgoing);
         this.incoming = List.copyOf(incoming);
+        this.graph = graph;
+    }
+
+    public Graph graph() {
+        return graph;
+    }
+
+    // Every posting id the window holds, so the scorer can check none is at or after the one it scores.
+    public List<Long> postingIds() {
+        List<Long> ids = new ArrayList<>();
+        outgoing.forEach(s -> ids.add(s.postingId()));
+        incoming.forEach(s -> ids.add(s.postingId()));
+        ids.addAll(graph.secondHopSeeds());
+        ids.addAll(graph.cyclePath());
+        return ids;
+    }
+
+    public List<Long> outgoingIdsBetween(Instant fromInclusive, Instant toInclusive) {
+        List<Long> ids = new ArrayList<>();
+        for (Score s : outgoing) {
+            if (!s.eventAt().isBefore(fromInclusive) && !s.eventAt().isAfter(toInclusive)) {
+                ids.add(s.postingId());
+            }
+        }
+        return ids;
     }
 
     public int size() {
@@ -76,6 +120,27 @@ public final class Window {
             }
         }
         return n;
+    }
+
+    public int fanInSince(Instant since) {
+        Set<AccountId> payers = new HashSet<>();
+        for (Score s : incoming) {
+            if (!s.eventAt().isBefore(since)) {
+                payers.add(s.account());
+            }
+        }
+        return payers.size();
+    }
+
+    // Money into this account that the scorer had already flagged. The seed of a mule chain.
+    public List<Score> flaggedIncomingSince(Instant since) {
+        List<Score> flagged = new ArrayList<>();
+        for (Score s : incoming) {
+            if (s.flagged() && !s.eventAt().isBefore(since)) {
+                flagged.add(s);
+            }
+        }
+        return flagged;
     }
 
     public long incomingSince(Instant since) {

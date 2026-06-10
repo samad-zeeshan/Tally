@@ -37,7 +37,13 @@ public record FeatureRule(String name, Feature feature, String op, long threshol
         DISTINCT_PAYEES_60M("distinct_payees_60m"),
         HOUR_SEEN_COUNT("hour_seen_count"),
         INCOMING_60M_MINOR("incoming_60m_minor"),
-        PASSTHROUGH_PCT("passthrough_pct");
+        PASSTHROUGH_PCT("passthrough_pct"),
+        FAN_IN_60M("fan_in_60m"),
+        PAYEE_PAYERS("payee_payers"),
+        PAYEE_OUTGOING("payee_outgoing"),
+        FLAGGED_IN_60M_MINOR("flagged_in_60m_minor"),
+        SEED_HOPS("seed_hops"),
+        CYCLE_24H("cycle_24h");
 
         public final String wireName;
 
@@ -73,6 +79,14 @@ public record FeatureRule(String name, Feature feature, String op, long threshol
                     long inflow = w.incomingSince(e.at().minus(hour));
                     yield inflow == 0 ? 0 : Math.multiplyExact(e.amountMinor(), 100) / inflow;
                 }
+                case FAN_IN_60M -> w.fanInSince(e.at().minus(hour));
+                case PAYEE_PAYERS -> w.graph().payeePayers();
+                case PAYEE_OUTGOING -> w.graph().payeeOutgoing();
+                case FLAGGED_IN_60M_MINOR -> w.flaggedIncomingSince(e.at().minus(hour)).stream().mapToLong(Score::amountMinor).sum();
+                // Hops from flagged money to this payer: 1 if it came in directly, 2 through one account.
+                case SEED_HOPS -> !w.flaggedIncomingSince(e.at().minus(hour)).isEmpty() ? 1
+                        : w.graph().secondHopSeeds().isEmpty() ? 0 : 2;
+                case CYCLE_24H -> w.graph().cyclePath().isEmpty() ? 0 : 1;
             };
         }
     }
@@ -103,7 +117,7 @@ public record FeatureRule(String name, Feature feature, String op, long threshol
         if (!NAME.matcher(name).matches()) {
             throw new IllegalArgumentException("rule name must be 3 to 40 of a-z, 0-9 and _: " + name);
         }
-        for (Rule builtIn : Rules.DEFAULT) {
+        for (Rule builtIn : Rules.V2) {
             if (builtIn.name().equals(name)) {
                 throw new IllegalArgumentException("rule name is taken by a baseline rule: " + name);
             }

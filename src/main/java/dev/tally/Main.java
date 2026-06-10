@@ -81,10 +81,11 @@ public final class Main {
         return !"false".equalsIgnoreCase(getenv.apply("TALLY_MIGRATE_ON_START"));
     }
 
-    // Rules accepted by the offline reflection gate are data, loaded only when an operator names the
-    // file (ADR-0025). A malformed file stops startup rather than scoring with half the rules.
+    // v2, the graph rules on top of v1, unless TALLY_FRAUD_RULESET=v1 asks for the old set to re-measure
+    // it. Rules the reflection gate accepted are data, loaded only when an operator names the file, and a
+    // malformed file stops startup rather than scoring with half the rules.
     private static List<Rule> fraudRules() {
-        List<Rule> rules = new ArrayList<>(Rules.DEFAULT);
+        List<Rule> rules = new ArrayList<>(Rules.named(System.getenv("TALLY_FRAUD_RULESET")));
         String extra = System.getenv("TALLY_FRAUD_EXTRA_RULES");
         if (extra != null && !extra.isBlank()) {
             List<Rule> loaded = FeatureRule.load(Path.of(extra));

@@ -5,104 +5,361 @@
     "accounts": 356
   },
   "threshold": 40,
-  "rules": [
-    "velocity",
-    "amount_deviation",
-    "new_counterparty",
-    "round_amount",
-    "time_of_day"
-  ],
   "store": "in-memory (TALLY_DB_URL unset), replay clock on",
-  "code_version": "a91911f",
-  "normal": {
-    "postings": 8991,
-    "flagged": 240,
-    "false_positive_rate": 0.0267
-  },
-  "patterns": {
-    "burst": {
-      "postings": 127,
-      "episodes": 15,
-      "flagged": 5,
-      "precision": 0.0204,
-      "recall": 0.0394,
-      "auroc": 0.8722,
-      "episodes_detected": 5,
-      "latency_postings_mean": 5.6,
-      "latency_postings_median": 4
+  "code_version": "eee1dc0",
+  "v1": {
+    "normal": {
+      "postings": 8991,
+      "flagged": 240,
+      "false_positive_rate": 0.0267
     },
-    "structuring": {
-      "postings": 78,
-      "episodes": 15,
-      "flagged": 78,
-      "precision": 0.2453,
-      "recall": 1.0,
-      "auroc": 0.9933,
-      "episodes_detected": 15,
-      "latency_postings_mean": 0,
-      "latency_postings_median": 0
+    "patterns": {
+      "burst": {
+        "postings": 127,
+        "episodes": 15,
+        "flagged": 5,
+        "precision": 0.0204,
+        "recall": 0.0394,
+        "auroc": 0.8722,
+        "episodes_detected": 5,
+        "latency_postings_mean": 5.6,
+        "latency_postings_median": 4
+      },
+      "structuring": {
+        "postings": 78,
+        "episodes": 15,
+        "flagged": 78,
+        "precision": 0.2453,
+        "recall": 1.0,
+        "auroc": 0.9933,
+        "episodes_detected": 15,
+        "latency_postings_mean": 0,
+        "latency_postings_median": 0
+      },
+      "account_takeover": {
+        "postings": 25,
+        "episodes": 15,
+        "flagged": 18,
+        "precision": 0.0698,
+        "recall": 0.72,
+        "auroc": 0.9906,
+        "episodes_detected": 15,
+        "latency_postings_mean": 0,
+        "latency_postings_median": 0
+      },
+      "mule_chain": {
+        "postings": 69,
+        "episodes": 15,
+        "flagged": 28,
+        "precision": 0.1045,
+        "recall": 0.4058,
+        "auroc": 0.837,
+        "episodes_detected": 15,
+        "latency_postings_mean": 0,
+        "latency_postings_median": 0
+      }
     },
-    "account_takeover": {
-      "postings": 25,
-      "episodes": 15,
-      "flagged": 18,
-      "precision": 0.0698,
-      "recall": 0.72,
-      "auroc": 0.9906,
-      "episodes_detected": 15,
-      "latency_postings_mean": 0,
-      "latency_postings_median": 0
+    "all_fraud": {
+      "postings": 299,
+      "episodes": 60,
+      "flagged": 129,
+      "precision": 0.3496,
+      "recall": 0.4314,
+      "auroc": 0.9055,
+      "episodes_detected": 50,
+      "latency_postings_mean": 0.56,
+      "latency_postings_median": 0.0
     },
-    "mule_chain": {
-      "postings": 69,
-      "episodes": 15,
-      "flagged": 28,
-      "precision": 0.1045,
-      "recall": 0.4058,
-      "auroc": 0.837,
-      "episodes_detected": 15,
-      "latency_postings_mean": 0,
-      "latency_postings_median": 0
+    "replay": {
+      "transfers": 9290,
+      "applied": 9290,
+      "refused": 0,
+      "refused_fraud": 0,
+      "seconds": 3.1
+    },
+    "alerts_per_1000_postings": 39.72,
+    "rules_fired": {
+      "amount_deviation": {
+        "normal": 227,
+        "fraud": 134
+      },
+      "new_counterparty": {
+        "normal": 1284,
+        "fraud": 122
+      },
+      "round_amount": {
+        "normal": 245,
+        "fraud": 90
+      },
+      "time_of_day": {
+        "normal": 114,
+        "fraud": 15
+      },
+      "velocity": {
+        "normal": 96,
+        "fraud": 85
+      }
     }
   },
-  "all_fraud": {
-    "postings": 299,
-    "episodes": 60,
-    "flagged": 129,
-    "precision": 0.3496,
-    "recall": 0.4314,
-    "auroc": 0.9055,
-    "episodes_detected": 50,
-    "latency_postings_mean": 0.56,
-    "latency_postings_median": 0.0
+  "v2": {
+    "normal": {
+      "postings": 8991,
+      "flagged": 50,
+      "false_positive_rate": 0.0056
+    },
+    "patterns": {
+      "burst": {
+        "postings": 127,
+        "episodes": 15,
+        "flagged": 91,
+        "precision": 0.6454,
+        "recall": 0.7165,
+        "auroc": 0.9746,
+        "episodes_detected": 15,
+        "latency_postings_mean": 2.4,
+        "latency_postings_median": 3
+      },
+      "structuring": {
+        "postings": 78,
+        "episodes": 15,
+        "flagged": 78,
+        "precision": 0.6094,
+        "recall": 1.0,
+        "auroc": 0.9986,
+        "episodes_detected": 15,
+        "latency_postings_mean": 0,
+        "latency_postings_median": 0
+      },
+      "account_takeover": {
+        "postings": 25,
+        "episodes": 15,
+        "flagged": 18,
+        "precision": 0.2647,
+        "recall": 0.72,
+        "auroc": 0.9979,
+        "episodes_detected": 15,
+        "latency_postings_mean": 0,
+        "latency_postings_median": 0
+      },
+      "mule_chain": {
+        "postings": 69,
+        "episodes": 15,
+        "flagged": 69,
+        "precision": 0.5798,
+        "recall": 1.0,
+        "auroc": 0.9983,
+        "episodes_detected": 15,
+        "latency_postings_mean": 0,
+        "latency_postings_median": 0
+      }
+    },
+    "all_fraud": {
+      "postings": 299,
+      "episodes": 60,
+      "flagged": 256,
+      "precision": 0.8366,
+      "recall": 0.8562,
+      "auroc": 0.9883,
+      "episodes_detected": 60,
+      "latency_postings_mean": 0.6,
+      "latency_postings_median": 0.0
+    },
+    "replay": {
+      "transfers": 9290,
+      "applied": 9290,
+      "refused": 0,
+      "refused_fraud": 0,
+      "seconds": 2.8
+    },
+    "alerts_per_1000_postings": 32.94,
+    "rules_fired": {
+      "amount_deviation": {
+        "normal": 227,
+        "fraud": 134
+      },
+      "cycle_24h": {
+        "normal": 7,
+        "fraud": 0
+      },
+      "established_payee": {
+        "normal": 7637,
+        "fraud": 0
+      },
+      "forwards_flagged": {
+        "normal": 0,
+        "fraud": 54
+      },
+      "fresh_payee_burst": {
+        "normal": 5,
+        "fraud": 100
+      },
+      "new_counterparty": {
+        "normal": 1284,
+        "fraud": 122
+      },
+      "round_amount": {
+        "normal": 245,
+        "fraud": 90
+      },
+      "time_of_day": {
+        "normal": 114,
+        "fraud": 15
+      },
+      "velocity": {
+        "normal": 96,
+        "fraud": 85
+      }
+    }
   },
-  "replay": {
-    "transfers": 9290,
-    "applied": 9290,
-    "refused": 0,
-    "refused_fraud": 0,
-    "seconds": 2.4
+  "precision_at_v1_recall": {
+    "burst": {
+      "v1_recall": 0.0394,
+      "v1_precision": 0.0204,
+      "v2": {
+        "precision": 0.8769,
+        "threshold": 55,
+        "recall": 0.4488
+      }
+    },
+    "structuring": {
+      "v1_recall": 1.0,
+      "v1_precision": 0.2453,
+      "v2": {
+        "precision": 0.7647,
+        "threshold": 50,
+        "recall": 1.0
+      }
+    },
+    "account_takeover": {
+      "v1_recall": 0.72,
+      "v1_precision": 0.0698,
+      "v2": {
+        "precision": 0.3158,
+        "threshold": 35,
+        "recall": 0.96
+      }
+    },
+    "mule_chain": {
+      "v1_recall": 0.4058,
+      "v1_precision": 0.1045,
+      "v2": {
+        "precision": 0.8621,
+        "threshold": 55,
+        "recall": 0.7246
+      }
+    },
+    "all_fraud": {
+      "v1_recall": 0.4314,
+      "v1_precision": 0.3496,
+      "v2": {
+        "precision": 0.9467,
+        "threshold": 55,
+        "recall": 0.4749
+      }
+    }
   },
-  "rules_fired": {
-    "amount_deviation": {
-      "normal": 227,
-      "fraud": 134
+  "explanations": {
+    "budget_micros": 50000,
+    "p50_micros": 27,
+    "p99_micros": 86,
+    "max_micros": 4190,
+    "over_budget": 0,
+    "flagged": 306,
+    "flagged_with_evidence": 150
+  },
+  "point_in_time": {
+    "postings_checked": 9290,
+    "features_per_posting": 16,
+    "java_python_mismatches": 0,
+    "late_evidence": 0,
+    "future_perturbation_samples": 200,
+    "future_perturbation_leaks": 0,
+    "passed": true,
+    "first_problems": []
+  },
+  "holdout": {
+    "seed": 20260926,
+    "v1": {
+      "all_fraud": {
+        "postings": 320,
+        "episodes": 60,
+        "flagged": 140,
+        "precision": 0.3655,
+        "recall": 0.4375,
+        "auroc": 0.9141,
+        "episodes_detected": 49,
+        "latency_postings_mean": 0.37,
+        "latency_postings_median": 0
+      },
+      "normal": {
+        "postings": 8802,
+        "flagged": 243,
+        "false_positive_rate": 0.0276
+      },
+      "alerts_per_1000_postings": 41.99,
+      "patterns": {
+        "burst": {
+          "precision": 0.0162,
+          "recall": 0.0296,
+          "auroc": 0.8717
+        },
+        "structuring": {
+          "precision": 0.2614,
+          "recall": 1.0,
+          "auroc": 0.9924
+        },
+        "account_takeover": {
+          "precision": 0.0795,
+          "recall": 0.7,
+          "auroc": 0.9875
+        },
+        "mule_chain": {
+          "precision": 0.1066,
+          "recall": 0.4203,
+          "auroc": 0.8674
+        }
+      }
     },
-    "new_counterparty": {
-      "normal": 1284,
-      "fraud": 122
-    },
-    "round_amount": {
-      "normal": 245,
-      "fraud": 90
-    },
-    "time_of_day": {
-      "normal": 114,
-      "fraud": 15
-    },
-    "velocity": {
-      "normal": 96,
-      "fraud": 85
+    "v2": {
+      "all_fraud": {
+        "postings": 320,
+        "episodes": 60,
+        "flagged": 274,
+        "precision": 0.8179,
+        "recall": 0.8562,
+        "auroc": 0.9822,
+        "episodes_detected": 60,
+        "latency_postings_mean": 0.62,
+        "latency_postings_median": 0.0
+      },
+      "normal": {
+        "postings": 8802,
+        "flagged": 61,
+        "false_positive_rate": 0.0069
+      },
+      "alerts_per_1000_postings": 36.72,
+      "patterns": {
+        "burst": {
+          "precision": 0.6164,
+          "recall": 0.7259,
+          "auroc": 0.9606
+        },
+        "structuring": {
+          "precision": 0.585,
+          "recall": 1.0,
+          "auroc": 0.9983
+        },
+        "account_takeover": {
+          "precision": 0.2561,
+          "recall": 0.7,
+          "auroc": 0.9963
+        },
+        "mule_chain": {
+          "precision": 0.5308,
+          "recall": 1.0,
+          "auroc": 0.9984
+        }
+      }
     }
   }
 }

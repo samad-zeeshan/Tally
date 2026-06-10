@@ -2,6 +2,7 @@ package dev.tally.fraud;
 
 import java.time.Duration;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,6 +15,23 @@ public final class Rules {
     public static final List<Rule> DEFAULT = List.of(
             new Velocity(), new AmountDeviation(), new NewCounterparty(), new RoundAmount(), new TimeOfDay());
 
+    // The v1 rules plus the graph rules. The service runs this set; DEFAULT stays so v1 can be re-measured.
+    public static final List<Rule> V2 = concat(DEFAULT, GraphRules.ALL);
+
+    public static List<Rule> named(String ruleset) {
+        return switch (ruleset == null || ruleset.isBlank() ? "v2" : ruleset) {
+            case "v1" -> DEFAULT;
+            case "v2" -> V2;
+            default -> throw new IllegalArgumentException("TALLY_FRAUD_RULESET must be v1 or v2: " + ruleset);
+        };
+    }
+
+    private static List<Rule> concat(List<Rule> a, List<Rule> b) {
+        List<Rule> all = new ArrayList<>(a);
+        all.addAll(b);
+        return List.copyOf(all);
+    }
+
     /** Many payments out in a short span: the shape of a drained account or a scripted burst. */
     public record Velocity(Duration span, int minEarlier) implements Rule {
         public Velocity() {
@@ -23,6 +41,11 @@ public final class Rules {
         @Override
         public String name() {
             return "velocity";
+        }
+
+        @Override
+        public List<Long> evidence(PostingEvent event, Window window) {
+            return window.outgoingIdsBetween(event.at().minus(span), event.at());
         }
 
         @Override
