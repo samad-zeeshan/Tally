@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 WINDOW_LIMIT = 200          # Scorer.WINDOW_LIMIT
+PAYERS_CAP = 50             # Scorer.PAYERS_CAP
 FLAG = 40                   # Score.FLAG_THRESHOLD
 CYCLE_HOPS = 3
 TEN_MIN, HOUR, DAY = timedelta(minutes=10), timedelta(hours=1), timedelta(hours=24)
@@ -54,7 +55,8 @@ class Index:
         return rows[:bisect.bisect_left(rows, i)]
 
     def outgoing(self, account, i, limit=WINDOW_LIMIT):
-        return [self.stream[j] for j in reversed(self.before(self.out, account, i)[-limit:])]
+        rows = self.before(self.out, account, i)
+        return [self.stream[j] for j in reversed(rows if limit is None else rows[-limit:])]
 
     def incoming(self, account, i):
         return [self.stream[j] for j in reversed(self.before(self.inc, account, i))]
@@ -96,7 +98,7 @@ def features_at(index, i):
         "incoming_60m_minor": inflow,
         "passthrough_pct": 0 if inflow == 0 else e.amount * 100 // inflow,
         "fan_in_60m": len({p.src for p in incoming}),
-        "payee_payers": len({p.src for p in index.incoming(e.dst, i)}),
+        "payee_payers": min(PAYERS_CAP, len({p.src for p in index.incoming(e.dst, i)})),
         "payee_outgoing": len(index.outgoing(e.dst, i)),
         "flagged_in_60m_minor": sum(p.amount for p in flagged),
         "seed_hops": 1 if flagged else (2 if second else 0),
@@ -111,8 +113,10 @@ def _cycle(index, i):
     for _ in range(CYCLE_HOPS):
         nxt = []
         for node in frontier:
-            for p in index.outgoing(node, i):
-                if p.at < e.at - DAY or p.at > e.at:
+            # The store filters on time first and then takes 200, so this does the same, in the same order.
+            recent = [p for p in index.outgoing(node, i, limit=None) if p.at >= e.at - DAY][:WINDOW_LIMIT]
+            for p in recent:
+                if p.at > e.at:
                     continue
                 if p.dst == e.src:
                     return True

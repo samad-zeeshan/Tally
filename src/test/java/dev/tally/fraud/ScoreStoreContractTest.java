@@ -78,7 +78,36 @@ abstract class ScoreStoreContractTest {
         Score score = new Score(bare.postingId(), bare.transferId(), bare.account(), bare.counterparty(),
                 bare.amountMinor(), bare.score(), bare.rules(), bare.eventAt(), bare.scoredAt(), why);
         store.insertIfAbsent(score);
-        assertEquals(score, store.outgoingBefore(alice.id(), Long.MAX_VALUE, 1).getFirst());
+        assertEquals(score, store.recent(alice.id(), 1).getFirst());
+    }
+
+    @Test
+    void payersAreCountedOnceEachBelowThePostingAndCapped() {
+        Score a1 = pay(alice, carol, 100, T0, 0, List.of());
+        Score a2 = pay(alice, carol, 100, T0.plusSeconds(1), 0, List.of());
+        Score b1 = pay(bob, carol, 100, T0.plusSeconds(2), 0, List.of());
+        for (Score s : List.of(a1, a2, b1)) {
+            store.insertIfAbsent(s);
+        }
+        assertEquals(2, store.distinctPayersBefore(carol.id(), Long.MAX_VALUE, 50));
+        assertEquals(1, store.distinctPayersBefore(carol.id(), b1.postingId(), 50));
+        assertEquals(1, store.distinctPayersBefore(carol.id(), Long.MAX_VALUE, 1), "the count stops at the cap");
+        assertEquals(2, store.outgoingCountBefore(alice.id(), Long.MAX_VALUE, 200));
+        assertEquals(1, store.outgoingCountBefore(alice.id(), Long.MAX_VALUE, 1));
+        assertEquals(0, store.outgoingCountBefore(alice.id(), a1.postingId(), 200));
+    }
+
+    @Test
+    void outgoingSinceIsATimeWindowBelowThePosting() {
+        Score old = pay(alice, bob, 100, T0, 0, List.of());
+        Score recent = pay(alice, carol, 200, T0.plus(Duration.ofHours(5)), 0, List.of());
+        Score later = pay(alice, bob, 300, T0.plus(Duration.ofHours(6)), 0, List.of());
+        for (Score s : List.of(old, recent, later)) {
+            store.insertIfAbsent(s);
+        }
+        List<Long> ids = store.outgoingSince(alice.id(), T0.plus(Duration.ofHours(1)), later.postingId(), 200)
+                .stream().map(Score::postingId).toList();
+        assertEquals(List.of(recent.postingId()), ids);
     }
 
     @Test

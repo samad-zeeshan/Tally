@@ -35,7 +35,7 @@ public final class FraudScoring implements PostingSink, AutoCloseable {
     }
 
     public List<Score> recent(AccountId account, int limit) {
-        return store.outgoingBefore(account, Long.MAX_VALUE, limit);
+        return store.recent(account, limit);
     }
 
     // True only when TALLY_FRAUD_REPLAY_CLOCK=true, for the offline evaluation. Never set in a manifest.

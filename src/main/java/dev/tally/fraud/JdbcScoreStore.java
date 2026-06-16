@@ -24,6 +24,10 @@ import java.util.UUID;
 public final class JdbcScoreStore implements ScoreStore {
     private static final String COLUMNS =
             "posting_id, transfer_id, account_id, counterparty_id, amount_minor, score, fired_rules, event_at, scored_at, explanation";
+    // What the scorer reads before every score. The explanation is left out: no rule reads it, and on a
+    // busy account parsing it for hundreds of rows held a pooled connection long enough to starve transfers.
+    private static final String WINDOW_COLUMNS =
+            "posting_id, transfer_id, account_id, counterparty_id, amount_minor, score, fired_rules, event_at, scored_at, NULL AS explanation";
 
     private final Pool pool;
 
@@ -73,7 +77,7 @@ public final class JdbcScoreStore implements ScoreStore {
 
     @Override
     public List<Score> outgoingBefore(AccountId account, long beforePostingId, int limit) {
-        return query("SELECT " + COLUMNS + " FROM posting_scores WHERE account_id = ? AND posting_id < ? "
+        return query("SELECT " + WINDOW_COLUMNS + " FROM posting_scores WHERE account_id = ? AND posting_id < ? "
                 + "ORDER BY posting_id DESC LIMIT ?", ps -> {
             ps.setObject(1, account.value());
             ps.setLong(2, beforePostingId);
@@ -83,12 +87,61 @@ public final class JdbcScoreStore implements ScoreStore {
 
     @Override
     public List<Score> incomingSince(AccountId account, Instant since, long beforePostingId) {
-        return query("SELECT " + COLUMNS + " FROM posting_scores WHERE counterparty_id = ? AND event_at >= ? "
+        return query("SELECT " + WINDOW_COLUMNS + " FROM posting_scores WHERE counterparty_id = ? AND event_at >= ? "
                 + "AND posting_id < ? ORDER BY posting_id DESC", ps -> {
             ps.setObject(1, account.value());
             ps.setObject(2, OffsetDateTime.ofInstant(since, ZoneOffset.UTC));
             ps.setLong(3, beforePostingId);
         });
+    }
+
+    @Override
+    public List<Score> recent(AccountId account, int limit) {
+        return query("SELECT " + COLUMNS + " FROM posting_scores WHERE account_id = ? ORDER BY posting_id DESC LIMIT ?", ps -> {
+            ps.setObject(1, account.value());
+            ps.setInt(2, limit);
+        });
+    }
+
+    // The inner LIMIT stops the scan at the cap, so a payee with a million payers costs the same as one with fifty.
+    @Override
+    public int distinctPayersBefore(AccountId account, long beforePostingId, int cap) {
+        return count("SELECT count(*) FROM (SELECT DISTINCT account_id FROM posting_scores "
+                + "WHERE counterparty_id = ? AND posting_id < ? LIMIT ?) payers", account, beforePostingId, cap);
+    }
+
+    @Override
+    public int outgoingCountBefore(AccountId account, long beforePostingId, int cap) {
+        return count("SELECT count(*) FROM (SELECT 1 FROM posting_scores WHERE account_id = ? AND posting_id < ? LIMIT ?) sent",
+                account, beforePostingId, cap);
+    }
+
+    @Override
+    public List<Score> outgoingSince(AccountId account, Instant since, long beforePostingId, int limit) {
+        return query("SELECT " + WINDOW_COLUMNS + " FROM posting_scores WHERE account_id = ? AND event_at >= ? "
+                + "AND posting_id < ? ORDER BY posting_id DESC LIMIT ?", ps -> {
+            ps.setObject(1, account.value());
+            ps.setObject(2, OffsetDateTime.ofInstant(since, ZoneOffset.UTC));
+            ps.setLong(3, beforePostingId);
+            ps.setInt(4, limit);
+        });
+    }
+
+    private int count(String sql, AccountId account, long beforePostingId, int cap) {
+        Connection conn = pool.borrow();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, account.value());
+            ps.setLong(2, beforePostingId);
+            ps.setInt(3, cap);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new StoreException("score count failed", e);
+        } finally {
+            pool.giveBack(conn);
+        }
     }
 
     private interface Binder {

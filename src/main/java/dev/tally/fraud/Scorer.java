@@ -29,6 +29,8 @@ public final class Scorer {
     static final Duration INCOMING_SPAN = Duration.ofHours(1);
     static final Duration CYCLE_SPAN = Duration.ofHours(24);
     static final int CYCLE_MAX_HOPS = 3;
+    // The rules only ask whether a payee has at most one payer or at least three, so counting stops at 50.
+    static final int PAYERS_CAP = 50;
     // KONTOGRAPH (arXiv 2608.22389) works to 200 ms for the whole decision. The scorer runs after commit,
     // so its budget only has to keep the queue moving, and a quarter of theirs leaves room for Postgres reads.
     public static final long EXPLAIN_BUDGET_MICROS = 50_000;
@@ -105,11 +107,8 @@ public final class Scorer {
 
     private Window.Graph graph(PostingEvent event, List<Score> incoming) {
         long before = event.debitPostingId();
-        Set<AccountId> payers = new HashSet<>();
-        for (Score s : store.incomingSince(event.to(), Instant.EPOCH, before)) {
-            payers.add(s.account());
-        }
-        int payeeOutgoing = store.outgoingBefore(event.to(), before, WINDOW_LIMIT).size();
+        int payers = store.distinctPayersBefore(event.to(), before, PAYERS_CAP);
+        int payeeOutgoing = store.outgoingCountBefore(event.to(), before, WINDOW_LIMIT);
         // Flagged money that reached one of this account's recent payers in the hour before that payer paid.
         List<Long> seeds = new ArrayList<>();
         for (Score in : incoming) {
@@ -119,7 +118,7 @@ public final class Scorer {
                 }
             }
         }
-        return new Window.Graph(payers.size(), payeeOutgoing, seeds, cycle(event));
+        return new Window.Graph(payers, payeeOutgoing, seeds, cycle(event));
     }
 
     // Breadth first from the payee along payments made in the last day, looking for the payer. Returns the
@@ -132,8 +131,8 @@ public final class Scorer {
         for (int hop = 0; hop < CYCLE_MAX_HOPS && !frontier.isEmpty(); hop++) {
             ArrayDeque<AccountId> next = new ArrayDeque<>();
             for (AccountId node : frontier) {
-                for (Score s : store.outgoingBefore(node, event.debitPostingId(), WINDOW_LIMIT)) {
-                    if (s.eventAt().isBefore(since) || s.eventAt().isAfter(event.at())) {
+                for (Score s : store.outgoingSince(node, since, event.debitPostingId(), WINDOW_LIMIT)) {
+                    if (s.eventAt().isAfter(event.at())) {
                         continue;
                     }
                     if (s.counterparty().equals(event.from())) {
