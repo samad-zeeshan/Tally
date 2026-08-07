@@ -16,7 +16,7 @@ import java.util.function.LongConsumer;
  *
  * Fixed size bounds the load on Postgres no matter how many virtual threads exist. Because JEP 491
  * (JDK 24, present in Java 25) removed synchronized pinning, a virtual thread that blocks here does
- * not pin its carrier. See ADR-0013.
+ * not pin its carrier.
  */
 public final class Pool implements AutoCloseable {
     private final DbConfig config;

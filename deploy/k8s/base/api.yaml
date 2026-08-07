@@ -1,4 +1,4 @@
-# The Java service, which also serves the built web client at the same origin (ADR-0020).
+# The Java service, which also serves the built web client at the same origin.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

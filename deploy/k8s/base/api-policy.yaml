@@ -10,7 +10,7 @@ spec:
       app.kubernetes.io/name: tally-api
 ---
 # Scales on CPU because the handlers are CPU bound once a transfer holds its row locks. It needs
-# metrics-server, which kind does not ship; without it the HPA holds at minReplicas. See ADR-0022.
+# metrics-server, which kind does not ship; without it the HPA holds at minReplicas.
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

@@ -1,5 +1,5 @@
 // Fraud scores for the selected account's payments out, and which rules fired. Scoring runs after the
-// transfer commits (ADR-0024), so a score can land a moment after the statement does; the panel asks
+// transfer commits, so a score can land a moment after the statement does; the panel asks
 // once more shortly after each refresh rather than polling.
 import { useEffect, useState } from "react";
 import { ApiError, getRisk } from "../api/client";

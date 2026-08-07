@@ -13,7 +13,7 @@ import java.util.function.LongSupplier;
 /**
  * The service's counters and histograms, rendered by hand in the Prometheus text format 0.0.4.
  *
- * The series are fixed fields, not a registry keyed by name, so a typo is a compile error. See ADR-0023.
+ * The series are fixed fields, not a registry keyed by name, so a typo is a compile error.
  */
 public final class Metrics {
     // Request latency on a local JVM is well under a millisecond for most routes, so the low end is dense.

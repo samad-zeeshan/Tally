@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 /**
  * A rule written as data: one feature, one comparison, one threshold, some points. This is the whole
- * language a reflection step may propose in (ADR-0025), so a proposal can be checked, never executed.
+ * language a reflection step may propose in, so a proposal can be checked, never executed.
  */
 public record FeatureRule(String name, Feature feature, String op, long threshold, int points) implements Rule {
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9_]{2,39}");

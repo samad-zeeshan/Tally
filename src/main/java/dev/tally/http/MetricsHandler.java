@@ -5,7 +5,7 @@ import dev.tally.obs.Metrics;
 import java.nio.charset.StandardCharsets;
 
 /**
- * GET /metrics in the Prometheus text format. Registered behind the bearer token, see ADR-0023.
+ * GET /metrics in the Prometheus text format. Registered behind the bearer token.
  */
 public final class MetricsHandler implements ApiHandler {
     private static final String CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";

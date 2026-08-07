@@ -68,14 +68,14 @@ public final class Main {
 
     // com.sun.net.httpserver has no per-exchange deadline, only these process-wide millisecond limits,
     // and they must be set before HttpServer.create first loads the server's config class. Honest floor,
-    // not real policy: a reverse proxy owns timeouts in production. See ADR-0015.
+    // not real policy: a reverse proxy owns timeouts in production.
     public static void applyServerTuning() {
         System.setProperty("sun.net.httpserver.maxReqTime", "10000");    // receive the request within 10s
         System.setProperty("sun.net.httpserver.maxRspTime", "30000");    // deliver the response within 30s
         System.setProperty("sun.net.httpserver.maxReqHeaderSize", "16384");   // default 384 KiB is absurd here
     }
 
-    // Under Kubernetes a Job owns migrations and the pods only wait for them (ADR-0022), because two
+    // Under Kubernetes a Job owns migrations and the pods only wait for them, because two
     // replicas running the lock-free runner at once would race on CREATE TABLE.
     static boolean migrateOnStart(UnaryOperator<String> getenv) {
         return !"false".equalsIgnoreCase(getenv.apply("TALLY_MIGRATE_ON_START"));

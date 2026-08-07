@@ -1,4 +1,4 @@
--- Fraud scores, one row per scored debit posting, written by the asynchronous scorer (ADR-0024).
+-- Fraud scores, one row per scored debit posting, written by the asynchronous scorer.
 
 CREATE TABLE posting_scores (
     -- The primary key is the idempotency guarantee for scoring: a posting delivered twice is inserted

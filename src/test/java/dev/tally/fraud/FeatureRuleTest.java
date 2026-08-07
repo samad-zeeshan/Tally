@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * The constrained rule a reflection step may propose (ADR-0025): each feature's value, the comparison,
+ * The constrained rule a reflection step may propose: each feature's value, the comparison,
  * and every way a proposal can be malformed.
  */
 class FeatureRuleTest {

@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.function.UnaryOperator;
 
 /**
- * Bearer-token auth for the API, on every endpoint except /health. See ADR-0015.
+ * Bearer-token auth for the API, on every endpoint except /health.
  *
  * It reads only the Authorization header, so a 401 is decided before the Idempotency-Key is consulted,
  * which is what stops an unauthenticated retry from consuming or reserving a key. There is no 403: one

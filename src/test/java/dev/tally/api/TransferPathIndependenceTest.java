@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The transfer path must not wait for, or fail with, the fraud scorer (ADR-0024). Each test gives the
+ * The transfer path must not wait for, or fail with, the fraud scorer. Each test gives the
  * server a broken scorer and shows transfers answer as fast and as correctly as ever.
  */
 class TransferPathIndependenceTest extends ApiTestHarness {

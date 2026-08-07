@@ -1,4 +1,4 @@
-# Bring Tally up on a local kind cluster from Windows PowerShell. Same steps as k8s-up.sh, see ADR-0022.
+# Bring Tally up on a local kind cluster from Windows PowerShell. Same steps as k8s-up.sh.
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 

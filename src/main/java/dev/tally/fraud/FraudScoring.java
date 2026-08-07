@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * The fraud scoring as the rest of the service sees it: a sink for applied postings, and a reader for the
- * risk endpoint. Wires the queue, the scorer and the store together. See ADR-0024.
+ * risk endpoint. Wires the queue, the scorer and the store together.
  */
 public final class FraudScoring implements PostingSink, AutoCloseable {
     public static final int DEFAULT_CAPACITY = 10_000;

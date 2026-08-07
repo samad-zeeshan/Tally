@@ -1,5 +1,5 @@
 # Everything Tally needs in one namespace. The Secret tally-secrets is deliberately not listed: the up
-# script creates it from .env so no credential is ever a file in this tree. See ADR-0022.
+# script creates it from .env so no credential is ever a file in this tree.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

@@ -28,7 +28,7 @@ export class ApiError extends Error {
 
 // import.meta.env.VITE_* is baked into the served JavaScript and readable by anyone who opens the page.
 // Acceptable only because this is a dev/demo credential for a local backend; a real client would get a
-// short-lived session token from a login flow, never a bundled secret. The trade is owned by ADR-0015.
+// short-lived session token from a login flow, never a bundled secret.
 const TOKEN = import.meta.env.VITE_API_TOKEN;
 
 // In dev the Vite proxy owns the "/api" prefix and strips it before forwarding to the backend. The

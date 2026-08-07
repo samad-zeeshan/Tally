@@ -11,7 +11,7 @@ import java.util.Optional;
 
 /**
  * Runs the migrations and exits, or with --await waits until someone else has. The Kubernetes Job runs
- * the first, and each API pod's init container runs the second, see ADR-0022.
+ * the first, and each API pod's init container runs the second.
  */
 public final class Migrate {
     private Migrate() {}

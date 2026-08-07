@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 /**
  * Programmatic java.util.logging setup: one stderr handler, single-line text or JSON lines, no
  * logging.properties. Stderr, not a file, because it suits containers and dodges OneDrive's sync
- * lock on this machine. See ADR-0016.
+ * lock on this machine.
  */
 public final class Logs {
     private static final String ROOT = "dev.tally";

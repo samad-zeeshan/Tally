@@ -15,7 +15,7 @@ import java.util.logging.LogRecord;
 import java.util.regex.Pattern;
 
 /**
- * One JSON object per record, for a log collector. Selected with TALLY_LOG_FORMAT=json, see ADR-0023.
+ * One JSON object per record, for a log collector. Selected with TALLY_LOG_FORMAT=json.
  *
  * The messages are already key=value text, so each pair becomes its own field and the rest is msg.
  */

@@ -20,7 +20,7 @@ class MainTest {
         assertEquals("16384", System.getProperty("sun.net.httpserver.maxReqHeaderSize"));
     }
 
-    // Compose and a laptop migrate at startup. Kubernetes turns it off and runs a Job instead (ADR-0022),
+    // Compose and a laptop migrate at startup. Kubernetes turns it off and runs a Job instead,
     // so only an explicit false may skip it.
     @Test
     void migrationsRunOnStartUnlessExplicitlyTurnedOff() {

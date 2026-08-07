@@ -12,7 +12,7 @@ import java.util.function.Supplier;
  * One lock per account, acquired lower-id-first so a deadlock cycle cannot form.
  *
  * Any consistent total order over the ids breaks Coffman's circular-wait condition; this uses
- * the natural order of the UUID. See ADR-0007.
+ * the natural order of the UUID.
  */
 final class AccountLocks {
     private final ConcurrentHashMap<AccountId, ReentrantLock> locks = new ConcurrentHashMap<>();

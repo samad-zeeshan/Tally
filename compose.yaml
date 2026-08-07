@@ -28,7 +28,7 @@ services:
     build:
       context: .
       # Baked into the served JS so the demo's create and transfer work. A client-embedded token is not
-      # protection (ADR-0015), it only exercises the auth handshake, which is exactly why it must be the
+      # protection, it only exercises the auth handshake, which is exactly why it must be the
       # developer's own throwaway value and not a constant committed to a public repository.
       args:
         VITE_API_TOKEN: ${TALLY_API_TOKEN:?set TALLY_API_TOKEN in .env, see .env.example}

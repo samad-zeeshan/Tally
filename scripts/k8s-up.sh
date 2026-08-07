@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bring Tally up on a local kind cluster: build the image, load it, create the Secret from .env, apply
-# the overlay, wait for every piece, and print the URLs. Safe to run again. See ADR-0022.
+# the overlay, wait for every piece, and print the URLs. Safe to run again.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

@@ -98,7 +98,7 @@ public final class TransfersHandler {
         };
     }
 
-    // Replay reproduces the original status on purpose (see ADR-0010): it recurses once into the same
+    // Replay reproduces the original status on purpose: it recurses once into the same
     // renderer and adds the header, so a replayed 201 stays a 201 and a replayed 422 stays a 422.
     private Response render(TransferOutcome outcome, TransferRequest req) {
         return switch (outcome) {

@@ -1,4 +1,4 @@
-# Prometheus scrapes every API pod, not the Service. Counters are per process (ADR-0023), so scraping
+# Prometheus scrapes every API pod, not the Service. Counters are per process, so scraping
 # through the Service would read a different pod each time and the rates would be noise.
 apiVersion: v1
 kind: ServiceAccount
@@ -39,7 +39,7 @@ data:
     scrape_configs:
       - job_name: tally-api
         metrics_path: /metrics
-        # /metrics needs the same bearer token as the rest of the API (ADR-0023).
+        # /metrics needs the same bearer token as the rest of the API.
         authorization:
           type: Bearer
           credentials_file: /etc/tally/token

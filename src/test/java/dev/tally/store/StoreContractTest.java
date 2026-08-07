@@ -123,7 +123,7 @@ abstract class StoreContractTest {
         assertEquals(0, balance(store, b.id()));
     }
 
-    // The fraud scorer keys its scores on the debit posting id (ADR-0024), so an Applied outcome has to
+    // The fraud scorer keys its scores on the debit posting id, so an Applied outcome has to
     // name its two postings, and a replay has to name the same two.
     @Test
     void appliedNamesItsDebitAndCreditPostings() {
