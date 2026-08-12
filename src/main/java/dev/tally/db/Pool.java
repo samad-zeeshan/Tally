@@ -5,6 +5,7 @@ import dev.tally.store.StoreException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -45,9 +46,17 @@ public final class Pool implements AutoCloseable {
         return new Pool(config, idle, waitNanos);
     }
 
-    // No Class.forName: the driver self-registers through ServiceLoader.
+    // No Class.forName: the driver self-registers through ServiceLoader. The driver's default socket timeout
+    // is none, so a partition that drops packets left a read waiting forever and its pool slot with it.
     private static Connection fresh(DbConfig config) throws SQLException {
-        return DriverManager.getConnection(config.url(), config.user(), config.password());
+        Properties props = new Properties();
+        props.setProperty("user", config.user());
+        props.setProperty("password", config.password());
+        props.setProperty("connectTimeout", "5");
+        props.setProperty("loginTimeout", String.valueOf(config.socketTimeoutSeconds()));
+        props.setProperty("socketTimeout", String.valueOf(config.socketTimeoutSeconds()));
+        props.setProperty("tcpKeepAlive", "true");
+        return DriverManager.getConnection(config.url(), props);
     }
 
     // Validate before handing out: a database bounce drops every socket, so a dead connection is
