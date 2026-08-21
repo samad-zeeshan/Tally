@@ -95,6 +95,12 @@ class Reflect(unittest.TestCase):
         self.assertEqual("rejected", record["verdict"])
         self.assertEqual("unparseable", record["smt"]["reason"])
 
+    def test_a_model_that_never_answers_is_logged_not_fatal(self):
+        def silent(prompt):
+            raise TimeoutError("the model server did not answer")
+        record = reflect.one_run(silent, self.memory, self.baseline, [], gate=lambda r: self.fail("no gate"))
+        self.assertEqual(("rejected", "no_answer"), (record["verdict"], record["smt"]["reason"]))
+
     def test_the_prompt_shows_retrieved_episodes_and_past_verdicts(self):
         self.memory.remember_proposal({"rule": {"name": "old_idea"}, "verdict": "rejected", "why": ["AUROC fell"]})
         proposer = FakeProposer('{"name": "second_hop_seed", "feature": "seed_hops", "op": ">=", '

@@ -1,144 +1,222 @@
 {
-  "model": "qwen/qwen3.5-9b",
-  "threshold": 40,
-  "dataset_seed": 20260925,
-  "evidence_parity_postings": 9290,
-  "baseline": {
-    "recall": 0.4314,
-    "auroc": 0.9055,
-    "flagged_fraud": 129,
-    "flagged_normal": 240,
-    "by_pattern_recall": {
-      "burst": 0.0394,
-      "structuring": 1.0,
-      "account_takeover": 0.72,
-      "mule_chain": 0.4058
-    }
-  },
-  "proposals": [
+  "v1_rounds_moved_to_memory": 3,
+  "runs": [
     {
-      "round": 1,
-      "rules_in_force": [],
-      "raw_answer": "{\n\"name\": \"mule_incoming_rule\",\n\"feature\": \"incoming_60m_minor\",\n\"op\": \">=\",\n\"threshold\": 1000,\n\"points\": 40,\n\"reason\": \"Detects high incoming money flow characteristic of mule accounts without triggering on normal low-incoming transactions.\"\n}",
-      "reason": "Detects high incoming money flow characteristic of mule accounts without triggering on normal low-incoming transactions.",
-      "rule": {
-        "name": "mule_incoming_rule",
-        "feature": "incoming_60m_minor",
-        "op": ">=",
-        "threshold": 1000,
-        "points": 40
+      "retrieved_episodes": [
+        "5ccc743:13491",
+        "5ccc743:14361",
+        "5ccc743:12483",
+        "5ccc743:13493",
+        "5ccc743:12485",
+        "5ccc743:15803",
+        "5ccc743:3395",
+        "5ccc743:1451",
+        "5ccc743:10959",
+        "5ccc743:11573",
+        "5ccc743:13005",
+        "5ccc743:13583"
+      ],
+      "memory": {
+        "false_alert": 46,
+        "missed": 33
       },
       "before": {
-        "recall": 0.4314,
-        "auroc": 0.9055,
-        "flagged_fraud": 129,
-        "flagged_normal": 240,
-        "by_pattern_recall": {
-          "burst": 0.0394,
-          "structuring": 1.0,
-          "account_takeover": 0.72,
-          "mule_chain": 0.4058
-        }
+        "recall": 0.8562,
+        "auroc": 0.9883,
+        "flagged_fraud": 256,
+        "flagged_normal": 50
       },
-      "after": {
-        "recall": 0.5686,
-        "auroc": 0.9307,
-        "flagged_fraud": 170,
-        "flagged_normal": 443,
-        "by_pattern_recall": {
-          "burst": 0.0394,
-          "structuring": 1.0,
-          "account_takeover": 0.72,
-          "mule_chain": 1.0
-        }
-      },
-      "verdict": "rejected",
-      "why": [
-        "flagged normal postings rose from 240 to 443"
-      ]
-    },
-    {
-      "round": 2,
-      "rules_in_force": [],
-      "raw_answer": "{\"name\": \"mule_passthrough_rule\", \"feature\": \"passthrough_pct\", \"op\": \">=\", \"threshold\": 80, \"points\": 20, \"reason\": \"High passthrough percentage effectively identifies mule accounts with minimal false positives on normal transactions.\"}",
-      "reason": "High passthrough percentage effectively identifies mule accounts with minimal false positives on normal transactions.",
+      "reason": "This rule targets the missed 'burst' fraud pattern where accounts send multiple payments to a single new payee within an hour (distinct_payees_60m=1), adding points without triggering on normal high-volume accounts that typically use multiple distinct payees.",
       "rule": {
-        "name": "mule_passthrough_rule",
-        "feature": "passthrough_pct",
-        "op": ">=",
-        "threshold": 80,
-        "points": 20
-      },
-      "before": {
-        "recall": 0.4314,
-        "auroc": 0.9055,
-        "flagged_fraud": 129,
-        "flagged_normal": 240,
-        "by_pattern_recall": {
-          "burst": 0.0394,
-          "structuring": 1.0,
-          "account_takeover": 0.72,
-          "mule_chain": 0.4058
-        }
-      },
-      "after": {
-        "recall": 0.5217,
-        "auroc": 0.9334,
-        "flagged_fraud": 156,
-        "flagged_normal": 262,
-        "by_pattern_recall": {
-          "burst": 0.0394,
-          "structuring": 1.0,
-          "account_takeover": 0.72,
-          "mule_chain": 0.7971
-        }
-      },
-      "verdict": "rejected",
-      "why": [
-        "flagged normal postings rose from 240 to 262"
-      ]
-    },
-    {
-      "round": 3,
-      "rules_in_force": [],
-      "raw_answer": "{\"name\": \"burst_distinct_payees_rule\", \"feature\": \"distinct_payees_60m\", \"op\": \">=\", \"threshold\": 3, \"points\": 20, \"reason\": \"High distinct payees in 60 minutes indicate burst activity without triggering on normal accounts that typically use fewer payees.\"}",
-      "reason": "High distinct payees in 60 minutes indicate burst activity without triggering on normal accounts that typically use fewer payees.",
-      "rule": {
-        "name": "burst_distinct_payees_rule",
+        "name": "burst_single_payee",
         "feature": "distinct_payees_60m",
-        "op": ">=",
-        "threshold": 3,
-        "points": 20
+        "op": "==",
+        "threshold": 1,
+        "points": 25
       },
-      "before": {
-        "recall": 0.4314,
-        "auroc": 0.9055,
-        "flagged_fraud": 129,
-        "flagged_normal": 240,
-        "by_pattern_recall": {
-          "burst": 0.0394,
-          "structuring": 1.0,
-          "account_takeover": 0.72,
-          "mule_chain": 0.4058
+      "smt": {
+        "verdict": "rejected",
+        "reason": "contradicts_policy",
+        "policy": "known_payee_small_payment",
+        "detail": "a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged",
+        "counterexample": {
+          "outgoing_10m": 0,
+          "outgoing_60m": 1,
+          "amount_minor": 1,
+          "amount_to_median_x100": 500,
+          "history_size": 5,
+          "counterparty_known": 1,
+          "distinct_payees_60m": 1,
+          "hour_seen_count": 1,
+          "incoming_60m_minor": 0,
+          "passthrough_pct": 0,
+          "fan_in_60m": 0,
+          "payee_payers": 1,
+          "payee_outgoing": 0,
+          "flagged_in_60m_minor": 0,
+          "seed_hops": 0,
+          "cycle_24h": 0
         }
       },
-      "after": {
-        "recall": 0.5485,
-        "auroc": 0.9107,
-        "flagged_fraud": 164,
-        "flagged_normal": 278,
-        "by_pattern_recall": {
-          "burst": 0.315,
-          "structuring": 1.0,
-          "account_takeover": 0.72,
-          "mule_chain": 0.4058
+      "gate": {
+        "verdict": "not_run"
+      },
+      "verdict": "rejected",
+      "why": [
+        "smt: contradicts_policy: a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged"
+      ],
+      "run": 1,
+      "model": "qwen/qwen3.5-9b",
+      "server_errors": [],
+      "at": "2026-09-25T23:27:51Z"
+    },
+    {
+      "retrieved_episodes": [
+        "5ccc743:13491",
+        "5ccc743:14361",
+        "5ccc743:12483",
+        "5ccc743:13493",
+        "5ccc743:12485",
+        "5ccc743:15803",
+        "5ccc743:3395",
+        "5ccc743:1451",
+        "5ccc743:10959",
+        "5ccc743:11573",
+        "5ccc743:13005",
+        "5ccc743:13583"
+      ],
+      "memory": {
+        "false_alert": 46,
+        "missed": 33
+      },
+      "before": {
+        "recall": 0.8562,
+        "auroc": 0.9883,
+        "flagged_fraud": 256,
+        "flagged_normal": 50
+      },
+      "reason": "This rule targets the missed fraud cases where amounts are consistently above 25k (ranging from ~12k to ~28k) while avoiding normal transactions which typically exceed 50k or have much higher median deviations.",
+      "rule": {
+        "name": "burst_high_amount",
+        "feature": "amount_minor",
+        "op": ">=",
+        "threshold": 25000,
+        "points": 15
+      },
+      "smt": {
+        "verdict": "passed",
+        "coverage": {
+          "widens": true,
+          "witness": {
+            "outgoing_10m": 0,
+            "outgoing_60m": 0,
+            "amount_minor": 25000,
+            "amount_to_median_x100": 500,
+            "history_size": 5,
+            "counterparty_known": 1,
+            "distinct_payees_60m": 0,
+            "hour_seen_count": 1,
+            "incoming_60m_minor": 2500000,
+            "passthrough_pct": 1,
+            "fan_in_60m": 1,
+            "payee_payers": 1,
+            "payee_outgoing": 1,
+            "flagged_in_60m_minor": 0,
+            "seed_hops": 0,
+            "cycle_24h": 0
+          }
+        }
+      },
+      "gate": {
+        "verdict": "rejected",
+        "why": [
+          "flagged normal postings rose from 50 to 229"
+        ],
+        "after": {
+          "recall": 0.8896,
+          "auroc": 0.9887,
+          "flagged_fraud": 266,
+          "flagged_normal": 229
         }
       },
       "verdict": "rejected",
       "why": [
-        "flagged normal postings rose from 240 to 278"
-      ]
+        "flagged normal postings rose from 50 to 229"
+      ],
+      "run": 2,
+      "model": "qwen/qwen3.5-9b",
+      "server_errors": [],
+      "at": "2026-09-25T23:28:12Z"
+    },
+    {
+      "retrieved_episodes": [
+        "5ccc743:13491",
+        "5ccc743:14361",
+        "5ccc743:12483",
+        "5ccc743:13493",
+        "5ccc743:12485",
+        "5ccc743:15803",
+        "5ccc743:3395",
+        "5ccc743:1451",
+        "5ccc743:10959",
+        "5ccc743:11573",
+        "5ccc743:13005",
+        "5ccc743:13583"
+      ],
+      "memory": {
+        "false_alert": 46,
+        "missed": 33
+      },
+      "before": {
+        "recall": 0.8562,
+        "auroc": 0.9883,
+        "flagged_fraud": 256,
+        "flagged_normal": 50
+      },
+      "reason": "This rule adds points for high-velocity bursts where the amount is significantly above the account's median (>=2.5x), capturing the missed fraud cases which have low scores due to missing this specific combination while avoiding normal large payments that typically have much higher median deviations.",
+      "rule": {
+        "name": "burst_high_amount_deviation",
+        "feature": "amount_to_median_x100",
+        "op": ">=",
+        "threshold": 250,
+        "points": 15
+      },
+      "smt": {
+        "verdict": "rejected",
+        "reason": "contradicts_policy",
+        "policy": "known_payee_small_payment",
+        "detail": "a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged",
+        "counterexample": {
+          "outgoing_10m": 0,
+          "outgoing_60m": 0,
+          "amount_minor": 1,
+          "amount_to_median_x100": 500,
+          "history_size": 5,
+          "counterparty_known": 1,
+          "distinct_payees_60m": 0,
+          "hour_seen_count": 1,
+          "incoming_60m_minor": 100,
+          "passthrough_pct": 1,
+          "fan_in_60m": 1,
+          "payee_payers": 1,
+          "payee_outgoing": 0,
+          "flagged_in_60m_minor": 0,
+          "seed_hops": 0,
+          "cycle_24h": 0
+        }
+      },
+      "gate": {
+        "verdict": "not_run"
+      },
+      "verdict": "rejected",
+      "why": [
+        "smt: contradicts_policy: a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged"
+      ],
+      "run": 3,
+      "model": "qwen/qwen3.5-9b",
+      "server_errors": [],
+      "at": "2026-09-25T23:28:26Z"
     }
   ],
-  "accepted_rules": []
+  "z3_parity_postings": 9290
 }

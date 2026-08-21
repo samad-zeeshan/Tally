@@ -6,7 +6,7 @@
   },
   "threshold": 40,
   "store": "in-memory (TALLY_DB_URL unset), replay clock on",
-  "code_version": "eee1dc0",
+  "code_version": "5ccc743",
   "v1": {
     "normal": {
       "postings": 8991,
@@ -75,7 +75,7 @@
       "applied": 9290,
       "refused": 0,
       "refused_fraud": 0,
-      "seconds": 3.1
+      "seconds": 2.7
     },
     "alerts_per_1000_postings": 39.72,
     "rules_fired": {
@@ -260,9 +260,9 @@
   },
   "explanations": {
     "budget_micros": 50000,
-    "p50_micros": 27,
-    "p99_micros": 86,
-    "max_micros": 4190,
+    "p50_micros": 29,
+    "p99_micros": 92,
+    "max_micros": 3837,
     "over_budget": 0,
     "flagged": 306,
     "flagged_with_evidence": 150

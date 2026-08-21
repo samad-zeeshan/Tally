@@ -1,0 +1,2817 @@
+{
+ "episodes": [
+  {
+   "id": "5ccc743:611",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 611,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 65,
+   "rules": [
+    "velocity",
+    "new_counterparty",
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 3,
+    "outgoing_60m": 3,
+    "amount_minor": 9614,
+    "amount_to_median_x100": 0,
+    "history_size": 3,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 3,
+    "hour_seen_count": 3,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:1451",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 1451,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 65,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 60000,
+    "amount_to_median_x100": 1963,
+    "history_size": 5,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 4,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:1473",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 1473,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 65,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1836,
+    "history_size": 6,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 2,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:2259",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 2259,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount",
+    "time_of_day",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1858,
+    "history_size": 11,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 0,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 14,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:2297",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 2297,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2142,
+    "history_size": 6,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 15,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:2361",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 2361,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 70,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 1,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 2061,
+    "history_size": 8,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 1,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 4,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:3395",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 3395,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 3,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1887,
+    "history_size": 10,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 3,
+    "hour_seen_count": 7,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 9,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:3451",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 3451,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 2004,
+    "history_size": 7,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 0,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 18,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4273",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4273,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1863,
+    "history_size": 17,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 13,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4291",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4291,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1929,
+    "history_size": 13,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 11,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4393",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4393,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 65,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1425,
+    "history_size": 10,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 4,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 14,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4443",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4443,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 70,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2421,
+    "history_size": 12,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 4,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 11,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4475",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4475,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1758,
+    "history_size": 12,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 7,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 9,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4601",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4601,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount",
+    "time_of_day",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 60000,
+    "amount_to_median_x100": 1999,
+    "history_size": 10,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 0,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 19,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:4675",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 4675,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 2014,
+    "history_size": 8,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 0,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 18,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:5013",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 5013,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1376,
+    "history_size": 5,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 9,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:5413",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 5413,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 2095,
+    "history_size": 7,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 3,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 10,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:5625",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 5625,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 50000,
+    "amount_to_median_x100": 3086,
+    "history_size": 9,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 3,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 25,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:6023",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 6023,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 1,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1602,
+    "history_size": 19,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 9,
+    "incoming_60m_minor": 4016,
+    "passthrough_pct": 5976,
+    "fan_in_60m": 1,
+    "payee_payers": 19,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:6819",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 6819,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2413,
+    "history_size": 10,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 4,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 30,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:7017",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 7017,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 40,
+   "rules": [
+    "new_counterparty",
+    "time_of_day"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 6270,
+    "amount_to_median_x100": 90,
+    "history_size": 14,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 0,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 31,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:7041",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 7041,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 60000,
+    "amount_to_median_x100": 1998,
+    "history_size": 17,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 34,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:8367",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 8367,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 60,
+   "rules": [
+    "velocity",
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 3,
+    "outgoing_60m": 4,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1779,
+    "history_size": 24,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 3,
+    "hour_seen_count": 12,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 30,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:8509",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 8509,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2166,
+    "history_size": 29,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 10,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 22,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:8581",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 8581,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1961,
+    "history_size": 29,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 1,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 32,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:8809",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 8809,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 2234,
+    "history_size": 22,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 1,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 33,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:9319",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 9319,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1763,
+    "history_size": 34,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 11,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 14,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:9323",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 9323,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 70,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "time_of_day",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2213,
+    "history_size": 10,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 0,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 26,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:9545",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 9545,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1931,
+    "history_size": 34,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 12,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 31,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:9955",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 9955,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1941,
+    "history_size": 43,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 9,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 18,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:10111",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 10111,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2021,
+    "history_size": 26,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 20,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 19,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:10805",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 10805,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 2135,
+    "history_size": 33,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 13,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 34,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:10959",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 10959,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1913,
+    "history_size": 31,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 12,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 13,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:11301",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 11301,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 2483,
+    "history_size": 30,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 6,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 44,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:11573",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 11573,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 50000,
+    "amount_to_median_x100": 3649,
+    "history_size": 39,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 9,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 22,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:11993",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 11993,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1982,
+    "history_size": 45,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 22,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 25,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12479",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12479,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 14143,
+    "amount_to_median_x100": 239,
+    "history_size": 59,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 28,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12483",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12483,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 0,
+   "rules": [],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 12113,
+    "amount_to_median_x100": 205,
+    "history_size": 60,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 29,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12485",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12485,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 14533,
+    "amount_to_median_x100": 243,
+    "history_size": 61,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 30,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12519",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12519,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 3540,
+    "amount_to_median_x100": 202,
+    "history_size": 15,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 7,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12521",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12521,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 2440,
+    "amount_to_median_x100": 139,
+    "history_size": 16,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 8,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12523",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12523,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 5985,
+    "amount_to_median_x100": 328,
+    "history_size": 17,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 9,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12745",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12745,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1704,
+    "history_size": 17,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 5,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 20,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12819",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12819,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 2,
+    "amount_minor": 3557,
+    "amount_to_median_x100": 214,
+    "history_size": 20,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 8,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12849",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12849,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 4555,
+    "amount_to_median_x100": 140,
+    "history_size": 23,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 10,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:12851",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 12851,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 0,
+   "rules": [],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 3201,
+    "amount_to_median_x100": 98,
+    "history_size": 24,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 11,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13005",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13005,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1608,
+    "history_size": 12,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 8,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 31,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13047",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13047,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 50000,
+    "amount_to_median_x100": 3610,
+    "history_size": 54,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 17,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 36,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13369",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13369,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 1,
+    "amount_minor": 17783,
+    "amount_to_median_x100": 86,
+    "history_size": 22,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 8,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13371",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13371,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 2,
+    "amount_minor": 45590,
+    "amount_to_median_x100": 220,
+    "history_size": 23,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 9,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13373",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13373,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 3,
+    "amount_minor": 32308,
+    "amount_to_median_x100": 156,
+    "history_size": 24,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 3,
+    "hour_seen_count": 10,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13489",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13489,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 17169,
+    "amount_to_median_x100": 153,
+    "history_size": 27,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 12,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13491",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13491,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 28114,
+    "amount_to_median_x100": 250,
+    "history_size": 28,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 13,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13493",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13493,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 25211,
+    "amount_to_median_x100": 219,
+    "history_size": 29,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 14,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13583",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13583,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 50,
+   "rules": [
+    "amount_deviation",
+    "new_counterparty",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 2108,
+    "history_size": 52,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 19,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 32,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13593",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13593,
+   "kind": "missed",
+   "pattern": "account_takeover",
+   "score": 35,
+   "rules": [
+    "amount_deviation"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 52500,
+    "amount_to_median_x100": 3395,
+    "history_size": 57,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 1,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13599",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13599,
+   "kind": "missed",
+   "pattern": "account_takeover",
+   "score": 35,
+   "rules": [
+    "amount_deviation"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 2,
+    "amount_minor": 46500,
+    "amount_to_median_x100": 3007,
+    "history_size": 58,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:13611",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 13611,
+   "kind": "missed",
+   "pattern": "account_takeover",
+   "score": 35,
+   "rules": [
+    "amount_deviation"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 1,
+    "amount_minor": 69000,
+    "amount_to_median_x100": 2266,
+    "history_size": 32,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 1,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14031",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14031,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 3,
+    "amount_minor": 7927,
+    "amount_to_median_x100": 129,
+    "history_size": 42,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 3,
+    "hour_seen_count": 19,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14033",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14033,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 4,
+    "amount_minor": 6579,
+    "amount_to_median_x100": 104,
+    "history_size": 43,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 4,
+    "hour_seen_count": 20,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14035",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14035,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 5,
+    "amount_minor": 12492,
+    "amount_to_median_x100": 199,
+    "history_size": 44,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 5,
+    "hour_seen_count": 21,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14197",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14197,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 40,
+   "rules": [
+    "velocity",
+    "amount_deviation",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 3,
+    "outgoing_60m": 4,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 1862,
+    "history_size": 54,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 28,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 43,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14357",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14357,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 33407,
+    "amount_to_median_x100": 280,
+    "history_size": 32,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 17,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14361",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14361,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 0,
+   "rules": [],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 25445,
+    "amount_to_median_x100": 204,
+    "history_size": 33,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 18,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14363",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14363,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 34515,
+    "amount_to_median_x100": 277,
+    "history_size": 34,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 19,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14659",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14659,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 2,
+    "amount_minor": 33219,
+    "amount_to_median_x100": 280,
+    "history_size": 48,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 22,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14843",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14843,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1788,
+    "history_size": 53,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 21,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 34,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:14975",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 14975,
+   "kind": "missed",
+   "pattern": "account_takeover",
+   "score": 35,
+   "rules": [
+    "amount_deviation"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 2,
+    "amount_minor": 138000,
+    "amount_to_median_x100": 2544,
+    "history_size": 55,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 2,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:15801",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 15801,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 73345,
+    "amount_to_median_x100": 324,
+    "history_size": 39,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 22,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:15803",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 15803,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 26589,
+    "amount_to_median_x100": 117,
+    "history_size": 40,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 23,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:15931",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 15931,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 1,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1966,
+    "history_size": 42,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 17,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 14,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16061",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16061,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 400000,
+    "amount_to_median_x100": 1941,
+    "history_size": 68,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 8,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 22,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16249",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16249,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "amount_deviation",
+    "round_amount"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 240000,
+    "amount_to_median_x100": 1846,
+    "history_size": 36,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 16,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 2,
+    "payee_outgoing": 36,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16337",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16337,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 0,
+    "outgoing_60m": 0,
+    "amount_minor": 4208,
+    "amount_to_median_x100": 263,
+    "history_size": 52,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 0,
+    "hour_seen_count": 28,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16339",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16339,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 5031,
+    "amount_to_median_x100": 308,
+    "history_size": 53,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 29,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16341",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16341,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 2057,
+    "amount_to_median_x100": 126,
+    "history_size": 54,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 30,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16557",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16557,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 20,
+   "rules": [
+    "new_counterparty"
+   ],
+   "features": {
+    "outgoing_10m": 1,
+    "outgoing_60m": 1,
+    "amount_minor": 1483,
+    "amount_to_median_x100": 102,
+    "history_size": 61,
+    "counterparty_known": 0,
+    "distinct_payees_60m": 1,
+    "hour_seen_count": 28,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 0,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16561",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16561,
+   "kind": "missed",
+   "pattern": "burst",
+   "score": 30,
+   "rules": [
+    "fresh_payee_burst"
+   ],
+   "features": {
+    "outgoing_10m": 2,
+    "outgoing_60m": 2,
+    "amount_minor": 2205,
+    "amount_to_median_x100": 152,
+    "history_size": 62,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 2,
+    "hour_seen_count": 29,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 1,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  },
+  {
+   "id": "5ccc743:16701",
+   "run": "5ccc743",
+   "ruleset": "v2",
+   "posting_id": 16701,
+   "kind": "false_alert",
+   "pattern": "normal",
+   "score": 45,
+   "rules": [
+    "velocity",
+    "amount_deviation",
+    "round_amount",
+    "established_payee"
+   ],
+   "features": {
+    "outgoing_10m": 3,
+    "outgoing_60m": 5,
+    "amount_minor": 120000,
+    "amount_to_median_x100": 2391,
+    "history_size": 53,
+    "counterparty_known": 1,
+    "distinct_payees_60m": 3,
+    "hour_seen_count": 20,
+    "incoming_60m_minor": 0,
+    "passthrough_pct": 0,
+    "fan_in_60m": 0,
+    "payee_payers": 36,
+    "payee_outgoing": 0,
+    "flagged_in_60m_minor": 0,
+    "seed_hops": 0,
+    "cycle_24h": 0
+   }
+  }
+ ],
+ "proposals": [
+  {
+   "ruleset": "v1",
+   "rule": {
+    "name": "mule_incoming_rule",
+    "feature": "incoming_60m_minor",
+    "op": ">=",
+    "threshold": 1000,
+    "points": 40
+   },
+   "reason": "Detects high incoming money flow characteristic of mule accounts without triggering on normal low-incoming transactions.",
+   "verdict": "rejected",
+   "why": [
+    "flagged normal postings rose from 240 to 443"
+   ],
+   "gate": {
+    "verdict": "rejected",
+    "why": [
+     "flagged normal postings rose from 240 to 443"
+    ],
+    "after": {
+     "recall": 0.5686,
+     "auroc": 0.9307,
+     "flagged_fraud": 170,
+     "flagged_normal": 443,
+     "by_pattern_recall": {
+      "burst": 0.0394,
+      "structuring": 1.0,
+      "account_takeover": 0.72,
+      "mule_chain": 1.0
+     }
+    }
+   },
+   "before": {
+    "recall": 0.4314,
+    "auroc": 0.9055,
+    "flagged_fraud": 129,
+    "flagged_normal": 240,
+    "by_pattern_recall": {
+     "burst": 0.0394,
+     "structuring": 1.0,
+     "account_takeover": 0.72,
+     "mule_chain": 0.4058
+    }
+   }
+  },
+  {
+   "ruleset": "v1",
+   "rule": {
+    "name": "mule_passthrough_rule",
+    "feature": "passthrough_pct",
+    "op": ">=",
+    "threshold": 80,
+    "points": 20
+   },
+   "reason": "High passthrough percentage effectively identifies mule accounts with minimal false positives on normal transactions.",
+   "verdict": "rejected",
+   "why": [
+    "flagged normal postings rose from 240 to 262"
+   ],
+   "gate": {
+    "verdict": "rejected",
+    "why": [
+     "flagged normal postings rose from 240 to 262"
+    ],
+    "after": {
+     "recall": 0.5217,
+     "auroc": 0.9334,
+     "flagged_fraud": 156,
+     "flagged_normal": 262,
+     "by_pattern_recall": {
+      "burst": 0.0394,
+      "structuring": 1.0,
+      "account_takeover": 0.72,
+      "mule_chain": 0.7971
+     }
+    }
+   },
+   "before": {
+    "recall": 0.4314,
+    "auroc": 0.9055,
+    "flagged_fraud": 129,
+    "flagged_normal": 240,
+    "by_pattern_recall": {
+     "burst": 0.0394,
+     "structuring": 1.0,
+     "account_takeover": 0.72,
+     "mule_chain": 0.4058
+    }
+   }
+  },
+  {
+   "ruleset": "v1",
+   "rule": {
+    "name": "burst_distinct_payees_rule",
+    "feature": "distinct_payees_60m",
+    "op": ">=",
+    "threshold": 3,
+    "points": 20
+   },
+   "reason": "High distinct payees in 60 minutes indicate burst activity without triggering on normal accounts that typically use fewer payees.",
+   "verdict": "rejected",
+   "why": [
+    "flagged normal postings rose from 240 to 278"
+   ],
+   "gate": {
+    "verdict": "rejected",
+    "why": [
+     "flagged normal postings rose from 240 to 278"
+    ],
+    "after": {
+     "recall": 0.5485,
+     "auroc": 0.9107,
+     "flagged_fraud": 164,
+     "flagged_normal": 278,
+     "by_pattern_recall": {
+      "burst": 0.315,
+      "structuring": 1.0,
+      "account_takeover": 0.72,
+      "mule_chain": 0.4058
+     }
+    }
+   },
+   "before": {
+    "recall": 0.4314,
+    "auroc": 0.9055,
+    "flagged_fraud": 129,
+    "flagged_normal": 240,
+    "by_pattern_recall": {
+     "burst": 0.0394,
+     "structuring": 1.0,
+     "account_takeover": 0.72,
+     "mule_chain": 0.4058
+    }
+   }
+  },
+  {
+   "retrieved_episodes": [
+    "5ccc743:13491",
+    "5ccc743:14361",
+    "5ccc743:12483",
+    "5ccc743:13493",
+    "5ccc743:12485",
+    "5ccc743:15803",
+    "5ccc743:3395",
+    "5ccc743:1451",
+    "5ccc743:10959",
+    "5ccc743:11573",
+    "5ccc743:13005",
+    "5ccc743:13583"
+   ],
+   "memory": {
+    "false_alert": 46,
+    "missed": 33
+   },
+   "before": {
+    "recall": 0.8562,
+    "auroc": 0.9883,
+    "flagged_fraud": 256,
+    "flagged_normal": 50
+   },
+   "reason": "This rule targets the missed 'burst' fraud pattern where accounts send multiple payments to a single new payee within an hour (distinct_payees_60m=1), adding points without triggering on normal high-volume accounts that typically use multiple distinct payees.",
+   "rule": {
+    "name": "burst_single_payee",
+    "feature": "distinct_payees_60m",
+    "op": "==",
+    "threshold": 1,
+    "points": 25
+   },
+   "smt": {
+    "verdict": "rejected",
+    "reason": "contradicts_policy",
+    "policy": "known_payee_small_payment",
+    "detail": "a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged",
+    "counterexample": {
+     "outgoing_10m": 0,
+     "outgoing_60m": 1,
+     "amount_minor": 1,
+     "amount_to_median_x100": 500,
+     "history_size": 5,
+     "counterparty_known": 1,
+     "distinct_payees_60m": 1,
+     "hour_seen_count": 1,
+     "incoming_60m_minor": 0,
+     "passthrough_pct": 0,
+     "fan_in_60m": 0,
+     "payee_payers": 1,
+     "payee_outgoing": 0,
+     "flagged_in_60m_minor": 0,
+     "seed_hops": 0,
+     "cycle_24h": 0
+    }
+   },
+   "gate": {
+    "verdict": "not_run"
+   },
+   "verdict": "rejected",
+   "why": [
+    "smt: contradicts_policy: a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged"
+   ],
+   "run": 1,
+   "model": "qwen/qwen3.5-9b",
+   "server_errors": [],
+   "at": "2026-09-25T23:27:51Z"
+  },
+  {
+   "retrieved_episodes": [
+    "5ccc743:13491",
+    "5ccc743:14361",
+    "5ccc743:12483",
+    "5ccc743:13493",
+    "5ccc743:12485",
+    "5ccc743:15803",
+    "5ccc743:3395",
+    "5ccc743:1451",
+    "5ccc743:10959",
+    "5ccc743:11573",
+    "5ccc743:13005",
+    "5ccc743:13583"
+   ],
+   "memory": {
+    "false_alert": 46,
+    "missed": 33
+   },
+   "before": {
+    "recall": 0.8562,
+    "auroc": 0.9883,
+    "flagged_fraud": 256,
+    "flagged_normal": 50
+   },
+   "reason": "This rule targets the missed fraud cases where amounts are consistently above 25k (ranging from ~12k to ~28k) while avoiding normal transactions which typically exceed 50k or have much higher median deviations.",
+   "rule": {
+    "name": "burst_high_amount",
+    "feature": "amount_minor",
+    "op": ">=",
+    "threshold": 25000,
+    "points": 15
+   },
+   "smt": {
+    "verdict": "passed",
+    "coverage": {
+     "widens": true,
+     "witness": {
+      "outgoing_10m": 0,
+      "outgoing_60m": 0,
+      "amount_minor": 25000,
+      "amount_to_median_x100": 500,
+      "history_size": 5,
+      "counterparty_known": 1,
+      "distinct_payees_60m": 0,
+      "hour_seen_count": 1,
+      "incoming_60m_minor": 2500000,
+      "passthrough_pct": 1,
+      "fan_in_60m": 1,
+      "payee_payers": 1,
+      "payee_outgoing": 1,
+      "flagged_in_60m_minor": 0,
+      "seed_hops": 0,
+      "cycle_24h": 0
+     }
+    }
+   },
+   "gate": {
+    "verdict": "rejected",
+    "why": [
+     "flagged normal postings rose from 50 to 229"
+    ],
+    "after": {
+     "recall": 0.8896,
+     "auroc": 0.9887,
+     "flagged_fraud": 266,
+     "flagged_normal": 229
+    }
+   },
+   "verdict": "rejected",
+   "why": [
+    "flagged normal postings rose from 50 to 229"
+   ],
+   "run": 2,
+   "model": "qwen/qwen3.5-9b",
+   "server_errors": [],
+   "at": "2026-09-25T23:28:12Z"
+  },
+  {
+   "retrieved_episodes": [
+    "5ccc743:13491",
+    "5ccc743:14361",
+    "5ccc743:12483",
+    "5ccc743:13493",
+    "5ccc743:12485",
+    "5ccc743:15803",
+    "5ccc743:3395",
+    "5ccc743:1451",
+    "5ccc743:10959",
+    "5ccc743:11573",
+    "5ccc743:13005",
+    "5ccc743:13583"
+   ],
+   "memory": {
+    "false_alert": 46,
+    "missed": 33
+   },
+   "before": {
+    "recall": 0.8562,
+    "auroc": 0.9883,
+    "flagged_fraud": 256,
+    "flagged_normal": 50
+   },
+   "reason": "This rule adds points for high-velocity bursts where the amount is significantly above the account's median (>=2.5x), capturing the missed fraud cases which have low scores due to missing this specific combination while avoiding normal large payments that typically have much higher median deviations.",
+   "rule": {
+    "name": "burst_high_amount_deviation",
+    "feature": "amount_to_median_x100",
+    "op": ">=",
+    "threshold": 250,
+    "points": 15
+   },
+   "smt": {
+    "verdict": "rejected",
+    "reason": "contradicts_policy",
+    "policy": "known_payee_small_payment",
+    "detail": "a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged",
+    "counterexample": {
+     "outgoing_10m": 0,
+     "outgoing_60m": 0,
+     "amount_minor": 1,
+     "amount_to_median_x100": 500,
+     "history_size": 5,
+     "counterparty_known": 1,
+     "distinct_payees_60m": 0,
+     "hour_seen_count": 1,
+     "incoming_60m_minor": 100,
+     "passthrough_pct": 1,
+     "fan_in_60m": 1,
+     "payee_payers": 1,
+     "payee_outgoing": 0,
+     "flagged_in_60m_minor": 0,
+     "seed_hops": 0,
+     "cycle_24h": 0
+    }
+   },
+   "gate": {
+    "verdict": "not_run"
+   },
+   "verdict": "rejected",
+   "why": [
+    "smt: contradicts_policy: a payment of 200.00 or less to a payee the account already pays, at a usual hour, with no burst and no flagged money or loop behind it, is never flagged"
+   ],
+   "run": 3,
+   "model": "qwen/qwen3.5-9b",
+   "server_errors": [],
+   "at": "2026-09-25T23:28:26Z"
+  }
+ ]
+}
