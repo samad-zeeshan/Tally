@@ -6,7 +6,7 @@ import java.util.Optional;
  * Database connection settings, read from the environment. Empty when TALLY_DB_URL is unset.
  */
 public record DbConfig(String url, String user, String password, int poolSize, int socketTimeoutSeconds) {
-    public static final int DEFAULT_SOCKET_TIMEOUT_SECONDS = 30;
+    public static final int DEFAULT_SOCKET_TIMEOUT_SECONDS = 15;
 
     public DbConfig(String url, String user, String password, int poolSize) {
         this(url, user, password, poolSize, DEFAULT_SOCKET_TIMEOUT_SECONDS);

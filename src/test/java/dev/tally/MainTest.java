@@ -20,6 +20,12 @@ class MainTest {
         assertEquals("16384", System.getProperty("sun.net.httpserver.maxReqHeaderSize"));
     }
 
+    @Test
+    void dnsAnswersAreCachedForSecondsNotTheDefaultThirty() {
+        Main.applyServerTuning();
+        assertEquals("5", java.security.Security.getProperty("networkaddress.cache.ttl"));
+    }
+
     // Compose and a laptop migrate at startup. Kubernetes turns it off and runs a Job instead,
     // so only an explicit false may skip it.
     @Test

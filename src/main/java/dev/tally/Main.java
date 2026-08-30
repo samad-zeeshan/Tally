@@ -73,6 +73,9 @@ public final class Main {
         System.setProperty("sun.net.httpserver.maxReqTime", "10000");    // receive the request within 10s
         System.setProperty("sun.net.httpserver.maxRspTime", "30000");    // deliver the response within 30s
         System.setProperty("sun.net.httpserver.maxReqHeaderSize", "16384");   // default 384 KiB is absurd here
+        // A restarted Postgres pod comes back on a new address. With the JVM's default 30-second cache, every
+        // reconnect in that window went to the dead one, and the fault harness saw the API stay down with it.
+        java.security.Security.setProperty("networkaddress.cache.ttl", "5");
     }
 
     // Under Kubernetes a Job owns migrations and the pods only wait for them, because two
