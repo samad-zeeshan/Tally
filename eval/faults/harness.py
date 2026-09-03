@@ -292,6 +292,11 @@ def one_run(api, fault, args, seed):
     resolved = {}
     for v in run.resolved.values():
         resolved[v] = resolved.get(v, 0) + 1
+    # Availability, beside the correctness checks: the longest stretch in which no client got an answer.
+    ok_times = sorted(t for t, _, r in run.attempts if r in ("applied", "replayed_applied", "insufficient_funds",
+                                                                "replayed_insufficient"))
+    edges = [0.0] + ok_times + [run.attempts[-1][0] if run.attempts else 0.0]
+    longest_gap = round(max(b - a for a, b in zip(edges, edges[1:])), 1) if len(edges) > 1 else None
     failed = sum(n for label, n in outcomes.items() if label not in
                  ("applied", "replayed_applied", "insufficient_funds", "replayed_insufficient"))
     # A fault that no client ever noticed tested nothing, so the run does not count as a pass.
@@ -310,6 +315,7 @@ def one_run(api, fault, args, seed):
         "seconds": round(time.time() - run.started, 1),
         **result,
         "violations": violations,
+        "longest_gap_seconds": longest_gap,
         "fault_observed": observed,
         "passed": (violations == 0 and result["unresolved_keys"] == 0 and result["reconciliation_consistent"] is True
                    and observed),

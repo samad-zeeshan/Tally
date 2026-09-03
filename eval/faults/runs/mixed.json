@@ -1,0 +1,285 @@
+{
+ "fault": "mixed",
+ "run_id": "mixe79781",
+ "events": [
+  [
+   0.0,
+   "start",
+   "mixed"
+  ],
+  [
+   5.142,
+   "fault",
+   "killed api pod tally-api-79968df56c-lncnp"
+  ],
+  [
+   11.352,
+   "fault",
+   "partitioned the api from postgres for 10s"
+  ],
+  [
+   21.414,
+   "heal",
+   "partition removed"
+  ],
+  [
+   27.5,
+   "fault",
+   "killed postgres pod tally-db-0"
+  ],
+  [
+   29.754,
+   "heal",
+   "postgres answering again"
+  ],
+  [
+   46.013,
+   "clients_done",
+   "128 keys"
+  ],
+  [
+   77.645,
+   "checked",
+   "books balance"
+  ]
+ ],
+ "per_second": [
+  {
+   "t": 2,
+   "ok": 18,
+   "retry": 3
+  },
+  {
+   "t": 4,
+   "ok": 8,
+   "retry": 7
+  },
+  {
+   "t": 6,
+   "ok": 11,
+   "retry": 10
+  },
+  {
+   "t": 7,
+   "ok": 2,
+   "retry": 0
+  },
+  {
+   "t": 8,
+   "ok": 7,
+   "retry": 3
+  },
+  {
+   "t": 9,
+   "ok": 25,
+   "retry": 1
+  },
+  {
+   "t": 10,
+   "ok": 2,
+   "retry": 0
+  },
+  {
+   "t": 11,
+   "ok": 1,
+   "retry": 7
+  },
+  {
+   "t": 12,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 13,
+   "ok": 0,
+   "retry": 3
+  },
+  {
+   "t": 14,
+   "ok": 0,
+   "retry": 5
+  },
+  {
+   "t": 15,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 16,
+   "ok": 0,
+   "retry": 3
+  },
+  {
+   "t": 17,
+   "ok": 0,
+   "retry": 2
+  },
+  {
+   "t": 18,
+   "ok": 0,
+   "retry": 2
+  },
+  {
+   "t": 20,
+   "ok": 0,
+   "retry": 2
+  },
+  {
+   "t": 21,
+   "ok": 13,
+   "retry": 1
+  },
+  {
+   "t": 22,
+   "ok": 2,
+   "retry": 1
+  },
+  {
+   "t": 23,
+   "ok": 5,
+   "retry": 3
+  },
+  {
+   "t": 24,
+   "ok": 14,
+   "retry": 4
+  },
+  {
+   "t": 25,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 26,
+   "ok": 4,
+   "retry": 6
+  },
+  {
+   "t": 27,
+   "ok": 8,
+   "retry": 1
+  },
+  {
+   "t": 28,
+   "ok": 0,
+   "retry": 4
+  },
+  {
+   "t": 29,
+   "ok": 0,
+   "retry": 9
+  },
+  {
+   "t": 30,
+   "ok": 0,
+   "retry": 4
+  },
+  {
+   "t": 31,
+   "ok": 0,
+   "retry": 4
+  },
+  {
+   "t": 32,
+   "ok": 0,
+   "retry": 13
+  },
+  {
+   "t": 33,
+   "ok": 0,
+   "retry": 3
+  },
+  {
+   "t": 34,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 35,
+   "ok": 0,
+   "retry": 11
+  },
+  {
+   "t": 36,
+   "ok": 0,
+   "retry": 4
+  },
+  {
+   "t": 37,
+   "ok": 0,
+   "retry": 10
+  },
+  {
+   "t": 38,
+   "ok": 0,
+   "retry": 8
+  },
+  {
+   "t": 39,
+   "ok": 0,
+   "retry": 2
+  },
+  {
+   "t": 40,
+   "ok": 2,
+   "retry": 4
+  },
+  {
+   "t": 41,
+   "ok": 2,
+   "retry": 2
+  },
+  {
+   "t": 42,
+   "ok": 3,
+   "retry": 3
+  },
+  {
+   "t": 43,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 45,
+   "ok": 1,
+   "retry": 0
+  }
+ ],
+ "summary": {
+  "fault": "mixed",
+  "run_id": "mixe79781",
+  "keys": 128,
+  "attempts": 278,
+  "retries": 150,
+  "attempt_outcomes": {
+   "applied": 100,
+   "dropped": 86,
+   "error": 20,
+   "http_500": 44,
+   "replayed_applied": 28
+  },
+  "resolved": {
+   "applied": 128
+  },
+  "seconds": 77.6,
+  "reconciliation_consistent": true,
+  "reconciliation_global_sum_minor": 0,
+  "postings_sum_minor": 0,
+  "balances_sum_minor": 0,
+  "negative_balances": 0,
+  "conservation_violations": 0,
+  "double_applications": 0,
+  "phantom_transfers": 0,
+  "lost_acknowledged_transfers": 0,
+  "outcome_mismatches": 0,
+  "balance_mismatches": 0,
+  "unresolved_keys": 0,
+  "key_conflicts": 0,
+  "scores_written": 127,
+  "postings_scored_twice": 0,
+  "violations": 0,
+  "longest_gap_seconds": 13.0,
+  "fault_observed": true,
+  "passed": true
+ }
+}

@@ -1,0 +1,165 @@
+{
+ "fault": "partition",
+ "run_id": "part79660",
+ "events": [
+  [
+   0.0,
+   "start",
+   "partition"
+  ],
+  [
+   5.228,
+   "fault",
+   "partitioned the api from postgres for 15s"
+  ],
+  [
+   20.304,
+   "heal",
+   "partition removed"
+  ],
+  [
+   30.281,
+   "clients_done",
+   "419 keys"
+  ],
+  [
+   40.285,
+   "checked",
+   "books balance"
+  ]
+ ],
+ "per_second": [
+  {
+   "t": 2,
+   "ok": 73,
+   "retry": 0
+  },
+  {
+   "t": 3,
+   "ok": 61,
+   "retry": 0
+  },
+  {
+   "t": 4,
+   "ok": 48,
+   "retry": 0
+  },
+  {
+   "t": 5,
+   "ok": 11,
+   "retry": 0
+  },
+  {
+   "t": 8,
+   "ok": 0,
+   "retry": 8
+  },
+  {
+   "t": 13,
+   "ok": 0,
+   "retry": 7
+  },
+  {
+   "t": 14,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 18,
+   "ok": 0,
+   "retry": 2
+  },
+  {
+   "t": 19,
+   "ok": 0,
+   "retry": 6
+  },
+  {
+   "t": 21,
+   "ok": 20,
+   "retry": 0
+  },
+  {
+   "t": 22,
+   "ok": 35,
+   "retry": 0
+  },
+  {
+   "t": 23,
+   "ok": 33,
+   "retry": 0
+  },
+  {
+   "t": 24,
+   "ok": 26,
+   "retry": 0
+  },
+  {
+   "t": 25,
+   "ok": 24,
+   "retry": 0
+  },
+  {
+   "t": 26,
+   "ok": 20,
+   "retry": 0
+  },
+  {
+   "t": 27,
+   "ok": 24,
+   "retry": 0
+  },
+  {
+   "t": 28,
+   "ok": 16,
+   "retry": 0
+  },
+  {
+   "t": 29,
+   "ok": 22,
+   "retry": 0
+  },
+  {
+   "t": 30,
+   "ok": 6,
+   "retry": 0
+  }
+ ],
+ "summary": {
+  "fault": "partition",
+  "run_id": "part79660",
+  "keys": 419,
+  "attempts": 443,
+  "retries": 24,
+  "attempt_outcomes": {
+   "applied": 402,
+   "error": 24,
+   "insufficient_funds": 15,
+   "replayed_applied": 2
+  },
+  "resolved": {
+   "applied": 404,
+   "insufficient_funds": 15
+  },
+  "seconds": 40.3,
+  "reconciliation_consistent": true,
+  "reconciliation_global_sum_minor": 0,
+  "postings_sum_minor": 0,
+  "balances_sum_minor": 0,
+  "negative_balances": 0,
+  "conservation_violations": 0,
+  "double_applications": 0,
+  "phantom_transfers": 0,
+  "lost_acknowledged_transfers": 0,
+  "outcome_mismatches": 0,
+  "balance_mismatches": 0,
+  "unresolved_keys": 0,
+  "key_conflicts": 0,
+  "scores_written": 400,
+  "postings_scored_twice": 0,
+  "violations": 0,
+  "longest_gap_seconds": 16.2,
+  "fault_observed": true,
+  "passed": true
+ }
+}

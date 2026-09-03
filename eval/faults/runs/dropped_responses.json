@@ -1,0 +1,213 @@
+{
+ "fault": "dropped_responses",
+ "run_id": "drop79737",
+ "events": [
+  [
+   0.0,
+   "start",
+   "dropped_responses"
+  ],
+  [
+   5.005,
+   "fault",
+   "active for the whole run, on the client side"
+  ],
+  [
+   33.925,
+   "clients_done",
+   "254 keys"
+  ],
+  [
+   43.917,
+   "checked",
+   "books balance"
+  ]
+ ],
+ "per_second": [
+  {
+   "t": 2,
+   "ok": 15,
+   "retry": 2
+  },
+  {
+   "t": 4,
+   "ok": 20,
+   "retry": 6
+  },
+  {
+   "t": 6,
+   "ok": 17,
+   "retry": 7
+  },
+  {
+   "t": 7,
+   "ok": 8,
+   "retry": 1
+  },
+  {
+   "t": 8,
+   "ok": 5,
+   "retry": 5
+  },
+  {
+   "t": 9,
+   "ok": 28,
+   "retry": 3
+  },
+  {
+   "t": 10,
+   "ok": 9,
+   "retry": 2
+  },
+  {
+   "t": 11,
+   "ok": 9,
+   "retry": 3
+  },
+  {
+   "t": 12,
+   "ok": 11,
+   "retry": 3
+  },
+  {
+   "t": 13,
+   "ok": 8,
+   "retry": 4
+  },
+  {
+   "t": 14,
+   "ok": 5,
+   "retry": 3
+  },
+  {
+   "t": 15,
+   "ok": 5,
+   "retry": 5
+  },
+  {
+   "t": 16,
+   "ok": 5,
+   "retry": 3
+  },
+  {
+   "t": 17,
+   "ok": 5,
+   "retry": 4
+  },
+  {
+   "t": 18,
+   "ok": 4,
+   "retry": 3
+  },
+  {
+   "t": 19,
+   "ok": 13,
+   "retry": 3
+  },
+  {
+   "t": 20,
+   "ok": 8,
+   "retry": 3
+  },
+  {
+   "t": 21,
+   "ok": 7,
+   "retry": 5
+  },
+  {
+   "t": 22,
+   "ok": 14,
+   "retry": 3
+  },
+  {
+   "t": 23,
+   "ok": 5,
+   "retry": 2
+  },
+  {
+   "t": 24,
+   "ok": 15,
+   "retry": 6
+  },
+  {
+   "t": 25,
+   "ok": 2,
+   "retry": 0
+  },
+  {
+   "t": 26,
+   "ok": 2,
+   "retry": 4
+  },
+  {
+   "t": 27,
+   "ok": 11,
+   "retry": 4
+  },
+  {
+   "t": 28,
+   "ok": 3,
+   "retry": 3
+  },
+  {
+   "t": 29,
+   "ok": 12,
+   "retry": 4
+  },
+  {
+   "t": 30,
+   "ok": 2,
+   "retry": 3
+  },
+  {
+   "t": 31,
+   "ok": 3,
+   "retry": 4
+  },
+  {
+   "t": 32,
+   "ok": 1,
+   "retry": 1
+  },
+  {
+   "t": 33,
+   "ok": 2,
+   "retry": 2
+  }
+ ],
+ "summary": {
+  "fault": "dropped_responses",
+  "run_id": "drop79737",
+  "keys": 254,
+  "attempts": 355,
+  "retries": 101,
+  "attempt_outcomes": {
+   "applied": 181,
+   "dropped": 101,
+   "replayed_applied": 73
+  },
+  "resolved": {
+   "applied": 254
+  },
+  "seconds": 43.9,
+  "reconciliation_consistent": true,
+  "reconciliation_global_sum_minor": 0,
+  "postings_sum_minor": 0,
+  "balances_sum_minor": 0,
+  "negative_balances": 0,
+  "conservation_violations": 0,
+  "double_applications": 0,
+  "phantom_transfers": 0,
+  "lost_acknowledged_transfers": 0,
+  "outcome_mismatches": 0,
+  "balance_mismatches": 0,
+  "unresolved_keys": 0,
+  "key_conflicts": 0,
+  "scores_written": 254,
+  "postings_scored_twice": 0,
+  "violations": 0,
+  "longest_gap_seconds": 2.0,
+  "fault_observed": true,
+  "passed": true
+ }
+}

@@ -1,0 +1,210 @@
+{
+ "fault": "postgres_restart",
+ "run_id": "post79620",
+ "events": [
+  [
+   0.0,
+   "start",
+   "postgres_restart"
+  ],
+  [
+   5.086,
+   "fault",
+   "killed postgres pod tally-db-0"
+  ],
+  [
+   7.379,
+   "heal",
+   "postgres answering again"
+  ],
+  [
+   30.155,
+   "clients_done",
+   "595 keys"
+  ],
+  [
+   40.156,
+   "checked",
+   "books balance"
+  ]
+ ],
+ "per_second": [
+  {
+   "t": 2,
+   "ok": 75,
+   "retry": 0
+  },
+  {
+   "t": 3,
+   "ok": 74,
+   "retry": 0
+  },
+  {
+   "t": 4,
+   "ok": 76,
+   "retry": 0
+  },
+  {
+   "t": 5,
+   "ok": 4,
+   "retry": 0
+  },
+  {
+   "t": 7,
+   "ok": 0,
+   "retry": 12
+  },
+  {
+   "t": 8,
+   "ok": 0,
+   "retry": 5
+  },
+  {
+   "t": 9,
+   "ok": 0,
+   "retry": 6
+  },
+  {
+   "t": 10,
+   "ok": 0,
+   "retry": 11
+  },
+  {
+   "t": 11,
+   "ok": 0,
+   "retry": 7
+  },
+  {
+   "t": 12,
+   "ok": 0,
+   "retry": 6
+  },
+  {
+   "t": 13,
+   "ok": 0,
+   "retry": 16
+  },
+  {
+   "t": 14,
+   "ok": 0,
+   "retry": 16
+  },
+  {
+   "t": 15,
+   "ok": 0,
+   "retry": 13
+  },
+  {
+   "t": 16,
+   "ok": 0,
+   "retry": 11
+  },
+  {
+   "t": 17,
+   "ok": 45,
+   "retry": 2
+  },
+  {
+   "t": 18,
+   "ok": 47,
+   "retry": 0
+  },
+  {
+   "t": 19,
+   "ok": 39,
+   "retry": 0
+  },
+  {
+   "t": 20,
+   "ok": 30,
+   "retry": 0
+  },
+  {
+   "t": 21,
+   "ok": 26,
+   "retry": 0
+  },
+  {
+   "t": 22,
+   "ok": 29,
+   "retry": 0
+  },
+  {
+   "t": 23,
+   "ok": 22,
+   "retry": 0
+  },
+  {
+   "t": 24,
+   "ok": 27,
+   "retry": 0
+  },
+  {
+   "t": 25,
+   "ok": 19,
+   "retry": 0
+  },
+  {
+   "t": 26,
+   "ok": 22,
+   "retry": 0
+  },
+  {
+   "t": 27,
+   "ok": 19,
+   "retry": 0
+  },
+  {
+   "t": 28,
+   "ok": 19,
+   "retry": 0
+  },
+  {
+   "t": 29,
+   "ok": 19,
+   "retry": 0
+  },
+  {
+   "t": 30,
+   "ok": 3,
+   "retry": 0
+  }
+ ],
+ "summary": {
+  "fault": "postgres_restart",
+  "run_id": "post79620",
+  "keys": 595,
+  "attempts": 700,
+  "retries": 105,
+  "attempt_outcomes": {
+   "applied": 579,
+   "error": 5,
+   "http_500": 100,
+   "insufficient_funds": 16
+  },
+  "resolved": {
+   "applied": 579,
+   "insufficient_funds": 16
+  },
+  "seconds": 40.2,
+  "reconciliation_consistent": true,
+  "reconciliation_global_sum_minor": 0,
+  "postings_sum_minor": 0,
+  "balances_sum_minor": 0,
+  "negative_balances": 0,
+  "conservation_violations": 0,
+  "double_applications": 0,
+  "phantom_transfers": 0,
+  "lost_acknowledged_transfers": 0,
+  "outcome_mismatches": 0,
+  "balance_mismatches": 0,
+  "unresolved_keys": 0,
+  "key_conflicts": 0,
+  "scores_written": 441,
+  "postings_scored_twice": 0,
+  "violations": 0,
+  "longest_gap_seconds": 12.1,
+  "fault_observed": true,
+  "passed": true
+ }
+}

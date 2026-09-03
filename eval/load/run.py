@@ -128,6 +128,9 @@ def main():
     args = parser.parse_args()
 
     api = cluster.Api(args.base, cluster.env_value("TALLY_API_TOKEN"), timeout=10)
+    # Run straight after the fault gate, the database may still be coming back from the last kill.
+    if not cluster.wait_until(lambda: api.call("GET", "/reconciliation")[0] == 200, 180, 2):
+        raise SystemExit(f"Tally at {args.base} is not serving reconciliation")
     rng = random.Random(20260925)
     accounts = []
     for i in range(args.accounts):

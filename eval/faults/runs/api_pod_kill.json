@@ -1,0 +1,240 @@
+{
+ "fault": "api_pod_kill",
+ "run_id": "apip79575",
+ "events": [
+  [
+   0.0,
+   "start",
+   "api_pod_kill"
+  ],
+  [
+   5.146,
+   "fault",
+   "killed api pod tally-api-79968df56c-tjgnj"
+  ],
+  [
+   13.283,
+   "fault",
+   "killed api pod tally-api-79968df56c-7q7dg"
+  ],
+  [
+   21.449,
+   "fault",
+   "killed api pod tally-api-79968df56c-sh52z"
+  ],
+  [
+   34.555,
+   "clients_done",
+   "2348 keys"
+  ],
+  [
+   44.789,
+   "checked",
+   "books balance"
+  ]
+ ],
+ "per_second": [
+  {
+   "t": 2,
+   "ok": 79,
+   "retry": 0
+  },
+  {
+   "t": 3,
+   "ok": 73,
+   "retry": 0
+  },
+  {
+   "t": 4,
+   "ok": 74,
+   "retry": 0
+  },
+  {
+   "t": 5,
+   "ok": 33,
+   "retry": 5
+  },
+  {
+   "t": 6,
+   "ok": 27,
+   "retry": 0
+  },
+  {
+   "t": 7,
+   "ok": 45,
+   "retry": 0
+  },
+  {
+   "t": 8,
+   "ok": 77,
+   "retry": 0
+  },
+  {
+   "t": 9,
+   "ok": 77,
+   "retry": 0
+  },
+  {
+   "t": 10,
+   "ok": 78,
+   "retry": 0
+  },
+  {
+   "t": 11,
+   "ok": 75,
+   "retry": 0
+  },
+  {
+   "t": 12,
+   "ok": 78,
+   "retry": 0
+  },
+  {
+   "t": 13,
+   "ok": 74,
+   "retry": 0
+  },
+  {
+   "t": 14,
+   "ok": 78,
+   "retry": 0
+  },
+  {
+   "t": 15,
+   "ok": 74,
+   "retry": 0
+  },
+  {
+   "t": 16,
+   "ok": 74,
+   "retry": 0
+  },
+  {
+   "t": 17,
+   "ok": 75,
+   "retry": 0
+  },
+  {
+   "t": 18,
+   "ok": 78,
+   "retry": 0
+  },
+  {
+   "t": 19,
+   "ok": 77,
+   "retry": 0
+  },
+  {
+   "t": 20,
+   "ok": 77,
+   "retry": 0
+  },
+  {
+   "t": 21,
+   "ok": 78,
+   "retry": 0
+  },
+  {
+   "t": 22,
+   "ok": 72,
+   "retry": 0
+  },
+  {
+   "t": 23,
+   "ok": 80,
+   "retry": 0
+  },
+  {
+   "t": 24,
+   "ok": 72,
+   "retry": 0
+  },
+  {
+   "t": 25,
+   "ok": 80,
+   "retry": 0
+  },
+  {
+   "t": 26,
+   "ok": 72,
+   "retry": 0
+  },
+  {
+   "t": 27,
+   "ok": 72,
+   "retry": 0
+  },
+  {
+   "t": 28,
+   "ok": 80,
+   "retry": 0
+  },
+  {
+   "t": 29,
+   "ok": 74,
+   "retry": 0
+  },
+  {
+   "t": 30,
+   "ok": 78,
+   "retry": 0
+  },
+  {
+   "t": 31,
+   "ok": 80,
+   "retry": 0
+  },
+  {
+   "t": 32,
+   "ok": 72,
+   "retry": 0
+  },
+  {
+   "t": 33,
+   "ok": 80,
+   "retry": 0
+  },
+  {
+   "t": 34,
+   "ok": 35,
+   "retry": 0
+  }
+ ],
+ "summary": {
+  "fault": "api_pod_kill",
+  "run_id": "apip79575",
+  "keys": 2348,
+  "attempts": 2353,
+  "retries": 5,
+  "attempt_outcomes": {
+   "applied": 2238,
+   "error": 5,
+   "insufficient_funds": 109,
+   "replayed_applied": 1
+  },
+  "resolved": {
+   "applied": 2239,
+   "insufficient_funds": 109
+  },
+  "seconds": 44.8,
+  "reconciliation_consistent": true,
+  "reconciliation_global_sum_minor": 0,
+  "postings_sum_minor": 0,
+  "balances_sum_minor": 0,
+  "negative_balances": 0,
+  "conservation_violations": 0,
+  "double_applications": 0,
+  "phantom_transfers": 0,
+  "lost_acknowledged_transfers": 0,
+  "outcome_mismatches": 0,
+  "balance_mismatches": 0,
+  "unresolved_keys": 0,
+  "key_conflicts": 0,
+  "scores_written": 111,
+  "postings_scored_twice": 0,
+  "violations": 0,
+  "longest_gap_seconds": 2.0,
+  "fault_observed": true,
+  "passed": true
+ }
+}
