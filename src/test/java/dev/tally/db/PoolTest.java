@@ -122,6 +122,33 @@ class PoolTest {
         }
     }
 
+    // The same outage, but the pool finds the dead connections on borrow rather than on give-back. Found
+    // on kind, where one API pod answered every request with a pool timeout long after Postgres was back.
+    @Test
+    @Timeout(60)
+    void borrowsDuringAnOutageDoNotLoseTheirSlots() throws Exception {
+        try (Connection admin = PostgresTestSupport.connect(); Statement s = admin.createStatement()) {
+            s.execute("DROP ROLE IF EXISTS tally_pool_outage_borrow");
+            s.execute("CREATE ROLE tally_pool_outage_borrow LOGIN PASSWORD 'outage-only-in-tests'");
+            try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.url(), "tally_pool_outage_borrow", "outage-only-in-tests", 2))) {
+                s.execute("ALTER ROLE tally_pool_outage_borrow NOLOGIN");
+                s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'tally_pool_outage_borrow'");
+                assertThrows(RuntimeException.class, pool::borrow);
+                assertThrows(RuntimeException.class, pool::borrow);
+                s.execute("ALTER ROLE tally_pool_outage_borrow LOGIN");
+
+                Connection a = pool.borrow();
+                Connection b = pool.borrow();
+                assertTrue(a.isValid(1) && b.isValid(1), "both slots come back once the database does");
+                pool.giveBack(a);
+                pool.giveBack(b);
+            } finally {
+                s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'tally_pool_outage_borrow'");
+                s.execute("DROP ROLE IF EXISTS tally_pool_outage_borrow");
+            }
+        }
+    }
+
     private void terminateOtherBackends() throws SQLException {
         try (Connection c = PostgresTestSupport.connect(); Statement s = c.createStatement()) {
             s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "

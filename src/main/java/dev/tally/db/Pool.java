@@ -78,14 +78,12 @@ public final class Pool implements AutoCloseable {
             }
             if (isDead(conn)) {
                 closeQuietly(conn);
-                return fresh(config);
+                return refill();
             }
             return conn;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new StoreException("interrupted while borrowing a connection", e);
-        } catch (SQLException e) {
-            throw new StoreException("could not open a replacement connection", e);
         }
     }
 
