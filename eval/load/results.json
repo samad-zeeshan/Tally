@@ -1,0 +1,204 @@
+{
+  "where": "kind v0.29.0 on Docker Desktop, Windows 11 laptop, one node",
+  "client": "Python 3.14.4 open-loop driver, 64 threads, on the same machine",
+  "api": "2 replicas, 1 CPU limit each; Postgres 500m CPU limit (deploy/k8s/overlays/faults)",
+  "code_version": "ab641a4",
+  "seconds_per_step": 20,
+  "warmup_seconds": 3,
+  "results": {
+    "transfer": {
+      "p99_budget_ms": 100,
+      "max_sustained_rps": 100,
+      "steps": [
+        {
+          "offered_rps": 25,
+          "achieved_rps": 25.0,
+          "requests": 575,
+          "errors": 0,
+          "p50_ms": 5.7,
+          "p95_ms": 9.0,
+          "p99_ms": 18.2,
+          "max_ms": 43.9,
+          "postings_in_book": 103082
+        },
+        {
+          "offered_rps": 50,
+          "achieved_rps": 50.0,
+          "requests": 1150,
+          "errors": 0,
+          "p50_ms": 15.6,
+          "p95_ms": 65.0,
+          "p99_ms": 85.2,
+          "max_ms": 92.1,
+          "postings_in_book": 105382
+        },
+        {
+          "offered_rps": 100,
+          "achieved_rps": 100.0,
+          "requests": 2300,
+          "errors": 0,
+          "p50_ms": 17.1,
+          "p95_ms": 63.6,
+          "p99_ms": 77.8,
+          "max_ms": 133.9,
+          "postings_in_book": 109982
+        },
+        {
+          "offered_rps": 200,
+          "achieved_rps": 199.4,
+          "requests": 4600,
+          "errors": 0,
+          "p50_ms": 32.8,
+          "p95_ms": 77.4,
+          "p99_ms": 103.0,
+          "max_ms": 182.5,
+          "postings_in_book": 119182
+        },
+        {
+          "offered_rps": 300,
+          "achieved_rps": 265.7,
+          "requests": 6900,
+          "errors": 0,
+          "p50_ms": 2744.2,
+          "p95_ms": 3097.9,
+          "p99_ms": 3345.2,
+          "max_ms": 4205.0,
+          "postings_in_book": 132982
+        }
+      ]
+    },
+    "statement": {
+      "p99_budget_ms": 100,
+      "max_sustained_rps": 100,
+      "steps": [
+        {
+          "offered_rps": 25,
+          "achieved_rps": 25.0,
+          "requests": 575,
+          "errors": 0,
+          "p50_ms": 5.9,
+          "p95_ms": 42.5,
+          "p99_ms": 63.0,
+          "max_ms": 82.0,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 50,
+          "achieved_rps": 50.0,
+          "requests": 1150,
+          "errors": 0,
+          "p50_ms": 7.7,
+          "p95_ms": 54.4,
+          "p99_ms": 65.6,
+          "max_ms": 76.1,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 100,
+          "achieved_rps": 99.7,
+          "requests": 2300,
+          "errors": 0,
+          "p50_ms": 10.2,
+          "p95_ms": 59.2,
+          "p99_ms": 77.7,
+          "max_ms": 153.3,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 200,
+          "achieved_rps": 199.6,
+          "requests": 4600,
+          "errors": 0,
+          "p50_ms": 20.8,
+          "p95_ms": 68.9,
+          "p99_ms": 101.3,
+          "max_ms": 170.6,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 400,
+          "achieved_rps": 398.8,
+          "requests": 9200,
+          "errors": 0,
+          "p50_ms": 43.7,
+          "p95_ms": 132.0,
+          "p99_ms": 236.1,
+          "max_ms": 557.9,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 800,
+          "achieved_rps": 506.2,
+          "requests": 18400,
+          "errors": 0,
+          "p50_ms": 7537.0,
+          "p95_ms": 12661.0,
+          "p99_ms": 13182.9,
+          "max_ms": 13415.4,
+          "postings_in_book": 132982
+        }
+      ]
+    },
+    "reconciliation": {
+      "p99_budget_ms": 1000,
+      "max_sustained_rps": 10,
+      "steps": [
+        {
+          "offered_rps": 1,
+          "achieved_rps": 1.0,
+          "requests": 23,
+          "errors": 0,
+          "p50_ms": 166.6,
+          "p95_ms": 176.0,
+          "p99_ms": 246.0,
+          "max_ms": 246.0,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 2,
+          "achieved_rps": 2.0,
+          "requests": 46,
+          "errors": 0,
+          "p50_ms": 180.2,
+          "p95_ms": 270.1,
+          "p99_ms": 278.8,
+          "max_ms": 278.8,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 5,
+          "achieved_rps": 5.0,
+          "requests": 115,
+          "errors": 0,
+          "p50_ms": 177.1,
+          "p95_ms": 269.5,
+          "p99_ms": 360.8,
+          "max_ms": 364.6,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 10,
+          "achieved_rps": 9.8,
+          "requests": 230,
+          "errors": 0,
+          "p50_ms": 371.7,
+          "p95_ms": 568.1,
+          "p99_ms": 672.7,
+          "max_ms": 868.2,
+          "postings_in_book": 132982
+        },
+        {
+          "offered_rps": 20,
+          "achieved_rps": 12.4,
+          "requests": 460,
+          "errors": 88,
+          "p50_ms": 4918.2,
+          "p95_ms": 7373.4,
+          "p99_ms": 8517.7,
+          "max_ms": 8770.9,
+          "postings_in_book": 132982
+        }
+      ]
+    }
+  }
+}

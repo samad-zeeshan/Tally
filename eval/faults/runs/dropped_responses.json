@@ -1,6 +1,6 @@
 {
  "fault": "dropped_responses",
- "run_id": "drop79737",
+ "run_id": "drop82053",
  "events": [
   [
    0.0,
@@ -8,188 +8,197 @@
    "dropped_responses"
   ],
   [
-   5.005,
+   5.009,
    "fault",
    "active for the whole run, on the client side"
   ],
   [
-   33.925,
+   30.154,
    "clients_done",
-   "254 keys"
+   "1742 keys"
   ],
   [
-   43.917,
+   42.726,
    "checked",
    "books balance"
   ]
  ],
  "per_second": [
   {
+   "t": 0,
+   "ok": 56,
+   "retry": 28
+  },
+  {
+   "t": 1,
+   "ok": 62,
+   "retry": 16
+  },
+  {
    "t": 2,
-   "ok": 15,
-   "retry": 2
+   "ok": 58,
+   "retry": 25
+  },
+  {
+   "t": 3,
+   "ok": 55,
+   "retry": 30
   },
   {
    "t": 4,
-   "ok": 20,
-   "retry": 6
+   "ok": 57,
+   "retry": 25
+  },
+  {
+   "t": 5,
+   "ok": 61,
+   "retry": 22
   },
   {
    "t": 6,
-   "ok": 17,
-   "retry": 7
+   "ok": 57,
+   "retry": 28
   },
   {
    "t": 7,
-   "ok": 8,
-   "retry": 1
+   "ok": 62,
+   "retry": 23
   },
   {
    "t": 8,
-   "ok": 5,
-   "retry": 5
+   "ok": 62,
+   "retry": 20
   },
   {
    "t": 9,
-   "ok": 28,
-   "retry": 3
+   "ok": 60,
+   "retry": 19
   },
   {
    "t": 10,
-   "ok": 9,
-   "retry": 2
+   "ok": 60,
+   "retry": 22
   },
   {
    "t": 11,
-   "ok": 9,
-   "retry": 3
+   "ok": 57,
+   "retry": 26
   },
   {
    "t": 12,
-   "ok": 11,
-   "retry": 3
+   "ok": 58,
+   "retry": 24
   },
   {
    "t": 13,
-   "ok": 8,
-   "retry": 4
+   "ok": 59,
+   "retry": 25
   },
   {
    "t": 14,
-   "ok": 5,
-   "retry": 3
+   "ok": 56,
+   "retry": 32
   },
   {
    "t": 15,
-   "ok": 5,
-   "retry": 5
+   "ok": 63,
+   "retry": 20
   },
   {
    "t": 16,
-   "ok": 5,
-   "retry": 3
+   "ok": 53,
+   "retry": 26
   },
   {
    "t": 17,
-   "ok": 5,
-   "retry": 4
+   "ok": 59,
+   "retry": 22
   },
   {
    "t": 18,
-   "ok": 4,
-   "retry": 3
+   "ok": 47,
+   "retry": 16
   },
   {
    "t": 19,
-   "ok": 13,
-   "retry": 3
+   "ok": 46,
+   "retry": 23
   },
   {
    "t": 20,
-   "ok": 8,
-   "retry": 3
+   "ok": 57,
+   "retry": 23
   },
   {
    "t": 21,
-   "ok": 7,
-   "retry": 5
+   "ok": 58,
+   "retry": 25
   },
   {
    "t": 22,
-   "ok": 14,
-   "retry": 3
+   "ok": 62,
+   "retry": 21
   },
   {
    "t": 23,
-   "ok": 5,
-   "retry": 2
+   "ok": 60,
+   "retry": 18
   },
   {
    "t": 24,
-   "ok": 15,
-   "retry": 6
+   "ok": 62,
+   "retry": 16
   },
   {
    "t": 25,
-   "ok": 2,
-   "retry": 0
+   "ok": 59,
+   "retry": 20
   },
   {
    "t": 26,
-   "ok": 2,
-   "retry": 4
+   "ok": 62,
+   "retry": 25
   },
   {
    "t": 27,
-   "ok": 11,
-   "retry": 4
+   "ok": 54,
+   "retry": 29
   },
   {
    "t": 28,
-   "ok": 3,
-   "retry": 3
+   "ok": 57,
+   "retry": 28
   },
   {
    "t": 29,
-   "ok": 12,
-   "retry": 4
+   "ok": 59,
+   "retry": 21
   },
   {
    "t": 30,
-   "ok": 2,
-   "retry": 3
-  },
-  {
-   "t": 31,
-   "ok": 3,
-   "retry": 4
-  },
-  {
-   "t": 32,
-   "ok": 1,
-   "retry": 1
-  },
-  {
-   "t": 33,
-   "ok": 2,
-   "retry": 2
+   "ok": 4,
+   "retry": 0
   }
  ],
  "summary": {
   "fault": "dropped_responses",
-  "run_id": "drop79737",
-  "keys": 254,
-  "attempts": 355,
-  "retries": 101,
+  "run_id": "drop82053",
+  "keys": 1742,
+  "attempts": 2440,
+  "retries": 698,
   "attempt_outcomes": {
-   "applied": 181,
-   "dropped": 101,
-   "replayed_applied": 73
+   "applied": 1210,
+   "dropped": 698,
+   "insufficient_funds": 23,
+   "replayed_applied": 495,
+   "replayed_insufficient": 14
   },
   "resolved": {
-   "applied": 254
+   "applied": 1705,
+   "insufficient_funds": 37
   },
-  "seconds": 43.9,
+  "seconds": 42.7,
+  "every_pod_serving_after_seconds": 2.6,
   "reconciliation_consistent": true,
   "reconciliation_global_sum_minor": 0,
   "postings_sum_minor": 0,
@@ -203,10 +212,10 @@
   "balance_mismatches": 0,
   "unresolved_keys": 0,
   "key_conflicts": 0,
-  "scores_written": 254,
+  "scores_written": 0,
   "postings_scored_twice": 0,
   "violations": 0,
-  "longest_gap_seconds": 2.0,
+  "longest_gap_seconds": 0.2,
   "fault_observed": true,
   "passed": true
  }

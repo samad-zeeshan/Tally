@@ -1,6 +1,6 @@
 {
  "fault": "clock_skew",
- "run_id": "cloc79701",
+ "run_id": "cloc82012",
  "events": [
   [
    0.0,
@@ -8,30 +8,40 @@
    "clock_skew"
   ],
   [
-   5.017,
+   5.008,
    "fault",
    "active for the whole run, on the client side"
   ],
   [
-   30.27,
+   30.101,
    "clients_done",
-   "909 keys"
+   "2082 keys"
   ],
   [
-   36.238,
+   40.933,
    "checked",
    "books balance"
   ]
  ],
  "per_second": [
   {
+   "t": 0,
+   "ok": 70,
+   "retry": 0
+  },
+  {
+   "t": 1,
+   "ok": 68,
+   "retry": 0
+  },
+  {
    "t": 2,
-   "ok": 74,
+   "ok": 64,
    "retry": 0
   },
   {
    "t": 3,
-   "ok": 77,
+   "ok": 72,
    "retry": 0
   },
   {
@@ -41,150 +51,151 @@
   },
   {
    "t": 5,
-   "ok": 50,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 6,
-   "ok": 47,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 7,
-   "ok": 40,
+   "ok": 70,
    "retry": 0
   },
   {
    "t": 8,
-   "ok": 33,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 9,
-   "ok": 35,
+   "ok": 72,
    "retry": 0
   },
   {
    "t": 10,
-   "ok": 28,
+   "ok": 65,
    "retry": 0
   },
   {
    "t": 11,
-   "ok": 28,
+   "ok": 67,
    "retry": 0
   },
   {
    "t": 12,
-   "ok": 24,
+   "ok": 65,
    "retry": 0
   },
   {
    "t": 13,
-   "ok": 28,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 14,
-   "ok": 28,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 15,
-   "ok": 28,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 16,
-   "ok": 24,
+   "ok": 69,
    "retry": 0
   },
   {
    "t": 17,
-   "ok": 24,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 18,
-   "ok": 20,
+   "ok": 72,
    "retry": 0
   },
   {
    "t": 19,
-   "ok": 20,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 20,
-   "ok": 20,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 21,
-   "ok": 24,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 22,
-   "ok": 24,
+   "ok": 66,
    "retry": 0
   },
   {
    "t": 23,
-   "ok": 20,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 24,
-   "ok": 28,
+   "ok": 70,
    "retry": 0
   },
   {
    "t": 25,
-   "ok": 21,
+   "ok": 72,
    "retry": 0
   },
   {
    "t": 26,
-   "ok": 24,
+   "ok": 72,
    "retry": 0
   },
   {
    "t": 27,
-   "ok": 16,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 28,
-   "ok": 24,
+   "ok": 69,
    "retry": 0
   },
   {
    "t": 29,
-   "ok": 24,
+   "ok": 73,
    "retry": 0
   },
   {
    "t": 30,
-   "ok": 8,
+   "ok": 1,
    "retry": 0
   }
  ],
  "summary": {
   "fault": "clock_skew",
-  "run_id": "cloc79701",
-  "keys": 909,
-  "attempts": 909,
+  "run_id": "cloc82012",
+  "keys": 2082,
+  "attempts": 2082,
   "retries": 0,
   "attempt_outcomes": {
-   "applied": 881,
-   "insufficient_funds": 28
+   "applied": 1963,
+   "insufficient_funds": 119
   },
   "resolved": {
-   "applied": 881,
-   "insufficient_funds": 28
+   "applied": 1963,
+   "insufficient_funds": 119
   },
-  "seconds": 36.2,
+  "seconds": 40.9,
+  "every_pod_serving_after_seconds": 2.5,
   "reconciliation_consistent": true,
   "reconciliation_global_sum_minor": 0,
   "postings_sum_minor": 0,
@@ -198,10 +209,10 @@
   "balance_mismatches": 0,
   "unresolved_keys": 0,
   "key_conflicts": 0,
-  "scores_written": 881,
+  "scores_written": 0,
   "postings_scored_twice": 0,
   "violations": 0,
-  "longest_gap_seconds": 2.1,
+  "longest_gap_seconds": 0.1,
   "fault_observed": true,
   "passed": true
  }

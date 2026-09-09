@@ -1,6 +1,6 @@
 {
   "where": "kind v0.29.0 on Docker Desktop, Windows 11, one node",
-  "code_version": "35697ce",
+  "code_version": "35a49cc",
   "clients": 8,
   "min_seconds_per_run": 30,
   "client_pace_seconds": 0.1,
@@ -8,19 +8,20 @@
   "runs": [
     {
       "fault": "none",
-      "run_id": "none79535",
-      "keys": 2038,
-      "attempts": 2038,
+      "run_id": "none81840",
+      "keys": 1958,
+      "attempts": 1958,
       "retries": 0,
       "attempt_outcomes": {
-        "applied": 1971,
-        "insufficient_funds": 67
+        "applied": 1885,
+        "insufficient_funds": 73
       },
       "resolved": {
-        "applied": 1971,
-        "insufficient_funds": 67
+        "applied": 1885,
+        "insufficient_funds": 73
       },
-      "seconds": 40.2,
+      "seconds": 42.6,
+      "every_pod_serving_after_seconds": 2.3,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -34,30 +35,31 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 726,
+      "scores_written": 0,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 2.1,
+      "longest_gap_seconds": 0.2,
       "fault_observed": true,
       "passed": true
     },
     {
       "fault": "api_pod_kill",
-      "run_id": "apip79575",
-      "keys": 2348,
-      "attempts": 2353,
-      "retries": 5,
+      "run_id": "apip81883",
+      "keys": 2123,
+      "attempts": 2148,
+      "retries": 25,
       "attempt_outcomes": {
-        "applied": 2238,
-        "error": 5,
-        "insufficient_funds": 109,
-        "replayed_applied": 1
+        "applied": 2058,
+        "error": 25,
+        "insufficient_funds": 60,
+        "replayed_applied": 5
       },
       "resolved": {
-        "applied": 2239,
-        "insufficient_funds": 109
+        "applied": 2063,
+        "insufficient_funds": 60
       },
-      "seconds": 44.8,
+      "seconds": 45.8,
+      "every_pod_serving_after_seconds": 1.6,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -71,30 +73,30 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 111,
+      "scores_written": 335,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 2.0,
+      "longest_gap_seconds": 3.2,
       "fault_observed": true,
       "passed": true
     },
     {
       "fault": "postgres_restart",
-      "run_id": "post79620",
-      "keys": 595,
-      "attempts": 700,
-      "retries": 105,
+      "run_id": "post81929",
+      "keys": 1185,
+      "attempts": 1340,
+      "retries": 155,
       "attempt_outcomes": {
-        "applied": 579,
-        "error": 5,
-        "http_500": 100,
-        "insufficient_funds": 16
+        "applied": 1164,
+        "http_500": 155,
+        "insufficient_funds": 21
       },
       "resolved": {
-        "applied": 579,
-        "insufficient_funds": 16
+        "applied": 1164,
+        "insufficient_funds": 21
       },
-      "seconds": 40.2,
+      "seconds": 42.6,
+      "every_pod_serving_after_seconds": 2.5,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -108,30 +110,31 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 441,
+      "scores_written": 472,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 12.1,
+      "longest_gap_seconds": 10.1,
       "fault_observed": true,
       "passed": true
     },
     {
       "fault": "partition",
-      "run_id": "part79660",
-      "keys": 419,
-      "attempts": 443,
-      "retries": 24,
+      "run_id": "part81971",
+      "keys": 939,
+      "attempts": 971,
+      "retries": 32,
       "attempt_outcomes": {
-        "applied": 402,
-        "error": 24,
-        "insufficient_funds": 15,
-        "replayed_applied": 2
+        "applied": 900,
+        "error": 32,
+        "insufficient_funds": 35,
+        "replayed_applied": 4
       },
       "resolved": {
-        "applied": 404,
-        "insufficient_funds": 15
+        "applied": 904,
+        "insufficient_funds": 35
       },
-      "seconds": 40.3,
+      "seconds": 40.7,
+      "every_pod_serving_after_seconds": 2.5,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -145,28 +148,29 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 400,
+      "scores_written": 0,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 16.2,
+      "longest_gap_seconds": 15.2,
       "fault_observed": true,
       "passed": true
     },
     {
       "fault": "clock_skew",
-      "run_id": "cloc79701",
-      "keys": 909,
-      "attempts": 909,
+      "run_id": "cloc82012",
+      "keys": 2082,
+      "attempts": 2082,
       "retries": 0,
       "attempt_outcomes": {
-        "applied": 881,
-        "insufficient_funds": 28
+        "applied": 1963,
+        "insufficient_funds": 119
       },
       "resolved": {
-        "applied": 881,
-        "insufficient_funds": 28
+        "applied": 1963,
+        "insufficient_funds": 119
       },
-      "seconds": 36.2,
+      "seconds": 40.9,
+      "every_pod_serving_after_seconds": 2.5,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -180,28 +184,32 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 881,
+      "scores_written": 0,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 2.1,
+      "longest_gap_seconds": 0.1,
       "fault_observed": true,
       "passed": true
     },
     {
       "fault": "dropped_responses",
-      "run_id": "drop79737",
-      "keys": 254,
-      "attempts": 355,
-      "retries": 101,
+      "run_id": "drop82053",
+      "keys": 1742,
+      "attempts": 2440,
+      "retries": 698,
       "attempt_outcomes": {
-        "applied": 181,
-        "dropped": 101,
-        "replayed_applied": 73
+        "applied": 1210,
+        "dropped": 698,
+        "insufficient_funds": 23,
+        "replayed_applied": 495,
+        "replayed_insufficient": 14
       },
       "resolved": {
-        "applied": 254
+        "applied": 1705,
+        "insufficient_funds": 37
       },
-      "seconds": 43.9,
+      "seconds": 42.7,
+      "every_pod_serving_after_seconds": 2.6,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -215,30 +223,34 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 254,
+      "scores_written": 0,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 2.0,
+      "longest_gap_seconds": 0.2,
       "fault_observed": true,
       "passed": true
     },
     {
       "fault": "mixed",
-      "run_id": "mixe79781",
-      "keys": 128,
-      "attempts": 278,
-      "retries": 150,
+      "run_id": "mixe82096",
+      "keys": 1025,
+      "attempts": 1695,
+      "retries": 670,
       "attempt_outcomes": {
-        "applied": 100,
-        "dropped": 86,
-        "error": 20,
-        "http_500": 44,
-        "replayed_applied": 28
+        "applied": 716,
+        "dropped": 486,
+        "error": 28,
+        "http_500": 156,
+        "insufficient_funds": 13,
+        "replayed_applied": 291,
+        "replayed_insufficient": 5
       },
       "resolved": {
-        "applied": 128
+        "applied": 1007,
+        "insufficient_funds": 18
       },
-      "seconds": 77.6,
+      "seconds": 50.5,
+      "every_pod_serving_after_seconds": 1.1,
       "reconciliation_consistent": true,
       "reconciliation_global_sum_minor": 0,
       "postings_sum_minor": 0,
@@ -252,18 +264,18 @@
       "balance_mismatches": 0,
       "unresolved_keys": 0,
       "key_conflicts": 0,
-      "scores_written": 127,
+      "scores_written": 136,
       "postings_scored_twice": 0,
       "violations": 0,
-      "longest_gap_seconds": 13.0,
+      "longest_gap_seconds": 12.1,
       "fault_observed": true,
       "passed": true
     }
   ],
   "totals": {
-    "keys": 6691,
-    "attempts": 7076,
-    "retries": 385,
+    "keys": 11054,
+    "attempts": 12634,
+    "retries": 1580,
     "violations": 0,
     "unresolved_keys": 0,
     "double_applications": 0,

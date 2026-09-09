@@ -7,7 +7,8 @@ cd "$(dirname "$0")/.."
 CLUSTER="${CLUSTER:-tally}"
 OVERLAY="${OVERLAY:-local}"
 TAG="${TAG:-$OVERLAY}"
-BASE="${BASE:-http://localhost:8080}"
+# 127.0.0.1, not localhost: on Windows a new connection to localhost tries ::1 first and loses seconds.
+BASE="${BASE:-http://127.0.0.1:8080}"
 PYTHON="${PYTHON:-python3}"
 
 docker tag "tally:$TAG" tally:faults

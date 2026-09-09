@@ -69,6 +69,18 @@ class Api:
             self.reset()
             raise
 
+    def fresh_call(self, method, path):
+        """One request on its own connection, so a load balancer may send it to any backend."""
+        c = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)
+        try:
+            c.request(method, path, headers=self.headers())
+            r = c.getresponse()
+            return r.status, r.read()
+        except Exception:
+            return 0, b""
+        finally:
+            c.close()
+
     def send_and_hang_up(self, method, path, body, headers=None):
         """Sends a request and closes the socket without reading the answer: a response lost on the way back."""
         c = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)

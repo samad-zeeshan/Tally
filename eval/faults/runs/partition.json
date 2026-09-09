@@ -1,6 +1,6 @@
 {
  "fault": "partition",
- "run_id": "part79660",
+ "run_id": "part81971",
  "events": [
   [
    0.0,
@@ -8,45 +8,55 @@
    "partition"
   ],
   [
-   5.228,
+   5.495,
    "fault",
    "partitioned the api from postgres for 15s"
   ],
   [
-   20.304,
+   20.665,
    "heal",
    "partition removed"
   ],
   [
-   30.281,
+   30.101,
    "clients_done",
-   "419 keys"
+   "939 keys"
   ],
   [
-   40.285,
+   40.692,
    "checked",
    "books balance"
   ]
  ],
  "per_second": [
   {
+   "t": 0,
+   "ok": 72,
+   "retry": 0
+  },
+  {
+   "t": 1,
+   "ok": 66,
+   "retry": 0
+  },
+  {
    "t": 2,
-   "ok": 73,
+   "ok": 70,
    "retry": 0
   },
   {
    "t": 3,
-   "ok": 61,
+   "ok": 66,
    "retry": 0
   },
   {
    "t": 4,
-   "ok": 48,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 5,
-   "ok": 11,
+   "ok": 29,
    "retry": 0
   },
   {
@@ -55,93 +65,104 @@
    "retry": 8
   },
   {
-   "t": 13,
+   "t": 11,
    "ok": 0,
-   "retry": 7
+   "retry": 5
   },
   {
-   "t": 14,
+   "t": 12,
    "ok": 0,
-   "retry": 1
+   "retry": 3
+  },
+  {
+   "t": 15,
+   "ok": 0,
+   "retry": 8
   },
   {
    "t": 18,
    "ok": 0,
-   "retry": 2
+   "retry": 5
   },
   {
    "t": 19,
    "ok": 0,
-   "retry": 6
+   "retry": 3
+  },
+  {
+   "t": 20,
+   "ok": 9,
+   "retry": 0
   },
   {
    "t": 21,
-   "ok": 20,
+   "ok": 51,
    "retry": 0
   },
   {
    "t": 22,
-   "ok": 35,
+   "ok": 69,
    "retry": 0
   },
   {
    "t": 23,
-   "ok": 33,
+   "ok": 63,
    "retry": 0
   },
   {
    "t": 24,
-   "ok": 26,
+   "ok": 61,
    "retry": 0
   },
   {
    "t": 25,
-   "ok": 24,
+   "ok": 65,
    "retry": 0
   },
   {
    "t": 26,
-   "ok": 20,
+   "ok": 61,
    "retry": 0
   },
   {
    "t": 27,
-   "ok": 24,
+   "ok": 65,
    "retry": 0
   },
   {
    "t": 28,
-   "ok": 16,
+   "ok": 54,
    "retry": 0
   },
   {
    "t": 29,
-   "ok": 22,
+   "ok": 66,
    "retry": 0
   },
   {
    "t": 30,
-   "ok": 6,
+   "ok": 1,
    "retry": 0
   }
  ],
  "summary": {
   "fault": "partition",
-  "run_id": "part79660",
-  "keys": 419,
-  "attempts": 443,
-  "retries": 24,
+  "run_id": "part81971",
+  "keys": 939,
+  "attempts": 971,
+  "retries": 32,
   "attempt_outcomes": {
-   "applied": 402,
-   "error": 24,
-   "insufficient_funds": 15,
-   "replayed_applied": 2
+   "applied": 900,
+   "error": 32,
+   "insufficient_funds": 35,
+   "replayed_applied": 4
   },
   "resolved": {
-   "applied": 404,
-   "insufficient_funds": 15
+   "applied": 904,
+   "insufficient_funds": 35
   },
-  "seconds": 40.3,
+  "seconds": 40.7,
+  "every_pod_serving_after_seconds": 2.5,
   "reconciliation_consistent": true,
   "reconciliation_global_sum_minor": 0,
   "postings_sum_minor": 0,
@@ -155,10 +176,10 @@
   "balance_mismatches": 0,
   "unresolved_keys": 0,
   "key_conflicts": 0,
-  "scores_written": 400,
+  "scores_written": 0,
   "postings_scored_twice": 0,
   "violations": 0,
-  "longest_gap_seconds": 16.2,
+  "longest_gap_seconds": 15.2,
   "fault_observed": true,
   "passed": true
  }

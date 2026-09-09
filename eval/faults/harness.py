@@ -210,6 +210,16 @@ def create_accounts(api, run_id, n, opening):
 def check(run, openings):
     """Every check runs against Postgres directly, and against the API's own reconciliation."""
     keys = sorted(run.resolved)
+    # Fresh connections, so the Service spreads them over every API pod. One reused keep-alive connection
+    # only ever reached the healthy pod and hid a pod whose pool had emptied for good.
+    def every_pod_serves():
+        for _ in range(12):
+            if run.api.fresh_call("GET", "/reconciliation")[0] != 200:
+                return False
+        return True
+    started = time.time()
+    recovered = cluster.wait_until(every_pod_serves, 120, 2)
+    recovery_seconds = round(time.time() - started, 1) if recovered else None
     # Scoring runs after commit on its own queue, so give it a moment to drain before counting scores.
     time.sleep(5)
     prefix = f"f-{run.run_id}-"
@@ -248,6 +258,7 @@ def check(run, openings):
     conflicts = [k for k in keys if run.resolved[k] == "key_conflict"]
     balance_off = [a for a in openings if stored.get(a) != expected[a]]
     return {
+        "every_pod_serving_after_seconds": recovery_seconds,
         "reconciliation_consistent": recon.get("consistent"),
         "reconciliation_global_sum_minor": recon.get("globalSumMinor"),
         "postings_sum_minor": total,
@@ -318,7 +329,7 @@ def one_run(api, fault, args, seed):
         "longest_gap_seconds": longest_gap,
         "fault_observed": observed,
         "passed": (violations == 0 and result["unresolved_keys"] == 0 and result["reconciliation_consistent"] is True
-                   and observed),
+                   and observed and result["every_pod_serving_after_seconds"] is not None),
     }
     per_second = {}
     for t, _, r in run.attempts:
@@ -331,7 +342,7 @@ def one_run(api, fault, args, seed):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    parser.add_argument("--base", default="http://localhost:8080")
+    parser.add_argument("--base", default="http://127.0.0.1:8080")
     parser.add_argument("--faults", nargs="*", default=FAULTS, choices=FAULTS)
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--min-seconds", type=float, default=30)

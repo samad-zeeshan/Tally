@@ -1,4 +1,4 @@
-# Three jobs so backend, web and the cluster fail independently and run in parallel.
+# Four jobs so backend, web, the evaluation checks and the cluster fail independently and run in parallel.
 name: ci
 
 on:
@@ -59,6 +59,28 @@ jobs:
       - run: npm run typecheck
       - run: npm run test --if-present
       - run: npm run build
+
+  # The model check, the Python tests for the fraud verifiers, and the drift check between the README, the
+  # demo's data and the results files. No cluster and no model server needed.
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install z3-solver==5.1.0.0
+      # Exits non-zero unless the real protocol passes and the model without the key check fails.
+      - name: TLC on the ledger model
+        run: python spec/check.py
+      - run: python -m unittest discover -s eval/fraud/tests -v
+      - name: README and site data match eval/
+        run: python -m unittest discover -s eval/tests -v
 
   # The Kubernetes proof: a kind cluster built from the same script a developer runs, the four deployment
   # gates, the fault gate, then the existing integration suite against the Postgres inside the cluster.

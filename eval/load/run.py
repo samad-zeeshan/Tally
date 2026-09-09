@@ -118,7 +118,7 @@ def sustained(steps, budget):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    parser.add_argument("--base", default="http://localhost:8080")
+    parser.add_argument("--base", default="http://127.0.0.1:8080")
     parser.add_argument("--seconds", type=float, default=20)
     parser.add_argument("--warmup", type=float, default=3)
     parser.add_argument("--threads", type=int, default=64)

@@ -1,6 +1,6 @@
 {
  "fault": "postgres_restart",
- "run_id": "post79620",
+ "run_id": "post81929",
  "events": [
   [
    0.0,
@@ -8,185 +8,195 @@
    "postgres_restart"
   ],
   [
-   5.086,
+   5.154,
    "fault",
    "killed postgres pod tally-db-0"
   ],
   [
-   7.379,
+   7.697,
    "heal",
    "postgres answering again"
   ],
   [
-   30.155,
+   30.107,
    "clients_done",
-   "595 keys"
+   "1185 keys"
   ],
   [
-   40.156,
+   42.629,
    "checked",
    "books balance"
   ]
  ],
  "per_second": [
   {
+   "t": 0,
+   "ok": 69,
+   "retry": 0
+  },
+  {
+   "t": 1,
+   "ok": 68,
+   "retry": 0
+  },
+  {
    "t": 2,
-   "ok": 75,
+   "ok": 67,
    "retry": 0
   },
   {
    "t": 3,
-   "ok": 74,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 4,
-   "ok": 76,
+   "ok": 68,
    "retry": 0
   },
   {
    "t": 5,
-   "ok": 4,
+   "ok": 9,
    "retry": 0
   },
   {
    "t": 7,
-   "ok": 0,
-   "retry": 12
+   "ok": 1,
+   "retry": 15
   },
   {
    "t": 8,
    "ok": 0,
-   "retry": 5
+   "retry": 13
   },
   {
    "t": 9,
    "ok": 0,
-   "retry": 6
+   "retry": 16
   },
   {
    "t": 10,
    "ok": 0,
-   "retry": 11
+   "retry": 16
   },
   {
    "t": 11,
    "ok": 0,
-   "retry": 7
+   "retry": 13
   },
   {
    "t": 12,
    "ok": 0,
-   "retry": 6
+   "retry": 16
   },
   {
    "t": 13,
    "ok": 0,
-   "retry": 16
+   "retry": 15
   },
   {
    "t": 14,
    "ok": 0,
-   "retry": 16
+   "retry": 17
   },
   {
    "t": 15,
    "ok": 0,
-   "retry": 13
+   "retry": 15
   },
   {
    "t": 16,
    "ok": 0,
-   "retry": 11
+   "retry": 18
   },
   {
    "t": 17,
-   "ok": 45,
-   "retry": 2
+   "ok": 35,
+   "retry": 1
   },
   {
    "t": 18,
-   "ok": 47,
+   "ok": 70,
    "retry": 0
   },
   {
    "t": 19,
-   "ok": 39,
+   "ok": 67,
    "retry": 0
   },
   {
    "t": 20,
-   "ok": 30,
+   "ok": 66,
    "retry": 0
   },
   {
    "t": 21,
-   "ok": 26,
+   "ok": 63,
    "retry": 0
   },
   {
    "t": 22,
-   "ok": 29,
+   "ok": 72,
    "retry": 0
   },
   {
    "t": 23,
-   "ok": 22,
+   "ok": 65,
    "retry": 0
   },
   {
    "t": 24,
-   "ok": 27,
+   "ok": 60,
    "retry": 0
   },
   {
    "t": 25,
-   "ok": 19,
+   "ok": 69,
    "retry": 0
   },
   {
    "t": 26,
-   "ok": 22,
+   "ok": 61,
    "retry": 0
   },
   {
    "t": 27,
-   "ok": 19,
+   "ok": 65,
    "retry": 0
   },
   {
    "t": 28,
-   "ok": 19,
+   "ok": 71,
    "retry": 0
   },
   {
    "t": 29,
-   "ok": 19,
+   "ok": 70,
    "retry": 0
   },
   {
    "t": 30,
-   "ok": 3,
+   "ok": 1,
    "retry": 0
   }
  ],
  "summary": {
   "fault": "postgres_restart",
-  "run_id": "post79620",
-  "keys": 595,
-  "attempts": 700,
-  "retries": 105,
+  "run_id": "post81929",
+  "keys": 1185,
+  "attempts": 1340,
+  "retries": 155,
   "attempt_outcomes": {
-   "applied": 579,
-   "error": 5,
-   "http_500": 100,
-   "insufficient_funds": 16
+   "applied": 1164,
+   "http_500": 155,
+   "insufficient_funds": 21
   },
   "resolved": {
-   "applied": 579,
-   "insufficient_funds": 16
+   "applied": 1164,
+   "insufficient_funds": 21
   },
-  "seconds": 40.2,
+  "seconds": 42.6,
+  "every_pod_serving_after_seconds": 2.5,
   "reconciliation_consistent": true,
   "reconciliation_global_sum_minor": 0,
   "postings_sum_minor": 0,
@@ -200,10 +210,10 @@
   "balance_mismatches": 0,
   "unresolved_keys": 0,
   "key_conflicts": 0,
-  "scores_written": 441,
+  "scores_written": 472,
   "postings_scored_twice": 0,
   "violations": 0,
-  "longest_gap_seconds": 12.1,
+  "longest_gap_seconds": 10.1,
   "fault_observed": true,
   "passed": true
  }
