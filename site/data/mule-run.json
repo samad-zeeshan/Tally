@@ -1,0 +1,736 @@
+{
+ "recorded_on": "2026-09-26",
+ "code_version": "5ccc743",
+ "how": "target/tally.jar on the in-memory store, driven by eval/record_demo.py; every response copied as returned",
+ "steps": [
+  {
+   "label": "open Victim",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Victim",
+     "openingBalanceMinor": 3000000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "0fd08ca2-1b23-43e0-97e2-d8bedc3b4940"
+    },
+    "body": {
+     "id": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "name": "Victim",
+     "balanceMinor": 3000000,
+     "createdAt": "2026-09-25T23:27:51.977333Z"
+    }
+   }
+  },
+  {
+   "label": "open Shop",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Shop",
+     "openingBalanceMinor": 0
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "88a35295-ff3e-47c3-bde2-3977869f1ef4"
+    },
+    "body": {
+     "id": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "name": "Shop",
+     "balanceMinor": 0,
+     "createdAt": "2026-09-25T23:27:51.978397500Z"
+    }
+   }
+  },
+  {
+   "label": "open Grocer",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Grocer",
+     "openingBalanceMinor": 0
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "20a10473-d0d9-4721-9ecc-30b9f744b4dc"
+    },
+    "body": {
+     "id": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "name": "Grocer",
+     "balanceMinor": 0,
+     "createdAt": "2026-09-25T23:27:51.978919700Z"
+    }
+   }
+  },
+  {
+   "label": "open Mule one",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Mule one",
+     "openingBalanceMinor": 200000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "f6056a40-f31e-44d3-a94a-7dd0c4fbacf9"
+    },
+    "body": {
+     "id": "dc52e1c4-6450-41f0-b739-8092be564720",
+     "name": "Mule one",
+     "balanceMinor": 200000,
+     "createdAt": "2026-09-25T23:27:51.980005600Z"
+    }
+   }
+  },
+  {
+   "label": "open Mule two",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Mule two",
+     "openingBalanceMinor": 200000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "f2460654-be42-4756-9b51-974b12677a10"
+    },
+    "body": {
+     "id": "c449210a-6b37-4dce-8518-39512b688d63",
+     "name": "Mule two",
+     "balanceMinor": 200000,
+     "createdAt": "2026-09-25T23:27:51.981606600Z"
+    }
+   }
+  },
+  {
+   "label": "open Mule three",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Mule three",
+     "openingBalanceMinor": 200000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "c1940154-2a58-45f9-8708-3c59a35173c9"
+    },
+    "body": {
+     "id": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+     "name": "Mule three",
+     "balanceMinor": 200000,
+     "createdAt": "2026-09-25T23:27:51.982649800Z"
+    }
+   }
+  },
+  {
+   "label": "open Exit",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Exit",
+     "openingBalanceMinor": 0
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "0cc9527a-ef5e-47e6-b98c-f62229bbecfb"
+    },
+    "body": {
+     "id": "bf5a6d14-41dc-46d1-991e-32a8df5e140c",
+     "name": "Exit",
+     "balanceMinor": 0,
+     "createdAt": "2026-09-25T23:27:51.983703500Z"
+    }
+   }
+  },
+  {
+   "label": "Victim's usual shopping, 6 days before",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0007",
+     "X-Tally-Event-Time": "2026-08-14T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "amountMinor": 3000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "6a2af119-caa2-4ec0-b6c4-813e5ac810ff"
+    },
+    "body": {
+     "id": "d51ff645-df63-41e6-a36d-877b54e460fe",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "amountMinor": 3000,
+     "createdAt": "2026-09-25T23:27:51.986400400Z"
+    }
+   }
+  },
+  {
+   "label": "Victim's usual shopping, 5 days before",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0008",
+     "X-Tally-Event-Time": "2026-08-15T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "amountMinor": 2900
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "a7761402-df16-43fe-b13a-a4397af91c5a"
+    },
+    "body": {
+     "id": "41215f4d-58c4-4184-8343-a461b6abb8ed",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "amountMinor": 2900,
+     "createdAt": "2026-09-25T23:27:51.988020200Z"
+    }
+   }
+  },
+  {
+   "label": "Victim's usual shopping, 4 days before",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0009",
+     "X-Tally-Event-Time": "2026-08-16T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "amountMinor": 2800
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "8f626db8-7bc0-4304-bdf1-7cb44a726a81"
+    },
+    "body": {
+     "id": "6a0f521b-f8a3-4197-98da-5beb3e1f9548",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "amountMinor": 2800,
+     "createdAt": "2026-09-25T23:27:51.989071600Z"
+    }
+   }
+  },
+  {
+   "label": "Victim's usual shopping, 3 days before",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0010",
+     "X-Tally-Event-Time": "2026-08-17T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "amountMinor": 2700
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "826fcff3-8f98-4ce0-a64d-f6edb39ca597"
+    },
+    "body": {
+     "id": "2d3ba419-6eec-4e90-9d28-033977b55331",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "amountMinor": 2700,
+     "createdAt": "2026-09-25T23:27:51.990127300Z"
+    }
+   }
+  },
+  {
+   "label": "Victim's usual shopping, 2 days before",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0011",
+     "X-Tally-Event-Time": "2026-08-18T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "amountMinor": 2600
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "33d26f2b-4ab3-4442-b33c-93e91d176011"
+    },
+    "body": {
+     "id": "b07ed131-c279-4733-bb54-a29d37d88007",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "2a8c5722-1444-4209-9cf7-f889a36e0023",
+     "amountMinor": 2600,
+     "createdAt": "2026-09-25T23:27:51.991710200Z"
+    }
+   }
+  },
+  {
+   "label": "Victim's usual shopping, 1 days before",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0012",
+     "X-Tally-Event-Time": "2026-08-19T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "amountMinor": 2500
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "d78ae1ae-229f-46d5-a187-8d122e6298aa"
+    },
+    "body": {
+     "id": "e436f53f-fcba-4262-9967-e11e0708c0aa",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "061793ec-a22d-4032-9542-b99eaafeef94",
+     "amountMinor": 2500,
+     "createdAt": "2026-09-25T23:27:51.992762600Z"
+    }
+   }
+  },
+  {
+   "label": "Victim pays Mule one",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0013",
+     "X-Tally-Event-Time": "2026-08-20T12:00:00Z"
+    },
+    "body": {
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "dc52e1c4-6450-41f0-b739-8092be564720",
+     "amountMinor": 600000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "8f97d857-a57d-46b9-b29c-585cf3e58563"
+    },
+    "body": {
+     "id": "0bc3acf5-1fa2-47ef-b790-2fcc48f96dd9",
+     "fromAccountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "toAccountId": "dc52e1c4-6450-41f0-b739-8092be564720",
+     "amountMinor": 600000,
+     "createdAt": "2026-09-25T23:27:51.993856600Z"
+    }
+   }
+  },
+  {
+   "label": "Mule one forwards",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0014",
+     "X-Tally-Event-Time": "2026-08-20T12:07:00Z"
+    },
+    "body": {
+     "fromAccountId": "dc52e1c4-6450-41f0-b739-8092be564720",
+     "toAccountId": "c449210a-6b37-4dce-8518-39512b688d63",
+     "amountMinor": 570000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "eadd8c0e-f6a9-42d4-a9d9-c4d71cc8e557"
+    },
+    "body": {
+     "id": "34c11bd9-f932-49ae-8d74-aa98e47a2bca",
+     "fromAccountId": "dc52e1c4-6450-41f0-b739-8092be564720",
+     "toAccountId": "c449210a-6b37-4dce-8518-39512b688d63",
+     "amountMinor": 570000,
+     "createdAt": "2026-09-25T23:27:51.995444200Z"
+    }
+   }
+  },
+  {
+   "label": "Mule two forwards",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0015",
+     "X-Tally-Event-Time": "2026-08-20T12:15:00Z"
+    },
+    "body": {
+     "fromAccountId": "c449210a-6b37-4dce-8518-39512b688d63",
+     "toAccountId": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+     "amountMinor": 541000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "073df47f-0f8e-4db1-958c-e8bddc0ffb4c"
+    },
+    "body": {
+     "id": "d649bb49-a9ec-4c3f-bc2a-ae5fe55530c2",
+     "fromAccountId": "c449210a-6b37-4dce-8518-39512b688d63",
+     "toAccountId": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+     "amountMinor": 541000,
+     "createdAt": "2026-09-25T23:27:51.996505400Z"
+    }
+   }
+  },
+  {
+   "label": "Mule three pays out",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "mule-demo-0016",
+     "X-Tally-Event-Time": "2026-08-20T12:22:00Z"
+    },
+    "body": {
+     "fromAccountId": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+     "toAccountId": "bf5a6d14-41dc-46d1-991e-32a8df5e140c",
+     "amountMinor": 520000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "44729241-fea6-4745-b577-240cff840111"
+    },
+    "body": {
+     "id": "86cc362a-8a0d-4368-9112-bd7710de9b06",
+     "fromAccountId": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+     "toAccountId": "bf5a6d14-41dc-46d1-991e-32a8df5e140c",
+     "amountMinor": 520000,
+     "createdAt": "2026-09-25T23:27:51.998126400Z"
+    }
+   }
+  },
+  {
+   "label": "risk for Victim",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/d520a17e-3301-470f-b75f-2d537c8da74a/risk?limit=1",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "bc0199f6-6f30-4d92-ad43-5e9e22dc01d7"
+    },
+    "body": {
+     "accountId": "d520a17e-3301-470f-b75f-2d537c8da74a",
+     "flagThreshold": 40,
+     "scores": [
+      {
+       "postingId": 29,
+       "transferId": "0bc3acf5-1fa2-47ef-b790-2fcc48f96dd9",
+       "counterpartyAccountId": "dc52e1c4-6450-41f0-b739-8092be564720",
+       "amountMinor": 600000,
+       "score": 70,
+       "flagged": true,
+       "rules": [
+        "amount_deviation",
+        "new_counterparty",
+        "round_amount"
+       ],
+       "eventAt": "2026-08-20T12:00:00Z",
+       "scoredAt": "2026-09-25T23:27:51.994910500Z",
+       "explanation": {
+        "points": {
+         "amount_deviation": 35,
+         "new_counterparty": 20,
+         "round_amount": 15
+        },
+        "features": {
+         "outgoing_10m": 0,
+         "outgoing_60m": 0,
+         "amount_minor": 600000,
+         "amount_to_median_x100": 22222,
+         "history_size": 6,
+         "counterparty_known": 0,
+         "distinct_payees_60m": 0,
+         "hour_seen_count": 6,
+         "incoming_60m_minor": 0,
+         "passthrough_pct": 0,
+         "fan_in_60m": 0,
+         "payee_payers": 0,
+         "payee_outgoing": 0,
+         "flagged_in_60m_minor": 0,
+         "seed_hops": 0,
+         "cycle_24h": 0
+        },
+        "evidence": [],
+        "micros": 240
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "label": "risk for Mule one",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/dc52e1c4-6450-41f0-b739-8092be564720/risk?limit=1",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "3a2ec323-e980-41e8-8f19-46d72b194de0"
+    },
+    "body": {
+     "accountId": "dc52e1c4-6450-41f0-b739-8092be564720",
+     "flagThreshold": 40,
+     "scores": [
+      {
+       "postingId": 31,
+       "transferId": "34c11bd9-f932-49ae-8d74-aa98e47a2bca",
+       "counterpartyAccountId": "c449210a-6b37-4dce-8518-39512b688d63",
+       "amountMinor": 570000,
+       "score": 55,
+       "flagged": true,
+       "rules": [
+        "round_amount",
+        "forwards_flagged"
+       ],
+       "eventAt": "2026-08-20T12:07:00Z",
+       "scoredAt": "2026-09-25T23:27:51.995975200Z",
+       "explanation": {
+        "points": {
+         "round_amount": 15,
+         "forwards_flagged": 40
+        },
+        "features": {
+         "outgoing_10m": 0,
+         "outgoing_60m": 0,
+         "amount_minor": 570000,
+         "amount_to_median_x100": 0,
+         "history_size": 0,
+         "counterparty_known": 0,
+         "distinct_payees_60m": 0,
+         "hour_seen_count": 0,
+         "incoming_60m_minor": 600000,
+         "passthrough_pct": 95,
+         "fan_in_60m": 1,
+         "payee_payers": 0,
+         "payee_outgoing": 0,
+         "flagged_in_60m_minor": 600000,
+         "seed_hops": 1,
+         "cycle_24h": 0
+        },
+        "evidence": [
+         29
+        ],
+        "micros": 482
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "label": "risk for Mule two",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/c449210a-6b37-4dce-8518-39512b688d63/risk?limit=1",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "7e50906a-d06e-4fb9-bc33-eb2cb0996981"
+    },
+    "body": {
+     "accountId": "c449210a-6b37-4dce-8518-39512b688d63",
+     "flagThreshold": 40,
+     "scores": [
+      {
+       "postingId": 33,
+       "transferId": "d649bb49-a9ec-4c3f-bc2a-ae5fe55530c2",
+       "counterpartyAccountId": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+       "amountMinor": 541000,
+       "score": 40,
+       "flagged": true,
+       "rules": [
+        "forwards_flagged"
+       ],
+       "eventAt": "2026-08-20T12:15:00Z",
+       "scoredAt": "2026-09-25T23:27:51.997071500Z",
+       "explanation": {
+        "points": {
+         "forwards_flagged": 40
+        },
+        "features": {
+         "outgoing_10m": 0,
+         "outgoing_60m": 0,
+         "amount_minor": 541000,
+         "amount_to_median_x100": 0,
+         "history_size": 0,
+         "counterparty_known": 0,
+         "distinct_payees_60m": 0,
+         "hour_seen_count": 0,
+         "incoming_60m_minor": 570000,
+         "passthrough_pct": 94,
+         "fan_in_60m": 1,
+         "payee_payers": 0,
+         "payee_outgoing": 0,
+         "flagged_in_60m_minor": 570000,
+         "seed_hops": 1,
+         "cycle_24h": 0
+        },
+        "evidence": [
+         31
+        ],
+        "micros": 236
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "label": "risk for Mule three",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/3fbe605f-8bf7-4e74-84d3-182bdd5889ae/risk?limit=1",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "dd273da9-df81-4b05-a60d-2dde678d588a"
+    },
+    "body": {
+     "accountId": "3fbe605f-8bf7-4e74-84d3-182bdd5889ae",
+     "flagThreshold": 40,
+     "scores": [
+      {
+       "postingId": 35,
+       "transferId": "86cc362a-8a0d-4368-9112-bd7710de9b06",
+       "counterpartyAccountId": "bf5a6d14-41dc-46d1-991e-32a8df5e140c",
+       "amountMinor": 520000,
+       "score": 55,
+       "flagged": true,
+       "rules": [
+        "round_amount",
+        "forwards_flagged"
+       ],
+       "eventAt": "2026-08-20T12:22:00Z",
+       "scoredAt": "2026-09-25T23:27:51.998650Z",
+       "explanation": {
+        "points": {
+         "round_amount": 15,
+         "forwards_flagged": 40
+        },
+        "features": {
+         "outgoing_10m": 0,
+         "outgoing_60m": 0,
+         "amount_minor": 520000,
+         "amount_to_median_x100": 0,
+         "history_size": 0,
+         "counterparty_known": 0,
+         "distinct_payees_60m": 0,
+         "hour_seen_count": 0,
+         "incoming_60m_minor": 541000,
+         "passthrough_pct": 96,
+         "fan_in_60m": 1,
+         "payee_payers": 0,
+         "payee_outgoing": 0,
+         "flagged_in_60m_minor": 541000,
+         "seed_hops": 1,
+         "cycle_24h": 0
+        },
+        "evidence": [
+         33
+        ],
+        "micros": 150
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "label": "reconcile",
+   "request": {
+    "method": "GET",
+    "path": "/reconciliation",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "7c617206-9786-469f-afcf-12307949301d"
+    },
+    "body": {
+     "consistent": true,
+     "globalSumMinor": 0,
+     "accountsChecked": 10,
+     "drifts": []
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,200 @@
+{
+ "recorded_on": "2026-09-26",
+ "code_version": "5ccc743",
+ "how": "target/tally.jar on the in-memory store, driven by eval/record_demo.py; every response copied as returned",
+ "steps": [
+  {
+   "label": "open Amara",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Amara",
+     "openingBalanceMinor": 50000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "08501333-ff38-49fb-a6aa-155043b62877"
+    },
+    "body": {
+     "id": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "name": "Amara",
+     "balanceMinor": 50000,
+     "createdAt": "2026-09-25T23:27:51.653746400Z"
+    }
+   }
+  },
+  {
+   "label": "open Ben",
+   "request": {
+    "method": "POST",
+    "path": "/accounts",
+    "headers": {},
+    "body": {
+     "name": "Ben",
+     "openingBalanceMinor": 10000
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "5790ae0d-bc75-4d49-9486-24514bb073c0"
+    },
+    "body": {
+     "id": "cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+     "name": "Ben",
+     "balanceMinor": 10000,
+     "createdAt": "2026-09-25T23:27:51.659811800Z"
+    }
+   }
+  },
+  {
+   "label": "transfer",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "demo-transfer-0001"
+    },
+    "body": {
+     "fromAccountId": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "toAccountId": "cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+     "amountMinor": 12500
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "98114611-a28d-4498-921d-67dcda2c0f59"
+    },
+    "body": {
+     "id": "849b2ca0-9830-4814-b1fa-292248531ab6",
+     "fromAccountId": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "toAccountId": "cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+     "amountMinor": 12500,
+     "createdAt": "2026-09-25T23:27:51.663384200Z"
+    }
+   }
+  },
+  {
+   "label": "balances after the transfer",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "74e6f9e5-68c4-479e-958e-a07066557f02"
+    },
+    "body": {
+     "id": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "name": "Amara",
+     "balanceMinor": 37500,
+     "createdAt": "2026-09-25T23:27:51.653746400Z"
+    }
+   }
+  },
+  {
+   "label": "reply lost",
+   "note": "POST /transfers with Idempotency-Key demo-retry-0002 was sent and the connection closed before the reply was read"
+  },
+  {
+   "label": "retry with the same key",
+   "request": {
+    "method": "POST",
+    "path": "/transfers",
+    "headers": {
+     "Idempotency-Key": "demo-retry-0002"
+    },
+    "body": {
+     "fromAccountId": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "toAccountId": "cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+     "amountMinor": 7500
+    }
+   },
+   "response": {
+    "status": 201,
+    "headers": {
+     "x-request-id": "30c10005-6d75-4a98-a872-7bc8d0ed82ea",
+     "idempotency-replayed": "true"
+    },
+    "body": {
+     "id": "36b30db7-0e5f-425a-a45f-dcc7e1ce2c56",
+     "fromAccountId": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "toAccountId": "cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+     "amountMinor": 7500,
+     "createdAt": "2026-09-25T23:27:51.668441900Z"
+    }
+   }
+  },
+  {
+   "label": "Amara after the retry",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "2675e148-7d98-4a7e-a3b1-b6c5a17122d6"
+    },
+    "body": {
+     "id": "b022c7a9-b798-4d07-9a85-1321e4c95e6e",
+     "name": "Amara",
+     "balanceMinor": 30000,
+     "createdAt": "2026-09-25T23:27:51.653746400Z"
+    }
+   }
+  },
+  {
+   "label": "Ben after the retry",
+   "request": {
+    "method": "GET",
+    "path": "/accounts/cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "fa6ef608-23bb-4a6e-b3ca-38d334b5ecac"
+    },
+    "body": {
+     "id": "cf8a821b-1f56-46ee-b5b4-e92e71ce3395",
+     "name": "Ben",
+     "balanceMinor": 30000,
+     "createdAt": "2026-09-25T23:27:51.659811800Z"
+    }
+   }
+  },
+  {
+   "label": "reconcile",
+   "request": {
+    "method": "GET",
+    "path": "/reconciliation",
+    "headers": {},
+    "body": null
+   },
+   "response": {
+    "status": 200,
+    "headers": {
+     "x-request-id": "e3398eec-b962-448f-8e9d-abd89febcc87"
+    },
+    "body": {
+     "consistent": true,
+     "globalSumMinor": 0,
+     "accountsChecked": 3,
+     "drifts": []
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,87 @@
+/* The demo page's styles. Colours come from the web client's own stylesheet so the two read as one thing. */
+:root {
+  --accent: #0f6b4f;
+  --accent-soft: #e7f3ee;
+  --alert: #b3261e;
+  --alert-soft: #fbe9e7;
+  --bg: #f5f7f5;
+  --surface: #ffffff;
+  --text: #1a1f1c;
+  --muted: #5c6660;
+  --border: #dfe4df;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #3dbf92;
+    --accent-soft: rgb(61 191 146 / .14);
+    --alert: #ff8a80;
+    --alert-soft: rgb(255 138 128 / .14);
+    --bg: #101512;
+    --surface: #181f1b;
+    --text: #e7ece8;
+    --muted: #97a29b;
+    --border: #2b352f;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+.band { max-width: 60rem; margin: 0 auto; padding: 1.25rem 16px; }
+h1 { margin: .5rem 0 .25rem; font-size: 2rem; }
+h2 { font-size: 1.15rem; margin: 2rem 0 .75rem; }
+.lede { font-size: 1.1rem; max-width: 44rem; margin: 0 0 .5rem; }
+.small { color: var(--muted); font-size: .88rem; }
+
+.buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 1rem; }
+.buttons button {
+  font: inherit; font-weight: 600; padding: .55rem .9rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+.buttons button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.buttons button.surprise[aria-pressed="true"] { background: var(--alert); border-color: var(--alert); }
+.buttons button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.stage { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; min-height: 22rem; }
+.caption { font-size: 1.05rem; margin-bottom: .75rem; min-height: 3.2em; }
+.visual { min-height: 10rem; }
+
+.accounts { display: flex; flex-wrap: wrap; gap: .75rem; }
+.acct { flex: 1 1 10rem; border: 1px solid var(--border); border-radius: var(--radius); padding: .75rem; transition: background .4s; }
+.acct .name { color: var(--muted); font-size: .9rem; }
+.acct .bal { font-size: 1.5rem; font-variant-numeric: tabular-nums; font-weight: 650; }
+.acct.hit { background: var(--accent-soft); }
+.badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+.badge.bad { background: var(--alert-soft); color: var(--alert); }
+
+.wire { margin-top: 1rem; }
+.wire summary { cursor: pointer; color: var(--muted); }
+.wire ol { padding-left: 1.25rem; margin: .5rem 0 0; }
+.wire li { margin: .35rem 0; font-size: .85rem; }
+.wire code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .8rem; word-break: break-word; }
+
+.timeline { display: flex; align-items: flex-end; gap: 2px; height: 9rem; border-bottom: 1px solid var(--border); position: relative; }
+.timeline .bar { flex: 1 1 0; align-self: stretch; display: flex; flex-direction: column-reverse; min-width: 3px; }
+.timeline .ok { background: var(--accent); }
+.timeline .retry { background: var(--alert); }
+.timeline .mark { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--alert); }
+.timeline .mark span { position: absolute; top: -.1rem; left: 4px; font-size: .72rem; color: var(--alert); white-space: nowrap; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .5rem; margin-top: 1rem; }
+.check { border: 1px solid var(--border); border-radius: var(--radius); padding: .5rem .75rem; }
+.check b { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+
+.chain { display: flex; flex-wrap: wrap; align-items: stretch; gap: .5rem; }
+.hop { flex: 1 1 11rem; border: 1px solid var(--border); border-radius: var(--radius); padding: .6rem .75rem; opacity: .35; transition: opacity .4s, background .4s; }
+.hop.on { opacity: 1; }
+.hop.flagged { background: var(--alert-soft); border-color: var(--alert); }
+.hop .who { font-weight: 650; }
+.hop ul { margin: .25rem 0 0; padding-left: 1rem; font-size: .82rem; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: .75rem; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: .75rem; }
+.tile .big { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile .was { color: var(--muted); font-size: .85rem; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

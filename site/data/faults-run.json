@@ -1,0 +1,269 @@
+{
+ "fault": "mixed",
+ "run_id": "mixe82096",
+ "events": [
+  [
+   0.0,
+   "start",
+   "mixed"
+  ],
+  [
+   5.239,
+   "fault",
+   "killed api pod tally-api-7d8596d68c-8hc7k"
+  ],
+  [
+   11.695,
+   "fault",
+   "partitioned the api from postgres for 10s"
+  ],
+  [
+   21.804,
+   "heal",
+   "partition removed"
+  ],
+  [
+   27.927,
+   "fault",
+   "killed postgres pod tally-db-0"
+  ],
+  [
+   30.483,
+   "heal",
+   "postgres answering again"
+  ],
+  [
+   40.61,
+   "clients_done",
+   "1025 keys"
+  ],
+  [
+   50.517,
+   "checked",
+   "books balance"
+  ]
+ ],
+ "per_second": [
+  {
+   "t": 0,
+   "ok": 60,
+   "retry": 26
+  },
+  {
+   "t": 1,
+   "ok": 59,
+   "retry": 31
+  },
+  {
+   "t": 2,
+   "ok": 59,
+   "retry": 22
+  },
+  {
+   "t": 3,
+   "ok": 64,
+   "retry": 15
+  },
+  {
+   "t": 4,
+   "ok": 58,
+   "retry": 29
+  },
+  {
+   "t": 5,
+   "ok": 44,
+   "retry": 19
+  },
+  {
+   "t": 6,
+   "ok": 68,
+   "retry": 18
+  },
+  {
+   "t": 7,
+   "ok": 61,
+   "retry": 28
+  },
+  {
+   "t": 8,
+   "ok": 56,
+   "retry": 23
+  },
+  {
+   "t": 9,
+   "ok": 60,
+   "retry": 31
+  },
+  {
+   "t": 10,
+   "ok": 65,
+   "retry": 18
+  },
+  {
+   "t": 11,
+   "ok": 41,
+   "retry": 29
+  },
+  {
+   "t": 14,
+   "ok": 0,
+   "retry": 8
+  },
+  {
+   "t": 15,
+   "ok": 0,
+   "retry": 2
+  },
+  {
+   "t": 17,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 18,
+   "ok": 0,
+   "retry": 7
+  },
+  {
+   "t": 19,
+   "ok": 0,
+   "retry": 1
+  },
+  {
+   "t": 21,
+   "ok": 0,
+   "retry": 5
+  },
+  {
+   "t": 22,
+   "ok": 35,
+   "retry": 20
+  },
+  {
+   "t": 23,
+   "ok": 54,
+   "retry": 30
+  },
+  {
+   "t": 24,
+   "ok": 60,
+   "retry": 22
+  },
+  {
+   "t": 25,
+   "ok": 62,
+   "retry": 16
+  },
+  {
+   "t": 26,
+   "ok": 56,
+   "retry": 24
+  },
+  {
+   "t": 27,
+   "ok": 55,
+   "retry": 26
+  },
+  {
+   "t": 29,
+   "ok": 0,
+   "retry": 8
+  },
+  {
+   "t": 30,
+   "ok": 0,
+   "retry": 19
+  },
+  {
+   "t": 31,
+   "ok": 0,
+   "retry": 23
+  },
+  {
+   "t": 32,
+   "ok": 0,
+   "retry": 20
+  },
+  {
+   "t": 33,
+   "ok": 0,
+   "retry": 22
+  },
+  {
+   "t": 34,
+   "ok": 0,
+   "retry": 19
+  },
+  {
+   "t": 35,
+   "ok": 0,
+   "retry": 21
+  },
+  {
+   "t": 36,
+   "ok": 0,
+   "retry": 19
+  },
+  {
+   "t": 37,
+   "ok": 0,
+   "retry": 23
+  },
+  {
+   "t": 38,
+   "ok": 0,
+   "retry": 16
+  },
+  {
+   "t": 39,
+   "ok": 0,
+   "retry": 26
+  },
+  {
+   "t": 40,
+   "ok": 8,
+   "retry": 3
+  }
+ ],
+ "summary": {
+  "fault": "mixed",
+  "run_id": "mixe82096",
+  "keys": 1025,
+  "attempts": 1695,
+  "retries": 670,
+  "attempt_outcomes": {
+   "applied": 716,
+   "dropped": 486,
+   "error": 28,
+   "http_500": 156,
+   "insufficient_funds": 13,
+   "replayed_applied": 291,
+   "replayed_insufficient": 5
+  },
+  "resolved": {
+   "applied": 1007,
+   "insufficient_funds": 18
+  },
+  "seconds": 50.5,
+  "every_pod_serving_after_seconds": 1.1,
+  "reconciliation_consistent": true,
+  "reconciliation_global_sum_minor": 0,
+  "postings_sum_minor": 0,
+  "balances_sum_minor": 0,
+  "negative_balances": 0,
+  "conservation_violations": 0,
+  "double_applications": 0,
+  "phantom_transfers": 0,
+  "lost_acknowledged_transfers": 0,
+  "outcome_mismatches": 0,
+  "balance_mismatches": 0,
+  "unresolved_keys": 0,
+  "key_conflicts": 0,
+  "scores_written": 136,
+  "postings_scored_twice": 0,
+  "violations": 0,
+  "longest_gap_seconds": 12.1,
+  "fault_observed": true,
+  "passed": true
+ }
+}

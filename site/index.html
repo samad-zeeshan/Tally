@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- The Tally demo. Plays back runs recorded from the real service; nothing here talks to a server. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tally demo</title>
+<meta name="description" content="Tally is a small bank that can never lose or double a cent. Watch recorded runs of a transfer, a retried payment, a reconciliation, a fault injection and a flagged mule chain.">
+<meta name="theme-color" content="#0f6b4f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f6b4f'/%3E%3Cpath d='M9 11h14M16 11v11' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="band">
+  <h1>Tally</h1>
+  <p class="lede">A small bank that can never lose or double a cent. Every transfer is two entries that cancel out,
+    a payment retried after a dropped connection lands once, the books can be rebuilt from scratch to prove
+    nothing leaked, and suspicious transfers are flagged after they land, with the evidence attached.</p>
+  <p class="small">Everything below is a replay of runs recorded from the real service. There is no server behind this page.</p>
+</header>
+
+<main class="band">
+  <nav class="buttons" aria-label="Recorded runs">
+    <button data-run="transfer" aria-pressed="true">1. Transfer</button>
+    <button data-run="retry">2. Retry a dropped reply</button>
+    <button data-run="reconcile">3. Reconcile</button>
+    <button data-run="break" class="surprise">4. Break it</button>
+    <button data-run="flag" class="surprise">5. Flag it</button>
+  </nav>
+
+  <section class="stage" aria-live="polite">
+    <div class="caption" id="caption"></div>
+    <div class="visual" id="visual"></div>
+    <details class="wire" id="wire-box" open>
+      <summary>What went over the wire</summary>
+      <ol id="wire"></ol>
+    </details>
+  </section>
+
+  <section class="numbers" aria-label="Results">
+    <h2>The numbers behind it</h2>
+    <div class="tiles" id="tiles"></div>
+    <p class="small" id="numbers-source"></p>
+  </section>
+</main>
+
+<footer class="band small">
+  Source and method: <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a>.
+  Synthetic data only.
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

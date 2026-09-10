@@ -98,7 +98,6 @@ def texts(spec, faults, ld, fr, rf):
     ex = fr["explanations"]
     pit = fr["point_in_time"]
     t = faults["totals"]
-    accepted = sum(1 for r in rf["runs"] if r["verdict"] == "accepted")
     return {
         "faults-summary": f"{len(faults['runs'])} runs, {t['keys']:,} transfers and {t['retries']:,} retries, "
                           f"{t['violations']} violations of any kind.",
@@ -111,8 +110,6 @@ def texts(spec, faults, ld, fr, rf):
                        f"{pit['future_perturbation_leaks']} changes when the future was rewritten for "
                        f"{pit['future_perturbation_samples']} sampled postings. Building an explanation took "
                        f"{ex['p99_micros']} microseconds at p99, against a budget of {ex['budget_micros'] // 1000} ms.",
-        "reflection-summary": f"{len(rf['runs'])} runs, {accepted} rule accepted." if accepted == 1 else
-                              f"{len(rf['runs'])} runs, {accepted} rules accepted.",
     }
 
 
@@ -123,7 +120,7 @@ def numbers(spec, faults, ld, fr, rf):
     return {
         "tiles": [
             {"label": "States the model checker explored", "value": f"{spec['runs']['MCLedger']['distinct_states']:,}",
-             "was": "no violation; with the key check removed it finds a double payment"},
+             "was": "no violation, and with the key check removed it finds a double payment"},
             {"label": "Transfers under injected faults", "value": f"{faults['totals']['keys']:,}",
              "was": f"{faults['totals']['violations']} violations across {len(faults['runs'])} fault runs"},
             {"label": "Transfer p99 on the cluster", "value": f"{best['p99_ms']} ms" if best else "n/a",
@@ -149,14 +146,14 @@ def render():
 
 
 # Markers are HTML comments, so they do not show on GitHub: <!-- gen:name --> ... <!-- /gen -->
-MARK = re.compile(r"(<!-- gen:([a-z-]+) -->\n)(.*?)(\n<!-- /gen -->)", re.S)
+MARK = re.compile(r"(<!-- gen:([a-z-]+) -->\n)(.*?)(<!-- /gen -->)", re.S)
 
 
 def apply(readme, blocks):
     missing = set(blocks) - set(m.group(2) for m in MARK.finditer(readme))
     if missing:
         raise SystemExit(f"README has no block for {sorted(missing)}")
-    return MARK.sub(lambda m: m.group(1) + blocks[m.group(2)] + m.group(4), readme)
+    return MARK.sub(lambda m: m.group(1) + blocks[m.group(2)] + "\n" + m.group(4), readme)
 
 
 def main():

@@ -1,0 +1,35 @@
+{
+ "tiles": [
+  {
+   "label": "States the model checker explored",
+   "value": "394,177",
+   "was": "no violation, and with the key check removed it finds a double payment"
+  },
+  {
+   "label": "Transfers under injected faults",
+   "value": "11,054",
+   "was": "0 violations across 7 fault runs"
+  },
+  {
+   "label": "Transfer p99 on the cluster",
+   "value": "77.8 ms",
+   "was": "at 100 requests a second"
+  },
+  {
+   "label": "Burst alert precision",
+   "value": "0.8769",
+   "was": "was 0.0204 at the same recall"
+  },
+  {
+   "label": "Normal payments flagged",
+   "value": "50",
+   "was": "was 240 of 8,991"
+  }
+ ],
+ "sources": [
+  "eval/spec/results.json",
+  "eval/faults/results.json",
+  "eval/load/results.json",
+  "eval/fraud/results.json"
+ ]
+}
