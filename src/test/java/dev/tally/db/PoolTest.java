@@ -99,12 +99,13 @@ class PoolTest {
         try (Connection admin = PostgresTestSupport.connect(); Statement s = admin.createStatement()) {
             s.execute("DROP ROLE IF EXISTS tally_pool_outage");
             s.execute("CREATE ROLE tally_pool_outage LOGIN PASSWORD 'outage-only-in-tests'");
-            try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.url(), "tally_pool_outage", "outage-only-in-tests", 2))) {
+            try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.urlWithoutCredentials(), "tally_pool_outage", "outage-only-in-tests", 2))) {
                 Connection a = pool.borrow();
                 Connection b = pool.borrow();
                 // The outage: no new logins, and every open session cut.
                 s.execute("ALTER ROLE tally_pool_outage NOLOGIN");
                 s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'tally_pool_outage'");
+                PostgresTestSupport.awaitNoSessions(s, "tally_pool_outage");
                 pool.giveBack(a);
                 pool.giveBack(b);
                 s.execute("ALTER ROLE tally_pool_outage LOGIN");
@@ -130,9 +131,10 @@ class PoolTest {
         try (Connection admin = PostgresTestSupport.connect(); Statement s = admin.createStatement()) {
             s.execute("DROP ROLE IF EXISTS tally_pool_outage_borrow");
             s.execute("CREATE ROLE tally_pool_outage_borrow LOGIN PASSWORD 'outage-only-in-tests'");
-            try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.url(), "tally_pool_outage_borrow", "outage-only-in-tests", 2))) {
+            try (Pool pool = Pool.open(new DbConfig(PostgresTestSupport.urlWithoutCredentials(), "tally_pool_outage_borrow", "outage-only-in-tests", 2))) {
                 s.execute("ALTER ROLE tally_pool_outage_borrow NOLOGIN");
                 s.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'tally_pool_outage_borrow'");
+                PostgresTestSupport.awaitNoSessions(s, "tally_pool_outage_borrow");
                 assertThrows(RuntimeException.class, pool::borrow);
                 assertThrows(RuntimeException.class, pool::borrow);
                 s.execute("ALTER ROLE tally_pool_outage_borrow LOGIN");

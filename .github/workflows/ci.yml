@@ -78,6 +78,8 @@ jobs:
       # Exits non-zero unless the real protocol passes and the model without the key check fails.
       - name: TLC on the ledger model
         run: python spec/check.py
+      - name: The committed summary is what TLC found
+        run: git diff --exit-code eval/spec/results.json
       - run: python -m unittest discover -s eval/fraud/tests -v
       - name: README and site data match eval/
         run: python -m unittest discover -s eval/tests -v

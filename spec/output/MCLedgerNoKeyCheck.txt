@@ -1,8 +1,8 @@
-TLC2 Version 2026.09.25.163503 (rev: 8f4bc8b)
-Running breadth-first search Model-Checking with fp 19 and seed 3174920563521388387 with 12 workers on 12 cores with 7092MB heap and 64MB offheap memory [pid: 22560] (Windows 11 10.0 amd64, Eclipse Adoptium 25.0.2 64bit, MSBDiskFPSet, DiskStateQueue).
-Starting... (2026-09-25 21:32:33)
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 40 and seed 8709826243592394787 with 1 worker on 12 cores with 7092MB heap and 64MB offheap memory [pid: 23436] (Windows 11 10.0 amd64, Eclipse Adoptium 25.0.2 x86_64, MSBDiskFPSet, DiskStateQueue).
+Starting... (2026-09-26 04:35:22)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2026-09-25 21:32:34.
+Finished computing initial states: 1 distinct state generated at 2026-09-26 04:35:22.
 Error: Invariant ExactlyOnce is violated.
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
@@ -23,7 +23,7 @@ State 1: <Initial predicate>
 /\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 2: <Send("c1") line 69, col 5 to line 72, col 82 of module Ledger>
+State 2: <Send line 69, col 5 to line 72, col 82 of module Ledger>
 /\ bal = [w |-> -3, a |-> 2, b |-> 1]
 /\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -41,7 +41,7 @@ State 2: <Send("c1") line 69, col 5 to line 72, col 82 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 3: <Take("w1") line 103, col 5 to line 107, col 82 of module Ledger>
+State 3: <Take line 103, col 5 to line 107, col 82 of module Ledger>
 /\ bal = [w |-> -3, a |-> 2, b |-> 1]
 /\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -59,7 +59,7 @@ State 3: <Take("w1") line 103, col 5 to line 107, col 82 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "fast", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 4: <EagerRetry("c1") line 83, col 5 to line 88, col 79 of module Ledger>
+State 4: <EagerRetry line 83, col 5 to line 88, col 79 of module Ledger>
 /\ bal = [w |-> -3, a |-> 2, b |-> 1]
 /\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -77,7 +77,7 @@ State 4: <EagerRetry("c1") line 83, col 5 to line 88, col 79 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "fast", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 5: <FastPath("w1") line 111, col 5 to line 117, col 81 of module Ledger>
+State 5: <FastPath line 111, col 5 to line 117, col 81 of module Ledger>
 /\ bal = [w |-> -3, a |-> 2, b |-> 1]
 /\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -131,7 +131,7 @@ State 7: <Lock line 127, col 13 to line 127, col 55 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "insert", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 8: <Insert("w1") line 135, col 5 to line 146, col 68 of module Ledger>
+State 8: <Insert line 135, col 5 to line 146, col 68 of module Ledger>
 /\ bal = [w |-> -3, a |-> 2, b |-> 1]
 /\ txn = [c1 |-> "none", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -149,7 +149,7 @@ State 8: <Insert("w1") line 135, col 5 to line 146, col 68 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "commit", st |-> "applied"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 9: <Commit("w1") line 153, col 5 to line 163, col 48 of module Ledger>
+State 9: <Commit line 153, col 5 to line 163, col 48 of module Ledger>
 /\ bal = [w |-> -3, a |-> 0, b |-> 3]
 /\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -169,7 +169,7 @@ State 9: <Commit("w1") line 153, col 5 to line 163, col 48 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 10: <Take("w1") line 103, col 5 to line 107, col 82 of module Ledger>
+State 10: <Take line 103, col 5 to line 107, col 82 of module Ledger>
 /\ bal = [w |-> -3, a |-> 0, b |-> 3]
 /\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -189,7 +189,7 @@ State 10: <Take("w1") line 103, col 5 to line 107, col 82 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "fast", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 11: <FastPath("w1") line 111, col 5 to line 117, col 81 of module Ledger>
+State 11: <FastPath line 111, col 5 to line 117, col 81 of module Ledger>
 /\ bal = [w |-> -3, a |-> 0, b |-> 3]
 /\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -249,7 +249,7 @@ State 13: <Lock line 127, col 13 to line 127, col 55 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "insert", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 14: <Insert("w1") line 135, col 5 to line 146, col 68 of module Ledger>
+State 14: <Insert line 135, col 5 to line 146, col 68 of module Ledger>
 /\ bal = [w |-> -3, a |-> 0, b |-> 3]
 /\ txn = [c1 |-> "applied", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -269,7 +269,7 @@ State 14: <Insert("w1") line 135, col 5 to line 146, col 68 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "c1", pc |-> "commit", st |-> "insufficient"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-State 15: <Commit("w1") line 153, col 5 to line 163, col 48 of module Ledger>
+State 15: <Commit line 153, col 5 to line 163, col 48 of module Ledger>
 /\ bal = [w |-> -3, a |-> 0, b |-> 3]
 /\ txn = [c1 |-> "insufficient", c2 |-> "none", c3 |-> "none"]
 /\ cl = [c1 |-> "waiting", c2 |-> "idle", c3 |-> "idle"]
@@ -289,6 +289,7 @@ State 15: <Commit("w1") line 153, col 5 to line 163, col 48 of module Ledger>
 /\ wk = [ w1 |-> [c |-> "none", pc |-> "idle", st |-> "none"],
   w2 |-> [c |-> "none", pc |-> "idle", st |-> "none"] ]
 
-124010 states generated, 25102 distinct states found, 6861 states left on queue.
-The depth of the complete state graph search is 16.
-Finished in 00s at (2026-09-25 21:32:34)
+101529 states generated, 20301 distinct states found, 5295 states left on queue.
+The depth of the complete state graph search is 15.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 11 and the 95th percentile is 4).
+Finished in 01s at (2026-09-26 04:35:23)

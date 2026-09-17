@@ -15,9 +15,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = ROOT / "spec"
-JAR_URL = "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar"
-# The v1.8.0 tag is a rolling prerelease, so the checksum pins the exact build that produced the output.
-JAR_SHA256 = "ab4694601923fd5ac06452abbf847c366a5054a3d739552085edd6ed986c29ec"
+JAR_URL = "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar"
+# v1.7.4 is the latest stable release. The newer v1.8.0 tag is a rolling prerelease that changes under
+# the same URL, so the checksum pins the exact build that produced the committed output.
+JAR_SHA256 = "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
 RUNS = [
     {"config": "MCLedger.cfg", "expect": "pass"},
     {"config": "MCLedgerNoKeyCheck.cfg", "expect": "violation"},
@@ -68,9 +69,11 @@ def main():
     out_dir.mkdir(exist_ok=True)
     summary = {"tool": "TLC", "tla2tools_sha256": JAR_SHA256, "module": "MCLedger", "runs": {}}
     ok = True
+    # One worker, because with several the run that stops at the first violation reports a different
+    # state count each time, and the README table would drift for no reason.
     for run in RUNS:
-        proc = subprocess.run(["java", "-XX:+UseParallelGC", "-cp", str(jar), "tlc2.TLC", "-workers", "auto",
-                               "-cleanup", "-noGenerateSpecTE", "-config", run["config"], "MCLedger.tla"],
+        proc = subprocess.run(["java", "-XX:+UseParallelGC", "-cp", str(jar), "tlc2.TLC", "-workers", "1",
+                               "-cleanup", "-config", run["config"], "MCLedger.tla"],
                               cwd=SPEC, capture_output=True, text=True)
         text = clean(proc.stdout + proc.stderr)
         name = run["config"].removesuffix(".cfg")

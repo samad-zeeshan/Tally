@@ -28,7 +28,7 @@ The ledger's rules are stated four ways. The TLA+ model in `spec/Ledger.tla` fol
 | Model | Expected | Result | Distinct states | Invariant broken |
 |---|---|---|---|---|
 | the real protocol | pass | pass | 394,177 | none |
-| idempotency check removed | violation | violation | 25,102 | ExactlyOnce |
+| idempotency check removed | violation | violation | 20,301 | ExactlyOnce |
 <!-- /gen -->
 
 The model covers the protocol, not the Java. It does not model the in-memory store, the connection pool, or several API replicas sharing one database, and money is a small integer rather than a `long`. The code and the model can agree on a misreading, which is the gap arXiv 2607.05076 warns about, and it is why the fault runs below exist as a second check.
