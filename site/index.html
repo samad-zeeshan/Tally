@@ -6,47 +6,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tally demo</title>
 <meta name="description" content="Tally is a small bank that can never lose or double a cent. Watch recorded runs of a transfer, a retried payment, a reconciliation, a fault injection and a flagged mule chain.">
-<meta name="theme-color" content="#0f6b4f">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f6b4f'/%3E%3Cpath d='M9 11h14M16 11v11' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta property="og:title" content="Tally demo">
+<meta property="og:description" content="A small bank that can never lose or double a cent, played back from recorded runs.">
+<meta name="theme-color" content="#eef1e6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151b18" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='3' fill='%23eef1e6'/%3E%3Cpath d='M4 11h24M4 17h24M4 23h24' stroke='%237f9f86' stroke-width='1.5'/%3E%3Cpath d='M9 4v24M11.5 4v24' stroke='%23b3312b' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Caslon+Display&family=Libre+Franklin:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="band">
-  <h1>Tally</h1>
-  <p class="lede">A small bank that can never lose or double a cent. Every transfer is two entries that cancel out,
-    a payment retried after a dropped connection lands once, the books can be rebuilt from scratch to prove
-    nothing leaked, and suspicious transfers are flagged after they land, with the evidence attached.</p>
-  <p class="small">Everything below is a replay of runs recorded from the real service. There is no server behind this page.</p>
+<a class="skip" href="#book">Skip to the ledger</a>
+
+<header class="wrap masthead">
+  <h1 class="wordmark" translate="no">Tally</h1>
+  <div class="masthead-copy">
+    <p class="lede">A small bank that can never lose or double a cent. Every transfer is two entries that cancel out,
+      a payment retried after a dropped connection lands once, the books can be rebuilt from scratch to prove
+      nothing leaked, and suspicious transfers are flagged after they land, with the evidence attached.</p>
+    <p class="note" id="provenance">Everything below is played back from runs recorded against the real service. There is no server behind this page.</p>
+  </div>
 </header>
 
-<main class="band">
-  <nav class="buttons" aria-label="Recorded runs">
-    <button data-run="transfer" aria-pressed="true">1. Transfer</button>
-    <button data-run="retry">2. Retry a dropped reply</button>
-    <button data-run="reconcile">3. Reconcile</button>
-    <button data-run="break" class="surprise">4. Break it</button>
-    <button data-run="flag" class="surprise">5. Flag it</button>
+<main class="wrap">
+  <nav class="tabs" aria-label="Recorded runs">
+    <button type="button" data-run="transfer" aria-pressed="false" disabled>Transfer</button>
+    <button type="button" data-run="retry" aria-pressed="false" disabled>Retry a lost reply</button>
+    <button type="button" data-run="reconcile" aria-pressed="false" disabled>Reconcile</button>
+    <button type="button" data-run="break" class="surprise" aria-pressed="false" disabled>Break it</button>
+    <button type="button" data-run="flag" class="surprise" aria-pressed="false" disabled>Flag it</button>
   </nav>
 
-  <section class="stage" aria-live="polite">
-    <div class="caption" id="caption"></div>
-    <div class="visual" id="visual"></div>
+  <section class="book" id="book" aria-labelledby="folio-title" aria-busy="true">
+    <div class="folio">
+      <h2 id="folio-title">Opening the book</h2>
+      <p class="caption" id="caption" aria-live="polite">Loading the recorded runs…</p>
+    </div>
+    <div class="spread">
+      <div class="page" id="visual"></div>
+      <aside class="figures" id="figures" aria-label="Running figures"></aside>
+    </div>
     <details class="wire" id="wire-box" open>
       <summary>What went over the wire</summary>
       <ol id="wire"></ol>
     </details>
   </section>
 
-  <section class="numbers" aria-label="Results">
-    <h2>The numbers behind it</h2>
-    <div class="tiles" id="tiles"></div>
-    <p class="small" id="numbers-source"></p>
+  <section class="trial" aria-labelledby="numbers-title">
+    <h2 id="numbers-title">The numbers behind it</h2>
+    <dl class="trial-list" id="tiles"></dl>
+    <p class="note" id="numbers-source"></p>
   </section>
 </main>
 
-<footer class="band small">
-  Source and method: <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a>.
-  Synthetic data only.
+<footer class="wrap colophon">
+  <p>Source and method: <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a>. Synthetic data only.</p>
 </footer>
 <script src="app.js"></script>
 </body>
