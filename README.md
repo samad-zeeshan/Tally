@@ -1,82 +1,110 @@
 # Tally
 
-Tally is a small bank that can never lose or double a cent. Every transfer is written as two entries that cancel out, a payment retried after a dropped connection lands exactly once, every balance can be rebuilt from scratch to prove nothing leaked, and suspicious transfers are flagged after they land with the evidence attached.
+Tally is a small bank that never loses or doubles a cent. The bank writes each transfer as two entries that cancel out. If a connection drops and an app sends a transfer again, the bank applies it only once. The bank can total every balance again from the start to prove that no money leaked. A fraud check looks at each transfer after the bank saves it, and each alert keeps its evidence.
 
-**Demo:** [samad-zeeshan.github.io/Tally](https://samad-zeeshan.github.io/Tally/) replays runs recorded from the real service: a transfer, a retry after a lost reply, a reconciliation, a fault injection, and a mule chain being flagged. A 90-second walkthrough is in [docs/media/demo.mp4](docs/media/demo.mp4).
+**Demo:** [samad-zeeshan.github.io/Tally](https://samad-zeeshan.github.io/Tally/) plays back runs from the real service. The runs show a transfer, a retry after a lost reply, a recount of the books, a crash test, and a fraud alert. In the last run, the fraud check flags a chain of accounts that pass stolen money along. A 90-second walkthrough is in [docs/media/demo.mp4](docs/media/demo.mp4).
 
-![Tally demo: transfer, retry, reconcile, break it, flag it](docs/media/demo.gif)
+![Tally demo: a transfer, a retry, a recount, a crash test and a fraud alert](docs/media/demo.gif)
 
 ## How it works
 
-A Java service on the JDK's HTTP server writes each transfer to Postgres in one transaction, and a fraud scorer reads the committed postings afterwards, off the request path.
+A Java service on the JDK's HTTP server writes each transfer to Postgres in one transaction. Later, a fraud scorer reads the saved entries, outside the path of the request.
 
-- ![overview](docs/diagrams/overview.png) The parts of the service, and how the Postgres or in-memory store is chosen at startup.
-- ![main flow](docs/diagrams/main-flow.png) A transfer is applied once, its reply is lost, and the retry with the same key gets the stored result back.
-- ![data model](docs/diagrams/data-model.png) The ledger tables and the database constraints that back the code's rules.
-- ![deployment](docs/diagrams/deployment.png) What runs where, locally and on the kind cluster.
-- ![fault harness](docs/diagrams/fault-harness.png) How the fault harness breaks the cluster while clients keep paying, and what it checks afterwards.
-- ![point in time](docs/diagrams/point-in-time.png) How each fraud score is built only from postings committed before it, and how that is verified.
-- ![rule gate](docs/diagrams/rule-gate.png) How a rule proposed by a local model has to pass a z3 check and then a full replay before anyone can switch it on.
+- ![overview](docs/diagrams/overview.png) This diagram shows the parts of the service and how it picks Postgres or an in-memory store at startup.
+- ![main flow](docs/diagrams/main-flow.png) The bank applies a transfer, the reply gets lost, and a retry with the same transfer reference gets the saved result.
+- ![data model](docs/diagrams/data-model.png) This diagram shows the ledger tables and the database constraints that enforce the same rules as the code.
+- ![deployment](docs/diagrams/deployment.png) This diagram shows what runs where, on a laptop and on a local Kubernetes cluster made with kind.
+- ![fault harness](docs/diagrams/fault-harness.png) The crash test breaks the cluster while clients send transfers, and then it checks the books.
+- ![point in time](docs/diagrams/point-in-time.png) Each fraud score uses only entries saved before it, and a separate checker proves this.
+- ![rule gate](docs/diagrams/rule-gate.png) A local model can propose a rule, but the rule must pass a z3 check and a full replay before anyone can enable it.
 
-Each has an interactive version beside it in `docs/diagrams/`.
+Each diagram has an interactive version beside it in `docs/diagrams/`.
 
 ## Why it is correct
 
-The ledger's rules are stated four ways. The TLA+ model in `spec/Ledger.tla` follows `JdbcStore.apply` statement by statement, with two workers, three clients whose transfers cross, crashes that roll a transaction back, lost requests and replies, and retries that race the first copy. Postgres enforces the same rules as constraints: a unique idempotency key, a balance check that only the world account may break, and non-zero postings. The fault harness then breaks a real cluster and compares Postgres with what every client was told. Reconciliation rebuilds every balance from its postings on demand.
+The project states the ledger rules in four ways:
+
+- A TLA+ model in `spec/Ledger.tla` follows `JdbcStore.apply` one statement at a time. The model has two workers and three clients whose transfers cross. It adds crashes that undo a transaction, lost messages, and retries that race the first copy.
+- Postgres enforces the same rules as constraints. Each transfer reference (the idempotency key) must be unique. Only the world account may go below zero, and no entry may be zero.
+- The crash test breaks a real cluster. Then it compares Postgres with the answer that each client got.
+- A recount (reconciliation) rebuilds every balance from its entries on request.
 
 <!-- gen:spec -->
-| Model | Expected | Result | Distinct states | Invariant broken |
+| Model | Expected | Result | Situations checked | Rule broken |
 |---|---|---|---|---|
 | the real protocol | pass | pass | 394,177 | none |
-| idempotency check removed | violation | violation | 20,301 | ExactlyOnce |
+| duplicate check removed | violation | violation | 20,301 | ExactlyOnce |
 <!-- /gen -->
 
-The model covers the protocol, not the Java. It does not model the in-memory store, the connection pool, or several API replicas sharing one database, and money is a small integer rather than a `long`. The code and the model can agree on a misreading, which is the gap arXiv 2607.05076 warns about, and it is why the fault runs below exist as a second check.
+The model checks the protocol, not the Java code. It leaves out the in-memory store, the connection pool, and several API copies that share one database. In the model, money is a small integer and not a `long`. The code and the model can share the same mistake. The paper arXiv 2607.05076 warns about this gap, so the crash tests below give a second check.
 
 <!-- gen:faults -->
-| Fault | Transfers | Retries | Money created or lost | Applied twice | Phantom | Confirmed but missing | Reconciles | Longest wait for an answer |
+| Fault | Transfers | Retries | Money created or lost | Applied twice | Nobody asked for it | Confirmed but missing | Recount agrees | Longest wait for an answer |
 |---|---|---|---|---|---|---|---|---|
 | none | 1,958 | 0 | 0 | 0 | 0 | 0 | yes | 0.2 s |
-| api pod kill | 2,123 | 25 | 0 | 0 | 0 | 0 | yes | 3.2 s |
-| postgres restart | 1,185 | 155 | 0 | 0 | 0 | 0 | yes | 10.1 s |
-| partition | 939 | 32 | 0 | 0 | 0 | 0 | yes | 15.2 s |
-| clock skew | 2,082 | 0 | 0 | 0 | 0 | 0 | yes | 0.1 s |
-| dropped responses | 1,742 | 698 | 0 | 0 | 0 | 0 | yes | 0.2 s |
-| mixed | 1,025 | 670 | 0 | 0 | 0 | 0 | yes | 12.1 s |
+| server stopped | 2,123 | 25 | 0 | 0 | 0 | 0 | yes | 3.2 s |
+| database restart | 1,185 | 155 | 0 | 0 | 0 | 0 | yes | 10.1 s |
+| database cut off | 939 | 32 | 0 | 0 | 0 | 0 | yes | 15.2 s |
+| clocks out of step | 2,082 | 0 | 0 | 0 | 0 | 0 | yes | 0.1 s |
+| replies dropped | 1,742 | 698 | 0 | 0 | 0 | 0 | yes | 0.2 s |
+| several at once | 1,025 | 670 | 0 | 0 | 0 | 0 | yes | 12.1 s |
 <!-- /gen -->
 
 <!-- gen:faults-summary -->
-7 runs, 11,054 transfers and 1,580 retries, 0 violations of any kind.
+Every check passed in all 7 crash tests, so the bank did not lose or double any money. The runs made about 11,000 transfers and about 1,600 retries.
 <!-- /gen -->
-Each run keeps sending until its faults have played out and every client has a definite answer, so a fault that no request noticed fails the run. The partition is a NetworkPolicy plus cutting the pool's open sockets from the database side. These runs used kind on Docker Desktop on one Windows laptop, and CI repeats them on every push as the fifth gate after the four deployment gates. The first runs found five real problems, each now fixed with a test: transfers and fraud score inserts could deadlock on account rows, connections lost during a Postgres restart were never replaced, on give-back or on borrow, so one pod ended up with none at all, a partition left every pooled connection waiting forever on a read, and a stale DNS cache kept the API pointed at a dead database pod for a minute. The last column is the longest stretch in which no client got any answer, which is what an outage looks like from outside.
+
+Each run sends transfers until all its faults are over and every client has a clear answer. A fault that no request noticed fails the run. To cut off the database, the test adds a NetworkPolicy and closes the open connections from the database side. These runs used kind on Docker Desktop on one Windows laptop. CI runs them again on every push, as a fifth gate after the four deployment gates.
+
+The first runs found five real bugs. Each one now has a fix and a test:
+
+- Transfers and fraud score inserts could deadlock on the same account rows.
+- The pool did not replace a connection that a Postgres restart broke, when a request gave the connection back.
+- The pool also did not replace a broken connection when a request borrowed it. Together, these two bugs left one server with no connections.
+- A database cut left every pooled connection to wait forever on a read.
+- A stale DNS cache kept the API on a dead database pod for a minute.
+
+The last column of the crash test table shows the longest time in which no client got any answer. That is what an outage looks like from outside.
 
 <!-- gen:load -->
-| Operation | p99 budget | Max sustained | p50 at that load | p95 | p99 |
+| Operation | Time limit, slowest 1 in 100 | Highest steady load | Typical (`p50`) | Slowest 1 in 20 (`p95`) | Slowest 1 in 100 (`p99`) |
 |---|---|---|---|---|---|
 | transfer | 100 ms | 100 req/s | 17.1 ms | 63.6 ms | 77.8 ms |
 | statement | 100 ms | 100 req/s | 10.2 ms | 59.2 ms | 77.7 ms |
 | reconciliation | 1000 ms | 10 req/s | 371.7 ms | 568.1 ms | 672.7 ms |
 <!-- /gen -->
 
-Latency is measured open loop from the scheduled send time, on the same laptop that runs the cluster, so it includes queueing and is a floor for this setup, not a capacity plan.
+All three operations stayed inside their time limits at the loads in the table. The load test measures each delay from the planned send time, so the delay includes time in the queue. The test ran on the same laptop as the cluster. These numbers describe this one setup. They are not a capacity plan.
 
 ## Fraud scoring
 
-Every applied transfer is scored after commit by rules over the payer's history (v1) plus rules over the transfer graph around it (v2): a burst to an account nobody else pays, forwarding flagged money within the hour, money coming back within a day, and a discount when many accounts already pay the payee. Each score stores every feature value, each rule's points, and the earlier postings it rests on. The numbers come from a seeded synthetic dataset with bursts, structuring, account takeover and mule chains, replayed through the real API.
+The fraud check scores every transfer after the bank saves it. The first version (v1) uses rules about the payer's own history. The second version (v2) adds rules about the web of transfers around each one:
+
+- a burst of money to an account that nobody else pays,
+- flagged money that moves on within the hour,
+- money that comes back within a day,
+- fewer points when many accounts already pay the payee.
+
+Each score keeps every input value, the points from each rule, and the earlier entries that it used. The test data comes from a random generator with a fixed seed. It holds four kinds of fraud, and the test sends all of it through the real API:
+
+- bursts of money to one new payee,
+- structuring, which is many small transfers that stay under a limit,
+- account takeover,
+- mule chains, which are accounts that pass stolen money along.
 
 <!-- gen:fraud -->
 | At the flag line of 40 | v1 rules | v2 with graph rules |
 |---|---|---|
-| Precision, all fraud | 0.3496 | 0.8366 |
-| Recall, all fraud | 0.4314 | 0.8562 |
-| AUROC, all fraud | 0.9055 | 0.9883 |
-| Normal postings flagged | 240 of 8,991 | 50 of 8,991 |
-| Alerts per 1,000 postings | 39.72 | 32.94 |
-| Precision / recall on a fresh seed (20260926) | 0.3655 / 0.4375 | 0.8179 / 0.8562 |
+| Flags that were fraud (`precision`) | 0.3496 | 0.8366 |
+| Fraud that got flagged (`recall`) | 0.4314 | 0.8562 |
+| Ranking quality, 1 is perfect (`AUROC`) | 0.9055 | 0.9883 |
+| Normal transfers flagged | 240 of 8,991 | 50 of 8,991 |
+| Alerts per 1,000 transfers | 39.72 | 32.94 |
+| `precision` and `recall` on new data, seed 20260926 | 0.3655 / 0.4375 | 0.8179 / 0.8562 |
 <!-- /gen -->
 
 <!-- gen:patterns -->
-| Pattern | v1 precision at its recall | v2 precision at the same recall | v1 AUROC | v2 AUROC | v2 recall at 40 |
+| Kind of fraud | v1 `precision` at its `recall` | v2 `precision` at the same `recall` | v1 `AUROC` | v2 `AUROC` | v2 `recall` at 40 |
 |---|---|---|---|---|---|
 | burst | 0.0204 at 0.0394 | 0.8769 | 0.8722 | 0.9746 | 0.7165 |
 | structuring | 0.2453 at 1 | 0.7647 | 0.9933 | 0.9986 | 1 |
@@ -85,18 +113,21 @@ Every applied transfer is scored after commit by rules over the payer's history 
 <!-- /gen -->
 
 <!-- gen:fraud-summary -->
-Dataset: 9,290 transfers between 356 accounts, seed 20260925. Burst precision at v1's recall of 0.0394 went from 0.0204 to 0.8769. Across all fraud, normal postings flagged fell from 240 to 50.
+The test data holds about 9,300 transfers between about 360 accounts, from seed 20260925. For bursts, the share of flags that were real fraud went from about 2 percent to about 88 percent. That is a large gain. This compares the two versions where each catches the same share of bursts, about 3.9 percent. Across all kinds of fraud, flags on normal transfers fell from 240 to 50. Fewer is better.
 <!-- /gen -->
-The graph rules were chosen looking at this dataset, so the fresh-seed row is the one to trust. Account takeover is still the weak pattern, as its row shows. The cycle rule fired only on normal payments, because the dataset has no loops.
+
+The graph rules came from a study of this same data, so trust the row with new data more. Account takeover is still the weak spot, and its row shows it. The rule for money that comes back fired only on normal transfers, because the test data has no loops.
 
 <!-- gen:pit-summary -->
-The verifier recomputed 16 features for all 9,290 postings and found 0 mismatches with the Java scorer, and 0 changes when the future was rewritten for 200 sampled postings. Building an explanation took 92 microseconds at p99, against a budget of 50 ms.
+A separate checker in Python computed all 16 inputs again for every transfer, about 9,300 in all. It found no difference from the Java scorer. The checker also changed the future for 200 sample transfers. No score changed, so no score used data from after its transfer. The slowest 1 in 100 explanations took about 92 microseconds to build. The limit is 50 ms, so this is far inside it.
 <!-- /gen -->
 
-New rules come from an offline reflection step: a local model (`qwen/qwen3.5-9b` through LM Studio) sees the matured errors nearest the missed fraud from an episodic memory, plus every earlier proposal and its verdict, and answers with one rule as schema-checked JSON. z3 then looks for a counterexample to two stated policies, and refuses rules that can never fire or add nothing. Only then does a full replay decide. An accepted rule still does nothing until an operator names its file in `TALLY_FRAUD_EXTRA_RULES`.
+New rules come from a separate offline step. A local model (`qwen/qwen3.5-9b` in LM Studio) reads past mistakes that look like the missed fraud. It also reads every earlier proposal and its result. It then answers with one rule as JSON, and a schema checks the format. Next, z3 looks for a case that breaks either of two written policies. It also refuses a rule that can never fire or that adds nothing new.
+
+A full replay of the test data makes the final decision. An accepted rule still does nothing until an operator names its file in `TALLY_FRAUD_EXTRA_RULES`.
 
 <!-- gen:reflection -->
-| Run | Proposed rule | z3 check | Replay gate |
+| Run | Proposed rule | z3 check | Full replay |
 |---|---|---|---|
 | 1 | `distinct_payees_60m == 1`, 25 points | rejected (contradicts policy) | not run |
 | 2 | `amount_minor >= 25000`, 15 points | passed | rejected (flagged normal postings rose from 50 to 229) |
@@ -105,12 +136,12 @@ New rules come from an offline reflection step: a local model (`qwen/qwen3.5-9b`
 
 ## Design decisions
 
-- Money is a `long` count of cents everywhere. No floats, overflow checks on every sum, and the JSON parser refuses fractions.
-- A reserved world account funds every opening and is the only account allowed below zero, so even money entering the bank is a balanced entry.
-- The unique idempotency key in Postgres is the source of truth. It holds across restarts and replicas, which an in-process lock never could.
-- Account rows are locked in one fixed order, so two crossing transfers cannot deadlock. The lock is `FOR NO KEY UPDATE`, so fraud score inserts never wait on it.
-- Hand-written JSON on the JDK's HTTP server with virtual threads, plain Kustomize manifests and hand-written Prometheus metrics. The surface is small and fixed, so no framework.
-- Fraud scoring runs after commit on a bounded queue. A slow or broken scorer can lose a score, never a transfer.
+- The code stores money as a `long` count of cents everywhere. It uses no floats, it checks every sum for overflow, and the JSON parser refuses fractions.
+- A reserved world account pays the opening balance of each new account. It is the only account that may go below zero. So money that enters the bank is a balanced entry too.
+- The unique reference in Postgres decides which transfer is a repeat. This stays true across restarts and across server copies. A lock inside one process cannot do that.
+- The code locks account rows in one fixed order, so two crossing transfers cannot deadlock. The lock is `FOR NO KEY UPDATE`, so fraud score inserts never wait for it.
+- The service uses no framework, because its surface is small and fixed. It writes its own JSON and its own Prometheus metrics. It runs on the JDK's HTTP server with virtual threads, and plain Kustomize files deploy it.
+- The fraud check runs after commit, from a queue with a fixed size. A slow or broken scorer can lose a score, but never a transfer.
 
 ## Run it
 
@@ -120,21 +151,21 @@ cp .env.example .env && docker compose up --build   # the app on localhost:8080,
 make k8s-up && make k8s-gates && ./scripts/k8s-faults.sh   # kind cluster, four gates, fault gate
 ```
 
-`python eval/fraud/run.py`, `python spec/check.py` and `python eval/load/run.py` rebuild the results files, and `python eval/report.py` regenerates every table above from them.
+These scripts rebuild the results files: `python eval/fraud/run.py`, `python spec/check.py` and `python eval/load/run.py`. Then `python eval/report.py` writes every table above again from those files.
 
 ## Papers
 
-- arXiv 2607.05076, Can Code Specify a System Precisely Enough to Formally Verify It? The model of the transfer protocol and its stated gaps.
-- arXiv 2609.27571, FDE-Bench. The four deployment gates, with fault behaviour added as a fifth.
-- arXiv 2608.22389, KONTOGRAPH. Point-in-time features, a verifier that rewrites the future, and timed explanations.
-- arXiv 2608.23468, RAD. Rules combined with relational signals over the transfer graph.
-- arXiv 2607.27267, FAVA. Every alert carries the evidence it fired on.
-- arXiv 2609.24446, ActGov. SMT counterexample checks on every rule update.
-- arXiv 2609.28771, Agent Memory with Episodic Retrieval for Financial Decision-Making. The reflection step's memory of matured errors.
-- arXiv 2609.27287, SR-Fraud. A frozen scorer, offline reflection, and a deterministic gate.
-- arXiv 2609.18270, BENCHCOMPASS. Evidence given to the model as typed summaries, not raw records.
-- arXiv 2609.19928, semantic user profiling at bank scale. Reasoning over groups of similar errors rather than one account at a time.
+- arXiv 2607.05076, Can Code Specify a System Precisely Enough to Formally Verify It? It shaped the model of the transfer protocol and its list of gaps.
+- arXiv 2609.27571, FDE-Bench. It gave the four deployment gates, and this project adds fault behaviour as a fifth.
+- arXiv 2608.22389, KONTOGRAPH. It gave the point-in-time inputs, the checker that rewrites the future, and the timed explanations.
+- arXiv 2608.23468, RAD. It combines rules with signals from the web of transfers.
+- arXiv 2607.27267, FAVA. Every alert carries the evidence that made it fire.
+- arXiv 2609.24446, ActGov. Every rule change gets a counterexample check from an SMT solver.
+- arXiv 2609.28771, Agent Memory with Episodic Retrieval for Financial Decision-Making. The offline step keeps a memory of past mistakes in this way.
+- arXiv 2609.27287, SR-Fraud. It uses a fixed scorer, an offline step that learns from mistakes, and a gate that always gives the same answer.
+- arXiv 2609.18270, BENCHCOMPASS. The model gets evidence as typed summaries, not raw records.
+- arXiv 2609.19928, semantic user profiling at bank scale. The offline step looks at groups of similar mistakes, not one account at a time.
 
 ## Licence
 
-MIT, see [LICENSE](LICENSE).
+Tally uses the MIT licence. See [LICENSE](LICENSE).

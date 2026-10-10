@@ -23,27 +23,37 @@ def f4(v):
     return "n/a" if v is None else f"{v:.4f}".rstrip("0").rstrip(".") if v not in (0, 1) else f"{v:g}"
 
 
+def about(v):
+    """Round to two significant figures for prose. Tables keep the exact value."""
+    return f"{float(f'{v:.2g}'):,g}"
+
+
 def spec_table(spec):
-    rows = ["| Model | Expected | Result | Distinct states | Invariant broken |", "|---|---|---|---|---|"]
-    labels = {"MCLedger": "the real protocol", "MCLedgerNoKeyCheck": "idempotency check removed"}
+    rows = ["| Model | Expected | Result | Situations checked | Rule broken |", "|---|---|---|---|---|"]
+    labels = {"MCLedger": "the real protocol", "MCLedgerNoKeyCheck": "duplicate check removed"}
     for name, r in spec["runs"].items():
         rows.append(f"| {labels.get(name, name)} | {r['expect']} | {r['result']} | {r['distinct_states']:,} | "
                     f"{', '.join(r['violated']) or 'none'} |")
     return "\n".join(rows)
 
 
+FAULTS = {"api_pod_kill": "server stopped", "postgres_restart": "database restart", "partition": "database cut off",
+          "clock_skew": "clocks out of step", "dropped_responses": "replies dropped", "mixed": "several at once"}
+
+
 def faults_table(faults):
-    rows = ["| Fault | Transfers | Retries | Money created or lost | Applied twice | Phantom | Confirmed but missing | Reconciles | Longest wait for an answer |",
+    rows = ["| Fault | Transfers | Retries | Money created or lost | Applied twice | Nobody asked for it | Confirmed but missing | Recount agrees | Longest wait for an answer |",
             "|---|---|---|---|---|---|---|---|---|"]
     for r in faults["runs"]:
-        rows.append(f"| {r['fault'].replace('_', ' ')} | {r['keys']:,} | {r['retries']:,} | {r['conservation_violations']} | "
+        rows.append(f"| {FAULTS.get(r['fault'], r['fault'].replace('_', ' '))} | {r['keys']:,} | {r['retries']:,} | {r['conservation_violations']} | "
                     f"{r['double_applications']} | {r['phantom_transfers']} | {r['lost_acknowledged_transfers']} | "
                     f"{'yes' if r['reconciliation_consistent'] else 'no'} | {r['longest_gap_seconds']} s |")
     return "\n".join(rows)
 
 
 def load_table(ld):
-    rows = ["| Operation | p99 budget | Max sustained | p50 at that load | p95 | p99 |", "|---|---|---|---|---|---|"]
+    rows = ["| Operation | Time limit, slowest 1 in 100 | Highest steady load | Typical (`p50`) | Slowest 1 in 20 (`p95`) | Slowest 1 in 100 (`p99`) |",
+            "|---|---|---|---|---|---|"]
     for op, r in ld["results"].items():
         best = next((s for s in r["steps"] if s["offered_rps"] == r["max_sustained_rps"]), None)
         if best is None:
@@ -57,20 +67,20 @@ def load_table(ld):
 def fraud_table(fr):
     v1, v2 = fr["v1"], fr["v2"]
     rows = ["| At the flag line of 40 | v1 rules | v2 with graph rules |", "|---|---|---|",
-            f"| Precision, all fraud | {f4(v1['all_fraud']['precision'])} | {f4(v2['all_fraud']['precision'])} |",
-            f"| Recall, all fraud | {f4(v1['all_fraud']['recall'])} | {f4(v2['all_fraud']['recall'])} |",
-            f"| AUROC, all fraud | {f4(v1['all_fraud']['auroc'])} | {f4(v2['all_fraud']['auroc'])} |",
-            f"| Normal postings flagged | {v1['normal']['flagged']} of {v1['normal']['postings']:,} | "
+            f"| Flags that were fraud (`precision`) | {f4(v1['all_fraud']['precision'])} | {f4(v2['all_fraud']['precision'])} |",
+            f"| Fraud that got flagged (`recall`) | {f4(v1['all_fraud']['recall'])} | {f4(v2['all_fraud']['recall'])} |",
+            f"| Ranking quality, 1 is perfect (`AUROC`) | {f4(v1['all_fraud']['auroc'])} | {f4(v2['all_fraud']['auroc'])} |",
+            f"| Normal transfers flagged | {v1['normal']['flagged']} of {v1['normal']['postings']:,} | "
             f"{v2['normal']['flagged']} of {v2['normal']['postings']:,} |",
-            f"| Alerts per 1,000 postings | {v1['alerts_per_1000_postings']} | {v2['alerts_per_1000_postings']} |"]
+            f"| Alerts per 1,000 transfers | {v1['alerts_per_1000_postings']} | {v2['alerts_per_1000_postings']} |"]
     h = fr["holdout"]
-    rows.append(f"| Precision / recall on a fresh seed ({h['seed']}) | {f4(h['v1']['all_fraud']['precision'])} / "
+    rows.append(f"| `precision` and `recall` on new data, seed {h['seed']} | {f4(h['v1']['all_fraud']['precision'])} / "
                 f"{f4(h['v1']['all_fraud']['recall'])} | {f4(h['v2']['all_fraud']['precision'])} / {f4(h['v2']['all_fraud']['recall'])} |")
     return "\n".join(rows)
 
 
 def pattern_table(fr):
-    rows = ["| Pattern | v1 precision at its recall | v2 precision at the same recall | v1 AUROC | v2 AUROC | v2 recall at 40 |",
+    rows = ["| Kind of fraud | v1 `precision` at its `recall` | v2 `precision` at the same `recall` | v1 `AUROC` | v2 `AUROC` | v2 `recall` at 40 |",
             "|---|---|---|---|---|---|"]
     for p, r in fr["precision_at_v1_recall"].items():
         if p == "all_fraud":
@@ -82,7 +92,7 @@ def pattern_table(fr):
 
 
 def reflection_table(rf):
-    rows = ["| Run | Proposed rule | z3 check | Replay gate |", "|---|---|---|---|"]
+    rows = ["| Run | Proposed rule | z3 check | Full replay |", "|---|---|---|---|"]
     for r in rf["runs"]:
         rule = r.get("rule")
         text = f"`{rule['feature']} {rule['op']} {rule['threshold']}`, {rule['points']} points" if rule else "no valid rule"
@@ -98,19 +108,32 @@ def texts(spec, faults, ld, fr, rf):
     ex = fr["explanations"]
     pit = fr["point_in_time"]
     t = faults["totals"]
-    return {
-        "faults-summary": f"{len(faults['runs'])} runs, {t['keys']:,} transfers and {t['retries']:,} retries, "
-                          f"{t['violations']} violations of any kind.",
-        "fraud-summary": f"Dataset: {fr['dataset']['transfers']:,} transfers between {fr['dataset']['accounts']} accounts, seed "
-                         f"{fr['dataset']['seed']}. Burst precision at v1's recall of {f4(burst['v1_recall'])} went from {f4(burst['v1_precision'])} "
-                         f"to {f4(burst['v2']['precision'])}. Across all fraud, normal postings flagged fell from "
-                         f"{fr['v1']['normal']['flagged']} to {fr['v2']['normal']['flagged']}.",
-        "pit-summary": f"The verifier recomputed {pit['features_per_posting']} features for all {pit['postings_checked']:,} "
-                       f"postings and found {pit['java_python_mismatches']} mismatches with the Java scorer, and "
-                       f"{pit['future_perturbation_leaks']} changes when the future was rewritten for "
-                       f"{pit['future_perturbation_samples']} sampled postings. Building an explanation took "
-                       f"{ex['p99_micros']} microseconds at p99, against a budget of {ex['budget_micros'] // 1000} ms.",
-    }
+    if t["violations"] == 0:
+        faults_text = f"Every check passed in all {len(faults['runs'])} crash tests, so the bank did not lose or double any money."
+    else:
+        faults_text = f"The crash tests broke a rule {t['violations']} times. That is not good enough yet."
+    faults_text += f" The runs made about {about(t['keys'])} transfers and about {about(t['retries'])} retries."
+    v1p, v2p = burst["v1_precision"] * 100, burst["v2"]["precision"] * 100
+    fraud_text = (f"The test data holds about {about(fr['dataset']['transfers'])} transfers between about "
+                  f"{about(fr['dataset']['accounts'])} accounts, from seed {fr['dataset']['seed']}. "
+                  f"For bursts, the share of flags that were real fraud went from about {about(v1p)} percent "
+                  f"to about {about(v2p)} percent. That is a large gain. "
+                  f"This compares the two versions where each catches the same share of bursts, about "
+                  f"{about(burst['v1_recall'] * 100)} percent. "
+                  f"Across all kinds of fraud, flags on normal transfers fell from {fr['v1']['normal']['flagged']} "
+                  f"to {fr['v2']['normal']['flagged']}. Fewer is better.")
+    miss, leak = pit["java_python_mismatches"], pit["future_perturbation_leaks"]
+    pit_text = (f"A separate checker in Python computed all {pit['features_per_posting']} inputs again for every transfer, "
+                f"about {about(pit['postings_checked'])} in all. "
+                + ("It found no difference from the Java scorer. " if miss == 0 else
+                   f"It found {miss} differences from the Java scorer, which is a bug. ")
+                + f"The checker also changed the future for {pit['future_perturbation_samples']} sample transfers. "
+                + ("No score changed, so no score used data from after its transfer. " if leak == 0 else
+                   f"The scores changed {leak} times, so some scores used later data. That is a bug. ")
+                + f"The slowest 1 in 100 explanations took about {about(ex['p99_micros'])} microseconds to build. "
+                + f"The limit is {ex['budget_micros'] // 1000} ms, so "
+                + ("this is far inside it." if ex["p99_micros"] <= ex["budget_micros"] else "this is too slow."))
+    return {"faults-summary": faults_text, "fraud-summary": fraud_text, "pit-summary": pit_text}
 
 
 def numbers(spec, faults, ld, fr, rf):
