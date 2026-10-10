@@ -42,7 +42,7 @@ FAULTS = {"api_pod_kill": "server stopped", "postgres_restart": "database restar
 
 
 def faults_table(faults):
-    rows = ["| Fault | Transfers | Retries | Money created or lost | Applied twice | Nobody asked for it | Confirmed but missing | Recount agrees | Longest wait for an answer |",
+    rows = ["| Fault | Transfers | Retries | Money created or lost | Applied twice | Nobody asked for it | Confirmed but lost | Recount agrees | Longest wait for an answer |",
             "|---|---|---|---|---|---|---|---|---|"]
     for r in faults["runs"]:
         rows.append(f"| {FAULTS.get(r['fault'], r['fault'].replace('_', ' '))} | {r['keys']:,} | {r['retries']:,} | {r['conservation_violations']} | "

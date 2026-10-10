@@ -39,7 +39,7 @@ The project states the ledger rules in four ways:
 The model checks the protocol, not the Java code. It leaves out the in-memory store, the connection pool, and several API copies that share one database. In the model, money is a small integer and not a `long`. The code and the model can share the same mistake. The paper arXiv 2607.05076 warns about this gap, so the crash tests below give a second check.
 
 <!-- gen:faults -->
-| Fault | Transfers | Retries | Money created or lost | Applied twice | Nobody asked for it | Confirmed but missing | Recount agrees | Longest wait for an answer |
+| Fault | Transfers | Retries | Money created or lost | Applied twice | Nobody asked for it | Confirmed but lost | Recount agrees | Longest wait for an answer |
 |---|---|---|---|---|---|---|---|---|
 | none | 1,958 | 0 | 0 | 0 | 0 | 0 | yes | 0.2 s |
 | server stopped | 2,123 | 25 | 0 | 0 | 0 | 0 | yes | 3.2 s |
@@ -76,7 +76,7 @@ The last column of the crash test table shows the longest time in which no clien
 
 All three operations stayed inside their time limits at the loads in the table. The load test measures each delay from the planned send time, so the delay includes time in the queue. The test ran on the same laptop as the cluster. These numbers describe this one setup. They are not a capacity plan.
 
-## Fraud scoring
+## Fraud check
 
 The fraud check scores every transfer after the bank saves it. The first version (v1) uses rules about the payer's own history. The second version (v2) adds rules about the web of transfers around each one:
 
@@ -137,9 +137,9 @@ A full replay of the test data makes the final decision. An accepted rule still 
 ## Design decisions
 
 - The code stores money as a `long` count of cents everywhere. It uses no floats, it checks every sum for overflow, and the JSON parser refuses fractions.
-- A reserved world account pays the opening balance of each new account. It is the only account that may go below zero. So money that enters the bank is a balanced entry too.
+- A reserved world account pays the first deposit into each new account. It is the only account that may go below zero. So money that enters the bank also makes two entries that agree.
 - The unique reference in Postgres decides which transfer is a repeat. This stays true across restarts and across server copies. A lock inside one process cannot do that.
-- The code locks account rows in one fixed order, so two crossing transfers cannot deadlock. The lock is `FOR NO KEY UPDATE`, so fraud score inserts never wait for it.
+- The code locks account rows in one fixed order, so two transfers in opposite directions cannot deadlock. The lock is `FOR NO KEY UPDATE`, so fraud score inserts never wait for it.
 - The service uses no framework, because its surface is small and fixed. It writes its own JSON and its own Prometheus metrics. It runs on the JDK's HTTP server with virtual threads, and plain Kustomize files deploy it.
 - The fraud check runs after commit, from a queue with a fixed size. A slow or broken scorer can lose a score, but never a transfer.
 
