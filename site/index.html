@@ -5,9 +5,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tally demo</title>
-<meta name="description" content="Tally is a small bank that can never lose or double a cent. Watch recorded runs of a transfer, a payment sent twice by mistake, a recount of the books, servers broken on purpose, and a chain of stolen money being caught.">
+<meta name="description" content="Tally is a small bank that never loses or doubles a cent. This page plays back recorded runs of the real service, from one transfer to a fraud alert.">
 <meta property="og:title" content="Tally demo">
-<meta property="og:description" content="A small bank that can never lose or double a cent, played back from recorded runs.">
+<meta property="og:description" content="Tally is a small bank that never loses or doubles a cent. This page plays back recorded runs.">
 <meta name="theme-color" content="#eef1e6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#151b18" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='3' fill='%23eef1e6'/%3E%3Cpath d='M4 11h24M4 17h24M4 23h24' stroke='%237f9f86' stroke-width='1.5'/%3E%3Cpath d='M9 4v24M11.5 4v24' stroke='%23b3312b' stroke-width='1.5'/%3E%3C/svg%3E">
@@ -24,10 +24,10 @@
   <p class="eyebrow"><span>01</span> The demo</p>
   <h1 class="wordmark" translate="no">Tally</h1>
   <div class="masthead-copy">
-    <p class="lede">A small bank that can never lose or double a cent. Every transfer is written as two lines that cancel out.
-      A payment sent twice after a dropped connection still lands once. The books can be added up again from scratch to prove
-      nothing leaked. Suspicious transfers are flagged after they land, with the evidence attached.</p>
-    <p class="note" id="provenance">Everything below is a replay of the real system. Nothing on this page talks to a live server.</p>
+    <p class="lede">Tally is a small bank that never loses or doubles a cent. The bank writes each transfer as two lines that cancel out.
+      If a dropped connection makes an app send a transfer twice, the bank applies it once. The bank can total its books again
+      to prove that no money leaked. A fraud check flags suspicious transfers after they happen and keeps the evidence.</p>
+    <p class="note" id="provenance">Everything below plays back recorded runs of the real system. Nothing on this page connects to a live server.</p>
   </div>
 </header>
 
@@ -36,29 +36,29 @@
   <nav class="tabs" aria-label="Recorded runs">
     <button type="button" data-run="transfer" data-demo="transfer" aria-pressed="false" disabled>Transfer</button>
     <button type="button" data-run="retry" data-demo="retry" aria-pressed="false" disabled>Retry a lost reply</button>
-    <button type="button" data-run="reconcile" data-demo="reconcile" aria-pressed="false" disabled>Reconcile</button>
+    <button type="button" data-run="reconcile" data-demo="reconcile" aria-pressed="false" disabled>Recount the books</button>
     <button type="button" data-run="break" data-demo="break" class="surprise" aria-pressed="false" disabled>Break it</button>
     <button type="button" data-run="flag" data-demo="flag" class="surprise" aria-pressed="false" disabled>Flag it</button>
   </nav>
 
   <section class="book" id="book" aria-labelledby="folio-title" aria-busy="true">
     <div class="folio">
-      <h2 id="folio-title">Opening the book</h2>
-      <p class="caption" id="caption" aria-live="polite">Loading the recorded runs…</p>
+      <h2 id="folio-title">The ledger book</h2>
+      <p class="caption" id="caption" aria-live="polite">Wait while the recorded runs load.</p>
     </div>
     <div class="spread">
       <div class="page" id="visual"></div>
-      <aside class="figures" id="figures" aria-label="Running figures"></aside>
+      <aside class="figures" id="figures" aria-label="Figures for this run"></aside>
     </div>
     <details class="wire" id="wire-box" open>
-      <summary>What went over the wire</summary>
+      <summary>What the app and the bank sent</summary>
       <ol id="wire"></ol>
     </details>
   </section>
 
   <section class="trial" id="numbers" aria-labelledby="numbers-title">
     <p class="eyebrow"><span>03</span> The results</p>
-    <h2 id="numbers-title">The numbers behind it</h2>
+    <h2 id="numbers-title">The test results</h2>
     <dl class="trial-list" id="tiles"></dl>
     <p class="note" id="numbers-source"></p>
   </section>
@@ -67,13 +67,13 @@
 <footer class="colophon" id="colophon">
   <div class="wrap">
     <p class="eyebrow"><span>04</span> The source</p>
-    <p class="voice">Every cent is written down twice, and the two lines always agree.</p>
+    <p class="voice">Tally records every cent twice, and the two lines always agree.</p>
   </div>
   <p class="giant" translate="no" aria-hidden="true">Tally</p>
   <div class="wrap colophon-meta">
     <p>The code, the tests and the method are at <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a>.</p>
-    <p>Every account and payment on this page is made up. The figures come from test runs saved in the repository.</p>
-    <p>Released under the MIT licence.</p>
+    <p>Every account and transfer on this page is fictional. The figures come from test runs that the repository keeps.</p>
+    <p>The code uses the MIT licence.</p>
   </div>
 </footer>
 <script src="app.js"></script>
