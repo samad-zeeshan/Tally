@@ -42,7 +42,13 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font: 400 1rem/1.6 var(--text); font-feature-settings: "tnum" 1;
+  transition: background-color 700ms var(--ease-out), color 700ms var(--ease-out);
 }
+/* The one theme flip: the results and the footer are read on an ink page. The ledger above keeps
+   its own paper background, so it reads as a sheet lying on a dark desk while the flip is on. */
+body.flip { background: var(--ink); color: var(--paper); }
+.masthead, main > .eyebrow, .tabs, .book { background: var(--paper); }
+.trial, .colophon { background: transparent; }
 ::selection { background: var(--accent); color: var(--paper); }
 a { color: var(--accent); text-underline-offset: .2em; text-decoration-thickness: 1px; }
 a:hover { text-decoration-thickness: 2px; }
@@ -51,6 +57,24 @@ a:hover { text-decoration-thickness: 2px; }
 .wrap { max-width: 72rem; margin: 0 auto; padding-inline: 16px; }
 .skip { position: absolute; left: 16px; top: -3rem; background: var(--ink); color: var(--paper); padding: .5rem .75rem; z-index: 2; }
 .skip:focus { top: .75rem; }
+
+/* Mono caps label above every section, numbered in reading order. */
+.eyebrow {
+  font: 500 .6875rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 1rem;
+}
+.eyebrow span { color: var(--accent); margin-right: .6em; }
+main > .eyebrow { margin: 0; padding-top: 2.5rem; }
+
+.source-pill {
+  position: fixed; top: 16px; right: 16px; z-index: 3;
+  font: 500 .75rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: none;
+  color: var(--paper); background: var(--ink); padding: .7rem 1rem; border-radius: 999px;
+  border: 1px solid var(--ink); transition: background-color 160ms ease, color 160ms ease, transform 120ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .source-pill:hover { background: var(--accent); border-color: var(--accent); } }
+.source-pill:active { transform: scale(.97); }
+body.flip .source-pill { background: var(--paper); color: var(--ink); border-color: var(--paper); }
 
 /* Masthead: the book's cover label. */
 .masthead {
@@ -61,11 +85,12 @@ a:hover { text-decoration-thickness: 2px; }
 .wordmark {
   font: 400 clamp(4rem, 11vw, 7.5rem)/.9 var(--display); letter-spacing: -.02em; margin: 0;
 }
+.masthead .eyebrow { grid-column: 1 / -1; margin: 0; }
 .lede { font-size: 1.075rem; line-height: 1.6; margin: 0 0 .75rem; text-wrap: pretty; max-width: 62ch; }
 .note { color: var(--ink-soft); font-size: .875rem; margin: 0; text-wrap: pretty; }
 
 /* Index tabs cut into the top edge of the page. */
-.tabs { display: flex; flex-wrap: wrap; gap: .375rem; margin: 2.5rem 0 0; position: relative; }
+.tabs { display: flex; flex-wrap: wrap; gap: .375rem; margin: 0; padding-top: 1rem; position: relative; }
 .tabs button {
   font: 500 .9375rem/1 var(--text); color: var(--ink);
   padding: .8rem 1.05rem .75rem; min-height: 2.75rem;
@@ -285,7 +310,27 @@ a:hover { text-decoration-thickness: 2px; }
 .trial .note { margin-top: .9rem; }
 .trial .note code { font: 400 .8125rem var(--mono); }
 
-.colophon { padding-top: 3rem; padding-bottom: 3rem; color: var(--ink-soft); font-size: .875rem; }
+/* On the ink page the section draws its lines from the current text colour, so it reads the same in
+   either direction of the flip and in dark mode. */
+.trial { padding-bottom: 5rem; }
+/* Softer text uses opacity, because Chromium freezes a color-mix of currentColor and misses the flip. */
+.trial .eyebrow, .colophon .eyebrow, .trial-list .was, .trial .note, .colophon-meta { color: inherit; opacity: .72; }
+.trial .eyebrow span, .colophon .eyebrow span { color: inherit; }
+body.flip .eyebrow span { color: currentColor; }
+.trial-list { border-top-color: currentColor; }
+.trial-list > div { border-bottom-color: color-mix(in srgb, currentColor 22%, transparent); }
+.trial-list > div:last-child { border-bottom-color: currentColor; }
+body.flip .trial a, body.flip .colophon a { color: inherit; }
+
+/* Footer as a second masthead: the name across the full width under one line of voice. */
+.colophon { padding-top: 4rem; overflow: hidden; border-top: 3px double color-mix(in srgb, currentColor 40%, transparent); }
+.voice { font: 400 clamp(1.6rem, 4vw, 3rem)/1.15 var(--display); margin: 0; max-width: 22ch; text-wrap: balance; letter-spacing: -.01em; }
+.giant {
+  font: 400 50vw/.78 var(--display); letter-spacing: -.05em; text-align: center; margin: 2.5rem 0 0; padding-bottom: .27em;
+  white-space: nowrap; user-select: none;
+}
+.colophon-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 2rem; padding-top: 1.5rem; padding-bottom: 3rem; font-size: .875rem; border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent); }
+.colophon-meta p { margin: 0; text-wrap: pretty; }
 
 .error { margin: 1rem 0 0 calc(var(--margin) + .5rem); color: var(--signal); }
 .error button {
@@ -300,7 +345,9 @@ a:hover { text-decoration-thickness: 2px; }
 }
 @media (max-width: 720px) {
   :root { --margin: 2.75rem; --money: 4.6rem; }
-  .masthead { grid-template-columns: minmax(0, 1fr); padding-top: 2rem; }
+  .masthead { grid-template-columns: minmax(0, 1fr); padding-top: 4.25rem; }
+  .colophon-meta { grid-template-columns: minmax(0, 1fr); }
+  .source-pill { top: 12px; right: 12px; padding: .6rem .85rem; }
   .folio { grid-template-columns: minmax(0, 1fr); }
   .folio h2 { font-size: 1.625rem; }
   .row > * { padding-inline: .45rem; }
@@ -325,4 +372,5 @@ a:hover { text-decoration-thickness: 2px; }
   .tabs button, .tape .sec.on, .row .strike.on, .hop .edge.on, .hop .body.on, .journal li, .tape .retry { transition-duration: 1ms; }
   .hop.flagged .node::after { animation: none; }
   .hop .body { transform: none; }
+  body, .source-pill { transition: none; }
 }

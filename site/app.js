@@ -21,7 +21,10 @@
     return e;
   }
 
-  function later(ms, fn) { live.timers.push(setTimeout(fn, ms)); }
+  // ?speed=3 plays every run three times faster. The screen recorder uses it to fit each run into a few
+  // seconds. Visitors never see the parameter, so the default pace stays the one the page was designed at.
+  var speed = Math.min(10, Math.max(0.25, parseFloat(new URLSearchParams(location.search).get("speed")) || 1));
+  function later(ms, fn) { live.timers.push(setTimeout(fn, ms / speed)); }
   function frame(fn) { var id = requestAnimationFrame(fn); live.frames = [id]; return id; }
 
   // A critically damped spring. Retargeting keeps the current value and velocity, so a counter
@@ -131,7 +134,7 @@
   // The ledger page for the first three runs: column heads, entries, and totals that must agree.
   function ledger() {
     var page = $("visual");
-    page.appendChild(row(["Ref", "Particulars", "Debit", "Credit"], "head"));
+    page.appendChild(row(["Ref", "Details", "Debit", "Credit"], "head"));
     var body = el("div", "entries");
     page.appendChild(body);
     var totals = el("div", "totals");
@@ -187,7 +190,7 @@
   }
 
   function balances() {
-    var b = { World: figure("World", 0, money, "funds every opening"), Amara: figure("Amara", 0, money), Ben: figure("Ben", 0, money) };
+    var b = { World: figure("World", 0, money, "The bank's own account. It goes below zero by exactly what it hands out, so the books still balance."), Amara: figure("Amara", 0, money), Ben: figure("Ben", 0, money) };
     var held = { World: 0, Amara: 0, Ben: 0 };
     b.apply = function (entry, instant) {
       entry.legs.forEach(function (leg) { held[leg.acct] += (leg.cr || 0) - (leg.dr || 0); });
@@ -199,13 +202,13 @@
   var runs = {
     transfer: function () {
       var list = entries(), book = ledger(), bal = balances();
-      caption("Amara and Ben open accounts. The opening money comes out of the bank's own world account, so even a new deposit is two lines that agree.");
+      caption("Amara and Ben open accounts. The opening money comes out of the bank's own account, called World, so even a new deposit is two lines that agree.");
       [0, 1].forEach(function (i) {
         later(400 + i * 1100, function () { book.post(list[i]); bal.apply(list[i]); wire(list[i].wire); });
       });
       later(3300, function () {
         var t = list[2];
-        caption("Amara sends Ben " + money(t.amount) + ". One transfer, two lines: " + money(t.amount) + " out of Amara, " + money(t.amount) + " into Ben. The totals move together and the difference stays at zero.");
+        caption("Amara sends Ben " + money(t.amount) + ". One transfer, two lines: " + money(t.amount) + " out of Amara, " + money(t.amount) + " into Ben. The totals move together and the difference stays at zero, as it always should.");
         book.post(t); bal.apply(t);
         wire(t.wire); wire(step(data.ledger, "balances after the transfer"));
       });
@@ -215,7 +218,7 @@
       var list = entries(), book = ledger(), bal = balances(), again = list[3];
       var run = data.ledger, replay = step(run, "retry with the same key");
       list.slice(0, 3).forEach(function (e) { book.post(e, { instant: true, cls: "earlier" }); bal.apply(e, true); });
-      caption("Amara sends another " + money(again.amount) + ". The server posts it, but the connection drops before the reply reaches her app.");
+      caption("Amara sends another " + money(again.amount) + ". The bank records it, but the connection drops before the reply reaches her app.");
       later(900, function () {
         var rows = book.post(again);
         rows[0].classList.add("lost");
@@ -223,7 +226,7 @@
         wire(step(run, "reply lost"));
       });
       later(3600, function () {
-        caption("Her app sends the same request again with the same key. The server finds that key already posted and answers with the first result. Nothing new is written.");
+        caption("Her app cannot tell it worked, so it sends the same payment again with the same reference. The bank sees that reference was already used and sends back its first answer. Nothing is paid twice.");
         var ghosts = book.post({ ref: again.ref, legs: again.legs.map(function (l) {
           return { acct: l.acct, text: l.text + ", again", dr: l.dr, cr: l.cr };
         }) }, { ghost: true, cls: "ghost" });
@@ -237,9 +240,9 @@
         later(1600, function () {
           var stamp = el("div", "stamp");
           stamp.appendChild(el("b", null, "Refused as a duplicate. "));
-          stamp.appendChild(document.createTextNode("Key "));
+          stamp.appendChild(document.createTextNode("Reference "));
           stamp.appendChild(el("code", null, again.key));
-          stamp.appendChild(document.createTextNode(" was already posted, so the server replayed the first answer."));
+          stamp.appendChild(document.createTextNode(" was already used, so the bank sent back its first answer."));
           stamp.style.top = (ghosts[0].offsetTop + 4) + "px";
           book.body.appendChild(stamp);
           if (stamp.animate && !reduce.matches) {
@@ -248,7 +251,7 @@
           }
           var amara = step(run, "Amara after the retry").response.body, ben = step(run, "Ben after the retry").response.body;
           bal.Amara.to(amara.balanceMinor); bal.Ben.to(ben.balanceMinor);
-          bal.Amara.sub("unchanged by the retry"); bal.Ben.sub("unchanged by the retry");
+          bal.Amara.sub("unchanged by the second try"); bal.Ben.sub("unchanged by the second try");
           wire(replay); wire(step(run, "Amara after the retry")); wire(step(run, "Ben after the retry"));
         });
       });
@@ -257,9 +260,9 @@
     reconcile: function () {
       var list = entries(), book = ledger(), r = step(data.ledger, "reconcile"), body = r.response.body;
       list.forEach(function (e) { book.post(e, { instant: true, cls: "earlier" }); });
-      caption("Reconcile adds up every posting again, account by account, and compares the result with the stored balances.");
+      caption("A recount adds up every entry again, account by account, and checks the result against each saved balance.");
       var recon = el("div", "recon");
-      recon.appendChild(row(["Lines", "Rebuilt from postings", "Balance"], "head"));
+      recon.appendChild(row(["Lines", "Account, recounted", "Balance"], "head"));
       $("visual").appendChild(recon);
       var accts = ["World", "Amara", "Ben"];
       var rows = Array.prototype.slice.call(book.body.querySelectorAll(".row"));
@@ -276,13 +279,13 @@
       });
       later(700 + accts.length * 1400 + 200, function () {
         rows.forEach(function (x) { x.classList.remove("lit"); });
-        caption("Every balance matches its postings, and all balances together, the world's included, add up to exactly zero.");
-        var total = row(["", "All balances, world included", money(body.globalSumMinor)]);
+        caption("Every balance matches its entries. All balances together, the bank's own included, add up to exactly zero, so no money appeared or vanished.");
+        var total = row(["", "All balances, the bank's own included", money(body.globalSumMinor)]);
         var wrap = el("div", "totals");
         wrap.appendChild(total); recon.appendChild(wrap); ink(total);
-        figure("Books consistent", 0, function () { return body.consistent ? "yes" : "no"; }).value.classList.add(body.consistent ? "good" : "neg");
+        figure("Books agree", 0, function () { return body.consistent ? "yes" : "no"; }).value.classList.add(body.consistent ? "good" : "neg");
         figure("Accounts checked", 0, count).to(body.accountsChecked);
-        figure("Accounts that drifted", 0, count).to(body.drifts.length);
+        figure("Accounts that did not match", 0, count).to(body.drifts.length);
         wire(r);
       });
     },
@@ -292,12 +295,12 @@
       var page = $("visual");
       page.classList.add("plain");
       var last = Math.ceil(Math.max(per[per.length - 1].t + 1, events[events.length - 1][0]));
-      caption("Eight clients keep sending transfers to the service on Kubernetes while it is broken on purpose: an API pod killed mid-request, the database cut off, then the database pod killed.");
+      caption("Eight customer apps keep sending transfers while the bank's servers are broken on purpose. First a server is shut down mid-payment. Then the database is cut off, and then it is shut down too.");
 
       var wrapEl = el("div", "tape-wrap"), tape = el("div", "tape");
       tape.tabIndex = 0;
       tape.setAttribute("role", "slider");
-      tape.setAttribute("aria-label", "Position in the recorded fault run, in seconds");
+      tape.setAttribute("aria-label", "Position in the recorded crash test, in seconds");
       tape.setAttribute("aria-valuemin", "0");
       tape.setAttribute("aria-valuemax", String(last));
       var byT = {}; per.forEach(function (p) { byT[p.t] = p; });
@@ -312,13 +315,13 @@
       }
       function plain(e) {
         var x = e[2];
-        if (/killed api pod/.test(x)) return ["API pod killed", "An API pod is killed in the middle of requests. Clients lose their replies and retry with the same keys."];
-        if (/partitioned/.test(x)) return ["API cut off from Postgres for 10 s", "The API is cut off from Postgres for 10 seconds. Nothing can be answered, so clients keep retrying."];
-        if (/partition removed/.test(x)) return ["Partition healed", "The partition heals. Retries of transfers that had already landed get the stored answer back."];
-        if (/killed postgres/.test(x)) return ["Postgres pod killed", "The database pod is killed. Open connections die with it and the service reconnects when it returns."];
-        if (/postgres answering/.test(x)) return ["Postgres back", "Postgres answers again and transfers resume."];
-        if (e[1] === "clients_done") return ["All transfers answered", "Every client has a definite answer for every transfer, " + count(s.keys) + " in all."];
-        if (e[1] === "checked") return ["Books checked", "The harness compares Postgres with what every client was told."];
+        if (/killed api pod/.test(x)) return ["Server shut down", "One of the bank's servers is shut down in the middle of payments. The apps lose their replies and send again with the same references."];
+        if (/partitioned/.test(x)) return ["Database cut off for 10 s", "The servers lose their link to the database for 10 seconds. Nothing can be answered, so the apps keep trying."];
+        if (/partition removed/.test(x)) return ["Link restored", "The link comes back. Repeats of payments that had already landed get the saved answer back, not a second payment."];
+        if (/killed postgres/.test(x)) return ["Database shut down", "The database itself is shut down. Open links die with it, and the servers reconnect when it returns."];
+        if (/postgres answering/.test(x)) return ["Database back", "The database answers again and transfers resume."];
+        if (e[1] === "clients_done") return ["All transfers answered", "Every app has a clear answer for every transfer, " + count(s.keys) + " in all."];
+        if (e[1] === "checked") return ["Books checked", "The test compares the database with what every app was told."];
         return [x, null];
       }
       events.forEach(function (e) {
@@ -336,7 +339,7 @@
       wrapEl.appendChild(axis);
       var controls = el("div", "controls"), playBtn = el("button", "play", "Pause");
       playBtn.type = "button";
-      controls.appendChild(el("p", "hint", "Ink is transfers answered each second, red is attempts that failed or lost their reply. Drag along the tape or use the arrow keys to move through the run."));
+      controls.appendChild(el("p", "hint", "Plain bars are transfers answered each second. Red bars are attempts that failed or lost their reply. Drag along the tape, or use the arrow keys, to move through the run."));
       controls.appendChild(playBtn);
       wrapEl.appendChild(controls);
       page.appendChild(wrapEl);
@@ -345,7 +348,7 @@
       events.forEach(function (e) {
         var li = el("li", e[1] === "fault" ? "fault" : "");
         li.appendChild(el("span", "t", e[0].toFixed(1) + "s"));
-        li.appendChild(el("span", null, e[1] === "start" ? "Clients start sending transfers" : plain(e)[0]));
+        li.appendChild(el("span", null, e[1] === "start" ? "The apps start sending transfers" : plain(e)[0]));
         journal.appendChild(li); jl.push(li);
       });
       page.appendChild(journal);
@@ -353,7 +356,7 @@
       page.appendChild(summary);
 
       var fSec = figure("Seconds into the run", 0, function (x) { return (x / 10).toFixed(1); });
-      var fOk = figure("Transfers answered", 0, count), fRetry = figure("Retries", 0, count);
+      var fOk = figure("Transfers answered", 0, count), fRetry = figure("Second tries", 0, count);
       events.forEach(function (e) {
         var li = el("li");
         li.appendChild(el("code", null, e[0].toFixed(1) + "s  " + e[1] + "  " + e[2]));
@@ -394,12 +397,12 @@
         state.settled = true;
         tape.classList.add("settled");
         later(reduce.matches ? 0 : 900, function () {
-          caption("Afterwards every client has a definite answer and the database agrees with every one of them. Reconciliation lands with the books at zero.");
-          [["Transfers", count(s.keys)], ["Retries", count(s.retries)],
-           ["Money created or lost", count(s.conservation_violations), true], ["Transfers applied twice", count(s.double_applications), true],
+          caption("Afterwards every app has a clear answer, and the database agrees with every one. The recount finds the books at exactly zero, so nothing was lost or paid twice.");
+          [["Transfers", count(s.keys)], ["Second tries", count(s.retries)],
+           ["Money created or lost", count(s.conservation_violations), true], ["Transfers paid twice", count(s.double_applications), true],
            ["Transfers nobody asked for", count(s.phantom_transfers), true], ["Confirmed transfers missing", count(s.lost_acknowledged_transfers), true],
            ["Sum of every balance", money(s.reconciliation_global_sum_minor), true],
-           ["Reconciliation", s.reconciliation_consistent ? "consistent" : "broken", s.reconciliation_consistent]]
+           ["Recount of the books", s.reconciliation_consistent ? "agrees" : "does not agree", s.reconciliation_consistent]]
             .forEach(function (c, i) {
               later(reduce.matches ? 0 : i * 260, function () {
                 var r = el("div", "row");
@@ -417,7 +420,7 @@
         if (!state.playing) return;
         var dt = Math.min((now - state.prev) / 1000, 0.1);
         state.prev = now;
-        state.t = Math.min(last, state.t + dt * 5);
+        state.t = Math.min(last, state.t + dt * 5 * speed);
         if (state.t >= last) state.playing = false;
         render();
         if (state.playing) state.raf = frame(tick);
@@ -488,9 +491,9 @@
       function hhmm(iso) { return iso.slice(11, 16); }
       function minutes(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 60000); }
 
-      caption("A victim with ordinary habits sends a large payment to an account she has never paid. That account passes it on within minutes, and so does the next, and the next.");
+      caption("A victim with ordinary habits sends a large payment to an account she has never paid. That account belongs to a money mule, who passes it on within minutes. So does the next mule, and the next.");
       var chain = el("ol", "chain"), hops = [];
-      names.concat(["Exit"]).forEach(function (name) {
+      names.concat(["Cash-out"]).forEach(function (name) {
         var li = el("li", "hop"), rail = el("div", "rail"), body = el("div", "body");
         rail.appendChild(el("span", "node")); rail.appendChild(el("span", "edge"));
         body.appendChild(el("div", "who", name));
@@ -503,7 +506,7 @@
       var first = scores[0].response.body.scores[0];
       figure("Her payment to " + ids[first.counterpartyAccountId], 0, money).to(first.amountMinor);
       var fMin = figure("Minutes from her payment to the payout", 0, count);
-      figure("Flag line", 0, count).to(threshold);
+      figure("Score that raises a flag", 0, count).to(threshold);
 
       var flagged = 0;
       scores.forEach(function (r, i) {
@@ -521,7 +524,7 @@
             u.appendChild(el("span", null, "Usually pays " + payees.join(" and ") + ", " + usual.length + " payments of " + money(Math.min.apply(null, amounts)) + " to " + money(Math.max.apply(null, amounts))));
             h.body.appendChild(u);
           }
-          h.body.appendChild(el("div", "score", "Score " + sc.score + (sc.flagged ? ", at or over the flag line of " : ", under the flag line of ") + threshold + (sc.flagged ? ". Flagged." : ".")));
+          h.body.appendChild(el("div", "score", "Suspicion score " + sc.score + (sc.flagged ? ", at or over the line of " : ", under the line of ") + threshold + (sc.flagged ? ", so it is flagged." : ", so it passes.")));
           var ul = el("ul");
           Object.keys(x.points).forEach(function (k) {
             var item = el("li");
@@ -530,7 +533,7 @@
             ul.appendChild(item);
           });
           h.body.appendChild(ul);
-          if (x.evidence.length) h.body.appendChild(el("p", "because", "Rests on posting #" + x.evidence.join(", #") + ", the flagged payment that came in."));
+          if (x.evidence.length) h.body.appendChild(el("p", "because", "Based on entry #" + x.evidence.join(", #") + ", the flagged payment that came in."));
           h.body.classList.add("on");
           if (sc.flagged) { h.li.classList.add("flagged"); flagged++; fFlag.to(flagged); }
           wire(r);
@@ -544,7 +547,7 @@
               p.appendChild(document.createTextNode(" at " + hhmm(sc.eventAt) + ", the end of the chain."));
               exit.body.appendChild(p); exit.body.classList.add("on");
               fMin.to(minutes(first.eventAt, sc.eventAt));
-              caption("Every hop is flagged, and each alert on a mule names the flagged payment it rests on. Scoring runs after the money has moved, so it never slows a transfer down.");
+              caption("Every account in the chain is flagged. Each alert on a mule names the flagged payment that led to it. The checks run after the money has moved, so they never slow a transfer down.");
             });
           }
         });
@@ -552,21 +555,78 @@
     }
   };
 
+  function nums(text) { return (String(text).match(/[\d,.]+/g) || []).map(function (x) { return parseFloat(x.replace(/,/g, "")); }); }
+  function about(n) {
+    var p = Math.pow(10, Math.max(0, Math.floor(Math.log10(Math.abs(n) || 1)) - 1));
+    return count(Math.round(n / p) * p);
+  }
+
+  // numbers.json is written by eval/report.py in the words of the results files. The page says the
+  // same figures in plain words, matched on stable parts of each label. An unknown tile shows as written.
+  var PLAIN = [
+    [/^States/, function (t) { return { label: "Situations a proof tool checked", value: t.value,
+      was: "It found no way to lose or double money. Remove the duplicate check on purpose and it finds one at once." }; }],
+    [/^Transfers under/, function (t) {
+      var w = nums(t.was), bad = w[0], runs = w[1];
+      return { label: "Transfers made while the servers were broken on purpose", value: t.value,
+        was: bad === 0 ? "None was lost or paid twice in " + runs + " crash tests, which is what a bank needs."
+          : count(bad) + " went wrong in " + runs + " crash tests. That is not good enough yet." };
+    }],
+    [/cluster$/, function (t) { return { label: "Slowest 1 in 100 transfers took", value: t.value,
+      was: "On one laptop running a test copy of the bank, handling " + nums(t.was)[0] + " transfers a second. That is quicker than a blink." }; }],
+    [/^Burst alert/, function (t) {
+      var now = parseFloat(t.value), then = nums(t.was)[0];
+      return { label: "Of the transfers flagged as suspicious, this share really were", value: (now * 100).toFixed(2) + "%",
+        was: "The first version flagged mostly innocent ones. Only about " + Math.round(then * 100) + " in 100 of its flags were right." };
+    }],
+    [/^Normal payments/, function (t) {
+      var w = nums(t.was);
+      return { label: "Ordinary payments wrongly flagged", value: t.value,
+        was: "This is out of about " + about(w[1]) + " ordinary payments. The first version flagged " + count(w[0]) + ". Fewer is better." };
+    }]
+  ];
+  function plainTile(t) {
+    for (var i = 0; i < PLAIN.length; i++) if (PLAIN[i][0].test(t.label)) return PLAIN[i][1](t);
+    return t;
+  }
+
+  // The figure counts up from zero the first time it scrolls into view. It is written in full first,
+  // so a reader who never scrolls, or asked for less motion, still sees the real value.
+  function countUp(dd, text) {
+    dd.textContent = text;
+    var m = /^([\d,]*\.?\d+)(.*)$/.exec(text);
+    if (!m || reduce.matches || !window.IntersectionObserver) return;
+    var target = parseFloat(m[1].replace(/,/g, "")), dp = (m[1].split(".")[1] || "").length, rest = m[2];
+    var io = new IntersectionObserver(function (seen) {
+      if (!seen[0].isIntersecting) return;
+      io.disconnect();
+      var t0 = performance.now();
+      (function go(now) {
+        var k = Math.min(1, (now - t0) / 1100), e = 1 - Math.pow(1 - k, 3), v = target * e;
+        dd.textContent = (dp ? v.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp }) : count(v)) + rest;
+        if (k < 1) requestAnimationFrame(go); else dd.textContent = text;
+      })(t0);
+    }, { threshold: 0.6 });
+    io.observe(dd);
+  }
+
   function tiles() {
     var n = data.numbers, box = $("tiles");
     box.innerHTML = "";
-    n.tiles.forEach(function (t) {
+    n.tiles.map(plainTile).forEach(function (t) {
       var d = el("div");
       d.appendChild(el("dt", null, t.label));
-      d.appendChild(el("dd", null, t.value));
+      var dd = el("dd");
+      d.appendChild(dd);
+      countUp(dd, t.value);
       if (t.was) d.appendChild(el("p", "was", t.was));
       box.appendChild(d);
     });
     var src = $("numbers-source");
-    src.textContent = "Read from ";
+    src.textContent = "Every figure here is read from ";
     n.sources.forEach(function (s, i) {
       src.appendChild(el("code", null, s));
-      src.appendChild(document.createTextNode(i < n.sources.length - 1 ? ", " : " in the repository."));
+      src.appendChild(document.createTextNode(i < n.sources.length - 1 ? ", " : ", files in the repository."));
     });
   }
 
@@ -591,7 +651,7 @@
     })).then(function () {
       $("book").setAttribute("aria-busy", "false");
       tiles();
-      $("provenance").textContent = "Everything below is played back from runs recorded against the real service on " + data.ledger.recorded_on + ". There is no server behind this page.";
+      $("provenance").textContent = "Everything below is a replay of the real system, recorded on " + data.ledger.recorded_on + ". Nothing on this page talks to a live server.";
       buttons.forEach(function (b) {
         b.disabled = false;
         b.onclick = function () { show(b.dataset.run); };
@@ -610,6 +670,17 @@
       $("visual").innerHTML = ""; $("visual").appendChild(box);
     });
   }
+  // The page turns from paper to ink once, when the results come up. The class only swaps two colours,
+  // the CSS does the tween, and reduced motion drops the transition so the flip is instant.
+  if (window.IntersectionObserver) {
+    var inView = {};
+    var flipper = new IntersectionObserver(function (seen) {
+      seen.forEach(function (s) { inView[s.target.id] = s.isIntersecting; });
+      document.body.classList.toggle("flip", inView.numbers || inView.colophon);
+    }, { rootMargin: "-45% 0px -45% 0px" });
+    flipper.observe($("numbers")); flipper.observe($("colophon"));
+  }
+
   // The raw requests are long JSON lines. On a phone they start folded so the ledger stays in view.
   if (window.matchMedia("(max-width: 720px)").matches) $("wire-box").open = false;
   window.addEventListener("hashchange", function () {

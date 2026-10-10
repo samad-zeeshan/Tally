@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tally demo</title>
-<meta name="description" content="Tally is a small bank that can never lose or double a cent. Watch recorded runs of a transfer, a retried payment, a reconciliation, a fault injection and a flagged mule chain.">
+<meta name="description" content="Tally is a small bank that can never lose or double a cent. Watch recorded runs of a transfer, a payment sent twice by mistake, a recount of the books, servers broken on purpose, and a chain of stolen money being caught.">
 <meta property="og:title" content="Tally demo">
 <meta property="og:description" content="A small bank that can never lose or double a cent, played back from recorded runs.">
 <meta name="theme-color" content="#eef1e6" media="(prefers-color-scheme: light)">
@@ -18,24 +18,27 @@
 </head>
 <body>
 <a class="skip" href="#book">Skip to the ledger</a>
+<a class="source-pill" href="https://github.com/samad-zeeshan/Tally">Source</a>
 
 <header class="wrap masthead">
+  <p class="eyebrow"><span>01</span> The demo</p>
   <h1 class="wordmark" translate="no">Tally</h1>
   <div class="masthead-copy">
-    <p class="lede">A small bank that can never lose or double a cent. Every transfer is two entries that cancel out,
-      a payment retried after a dropped connection lands once, the books can be rebuilt from scratch to prove
-      nothing leaked, and suspicious transfers are flagged after they land, with the evidence attached.</p>
-    <p class="note" id="provenance">Everything below is played back from runs recorded against the real service. There is no server behind this page.</p>
+    <p class="lede">A small bank that can never lose or double a cent. Every transfer is written as two lines that cancel out.
+      A payment sent twice after a dropped connection still lands once. The books can be added up again from scratch to prove
+      nothing leaked. Suspicious transfers are flagged after they land, with the evidence attached.</p>
+    <p class="note" id="provenance">Everything below is a replay of the real system. Nothing on this page talks to a live server.</p>
   </div>
 </header>
 
 <main class="wrap">
+  <p class="eyebrow runs-eyebrow"><span>02</span> Recorded runs</p>
   <nav class="tabs" aria-label="Recorded runs">
-    <button type="button" data-run="transfer" aria-pressed="false" disabled>Transfer</button>
-    <button type="button" data-run="retry" aria-pressed="false" disabled>Retry a lost reply</button>
-    <button type="button" data-run="reconcile" aria-pressed="false" disabled>Reconcile</button>
-    <button type="button" data-run="break" class="surprise" aria-pressed="false" disabled>Break it</button>
-    <button type="button" data-run="flag" class="surprise" aria-pressed="false" disabled>Flag it</button>
+    <button type="button" data-run="transfer" data-demo="transfer" aria-pressed="false" disabled>Transfer</button>
+    <button type="button" data-run="retry" data-demo="retry" aria-pressed="false" disabled>Retry a lost reply</button>
+    <button type="button" data-run="reconcile" data-demo="reconcile" aria-pressed="false" disabled>Reconcile</button>
+    <button type="button" data-run="break" data-demo="break" class="surprise" aria-pressed="false" disabled>Break it</button>
+    <button type="button" data-run="flag" data-demo="flag" class="surprise" aria-pressed="false" disabled>Flag it</button>
   </nav>
 
   <section class="book" id="book" aria-labelledby="folio-title" aria-busy="true">
@@ -53,15 +56,25 @@
     </details>
   </section>
 
-  <section class="trial" aria-labelledby="numbers-title">
+  <section class="trial" id="numbers" aria-labelledby="numbers-title">
+    <p class="eyebrow"><span>03</span> The results</p>
     <h2 id="numbers-title">The numbers behind it</h2>
     <dl class="trial-list" id="tiles"></dl>
     <p class="note" id="numbers-source"></p>
   </section>
 </main>
 
-<footer class="wrap colophon">
-  <p>Source and method: <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a>. Synthetic data only.</p>
+<footer class="colophon" id="colophon">
+  <div class="wrap">
+    <p class="eyebrow"><span>04</span> The source</p>
+    <p class="voice">Every cent is written down twice, and the two lines always agree.</p>
+  </div>
+  <p class="giant" translate="no" aria-hidden="true">Tally</p>
+  <div class="wrap colophon-meta">
+    <p>The code, the tests and the method are at <a href="https://github.com/samad-zeeshan/Tally">github.com/samad-zeeshan/Tally</a>.</p>
+    <p>Every account and payment on this page is made up. The figures come from test runs saved in the repository.</p>
+    <p>Released under the MIT licence.</p>
+  </div>
 </footer>
 <script src="app.js"></script>
 </body>
