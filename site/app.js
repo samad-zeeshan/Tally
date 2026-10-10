@@ -178,7 +178,7 @@
       var b = step(run, label).request.body;
       return { ref: "open", wire: step(run, label), legs: [
         { acct: "World", text: "World, opens " + b.name, dr: b.openingBalanceMinor },
-        { acct: b.name, text: b.name + ", opening", cr: b.openingBalanceMinor }] };
+        { acct: b.name, text: b.name + ", first deposit", cr: b.openingBalanceMinor }] };
     }
     function transfer(s) {
       var amount = s.request.body.amountMinor, key = s.request.headers["Idempotency-Key"];
@@ -202,7 +202,7 @@
   var runs = {
     transfer: function () {
       var list = entries(), book = ledger(), bal = balances();
-      caption("Amara and Ben open accounts. The bank's own account, called World, pays their opening money. So even a new deposit is two lines that agree.");
+      caption("Amara and Ben open accounts. The bank's own account, called World, pays their first deposit. So even a new deposit is two lines that agree.");
       [0, 1].forEach(function (i) {
         later(400 + i * 1100, function () { book.post(list[i]); bal.apply(list[i]); wire(list[i].wire); });
       });
@@ -400,7 +400,7 @@
           caption("After the test, every app has a clear answer, and the database agrees with each one. The recount finds that the books total exactly zero. So the bank did not lose or double any money.");
           [["Transfers", count(s.keys)], ["Retries", count(s.retries)],
            ["Money created or lost", count(s.conservation_violations), true], ["Transfers paid twice", count(s.double_applications), true],
-           ["Transfers nobody asked for", count(s.phantom_transfers), true], ["Confirmed transfers missing", count(s.lost_acknowledged_transfers), true],
+           ["Transfers nobody asked for", count(s.phantom_transfers), true], ["Confirmed transfers lost", count(s.lost_acknowledged_transfers), true],
            ["Sum of every balance", money(s.reconciliation_global_sum_minor), true],
            ["Recount of the books", s.reconciliation_consistent ? "agrees" : "does not agree", s.reconciliation_consistent]]
             .forEach(function (c, i) {
