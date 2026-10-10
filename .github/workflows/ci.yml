@@ -83,6 +83,8 @@ jobs:
       - run: python -m unittest discover -s eval/fraud/tests -v
       - name: README and site data match eval/
         run: python -m unittest discover -s eval/tests -v
+      - name: Demo page words pass the plain-language check
+        run: python -m unittest discover -s tests -v
 
   # The Kubernetes proof: a kind cluster built from the same script a developer runs, the four deployment
   # gates, the fault gate, then the existing integration suite against the Postgres inside the cluster.
