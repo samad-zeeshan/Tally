@@ -4,6 +4,8 @@ Tally is a small bank that never loses or doubles a cent. The bank writes each t
 
 **Demo:** [samad-zeeshan.github.io/Tally](https://samad-zeeshan.github.io/Tally/) plays back runs from the real service. The runs show a transfer, a retry after a lost reply, a recount of the books, a crash test, and a fraud alert. In the last run, the fraud check flags a chain of accounts that pass stolen money along. A 90-second walkthrough is in [docs/media/demo.mp4](docs/media/demo.mp4).
 
+A 26-second explainer video is in [docs/media/explainer.mp4](docs/media/explainer.mp4).
+
 ![Tally demo: a transfer, a retry, a recount, a crash test and a fraud alert](docs/media/demo.gif)
 
 ## How it works
