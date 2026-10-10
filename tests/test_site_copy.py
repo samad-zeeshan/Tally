@@ -26,6 +26,17 @@ FILLER = [
 ]
 MAX_WORDS = 25
 
+# A form of "be", then at most one word, then a past participle. It is a rough net for passive
+# voice, so it also catches "is a balanced entry". Such sentences go in PASSIVE_OK with a reason.
+PARTICIPLES = "made done found given held kept left run seen sent shown taken written built caught"
+PASSIVE = re.compile(
+    r"\b(?:is|are|was|were|be|been|being)\s+(?:\w+\s+)?(?:\w+ed|" + PARTICIPLES.replace(" ", "|") + r")\b",
+    re.I,
+)
+PASSIVE_OK = {
+    # Each entry is an exact sentence, with a one-line reason above it.
+}
+
 
 class _Text(HTMLParser):
     def __init__(self):
@@ -95,6 +106,11 @@ class SiteCopy(unittest.TestCase):
     def test_sentences_stay_short(self):
         for sentence in sentences(page_strings() + readme_prose()):
             self.assertLessEqual(len(sentence.split()), MAX_WORDS, sentence)
+
+    def test_active_voice(self):
+        for sentence in sentences(page_strings() + readme_prose()):
+            if sentence not in PASSIVE_OK:
+                self.assertIsNone(PASSIVE.search(sentence), sentence)
 
 
 if __name__ == "__main__":
